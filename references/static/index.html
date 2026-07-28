@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>信控智能体 · 调试驾驶舱</title>
+  <link rel="stylesheet" href="/debug/assets/debug-shell.css" />
+  <script defer src="/debug/assets/debug-ui.js"></script>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    h1 { margin: 0 0 6px; font-size: 1.6rem; }
+    .subtitle { margin: 0 0 18px; color: var(--muted); font-size: 0.9rem; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .card .label { color: var(--muted); font-size: 0.8rem; }
+    .card .value { margin-top: 6px; font-size: 1.3rem; font-weight: 700; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    section h2 {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 1rem;
+    }
+
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    label { display: block; margin: 6px 0 4px; color: var(--muted); font-size: 0.8rem; }
+    input, select, textarea {
+      width: 100%;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 10px;
+      font-size: 0.85rem;
+    }
+    textarea { min-height: 92px; font-family: ui-monospace, monospace; resize: vertical; }
+
+    button {
+      border: none;
+      background: var(--accent);
+      color: white;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+    button:hover { filter: brightness(1.08); }
+
+    .status { font-size: 0.8rem; color: var(--muted); }
+    .status.ok { color: var(--success); }
+    .status.err { color: var(--danger); }
+    .status.pending { color: var(--warning); }
+
+    .phase {
+      display: grid;
+      gap: 7px;
+      margin-top: 8px;
+    }
+    .phase-item {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+    }
+    .phase-bar {
+      flex: 1;
+      margin-left: 10px;
+      height: 6px;
+      background: #202938;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .phase-bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--success);
+    }
+
+    .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 8px; font-size: 0.8rem; text-align: left; }
+    th { color: var(--muted); background: #111827; }
+
+    pre {
+      margin-top: 8px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 0.78rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 260px;
+      overflow: auto;
+    }
+
+    .viz-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 10px;
+    }
+    .viz-box {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .viz-box h3 {
+      margin: 0 0 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .vchart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      gap: 10px;
+      height: 160px;
+      padding: 8px 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .vchart-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 72px;
+    }
+    .vchart-col .bar {
+      width: 100%;
+      border-radius: 6px 6px 0 0;
+      background: linear-gradient(180deg, #58a6ff, #1f6feb);
+      min-height: 4px;
+      transition: height 0.25s ease;
+    }
+    .vchart-col .lab {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.2;
+      word-break: break-all;
+    }
+    .vchart-col .lvl {
+      font-size: 0.7rem;
+      color: var(--warning);
+      margin-top: 2px;
+    }
+    .dist-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+    }
+    .dist-row .name { width: 36px; color: var(--muted); flex-shrink: 0; }
+    .dist-row .track {
+      flex: 1;
+      height: 14px;
+      background: #202938;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .dist-row .fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #3fb950, #238636);
+    }
+    .dist-row .cnt { width: 28px; text-align: right; color: var(--text); flex-shrink: 0; }
+
+    .hbar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+      font-size: 0.75rem;
+    }
+    .hbar-row .tid {
+      width: 140px;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text);
+    }
+    .hbar-row .track {
+      flex: 1;
+      height: 12px;
+      background: #202938;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .hbar-row .fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #a371f7, #8957e5);
+    }
+    .hbar-row .score { width: 52px; text-align: right; color: var(--muted); flex-shrink: 0; }
+
+    .history-toolbar { margin-bottom: 8px; }
+    .history-list {
+      max-height: 320px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .history-item {
+      border-bottom: 1px solid var(--border);
+      padding: 8px 10px;
+      font-size: 0.78rem;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item .meta { color: var(--muted); font-size: 0.72rem; margin-bottom: 4px; }
+    .history-item .sum { color: var(--text); }
+    .history-item pre {
+      max-height: 120px;
+      margin-top: 6px;
+      display: none;
+    }
+    .history-item.expanded pre { display: block; }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    .pill.loop { background: #1f3d5c; color: #79c0ff; }
+    .pill.diagnosis_template { background: #352a4a; color: #d2a8ff; }
+    .pill.multiscenario_benchmark { background: #2d3f2d; color: #7ee787; }
+
+    .product-entry-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .product-entry {
+      background: linear-gradient(135deg, rgba(88,166,255,.11), rgba(63,185,80,.04));
+      border: 1px solid rgba(88,166,255,.22);
+      border-radius: 14px;
+      padding: 14px;
+      color: var(--text);
+      text-decoration: none;
+      box-shadow: 0 8px 22px rgba(0,0,0,.13);
+      transition: transform .16s ease, border-color .16s ease;
+    }
+    .product-entry:hover { transform: translateY(-2px); border-color: rgba(88,166,255,.45); }
+    .product-entry .eyebrow { font-size: .68rem; color: var(--accent); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .product-entry .title { margin-top: 7px; font-size: .98rem; font-weight: 800; }
+    .product-entry .desc { margin-top: 6px; color: var(--muted); font-size: .78rem; line-height: 1.55; }
+    .product-entry .go { margin-top: 10px; color: #79c0ff; font-size: .76rem; font-weight: 700; }
+
+    @media (max-width: 1100px) {
+      .cards { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+      .product-entry-grid { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+    }
+    @media (max-width: 700px) { .product-entry-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <!-- City Demo Entry Banner -->
+  <div class="sc-page-hero dark" style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+    <div>
+      <div class="sc-page-kicker">城市级信控智能体演示驾驶舱</div>
+      <h1 class="sc-page-title">济南市 · 城市级信控智能体 Demo</h1>
+      <p class="sc-page-desc">完整展示城市态势、对象下钻、五环节智能体分析、人机协同和专项规划工具。</p>
+    </div>
+    <a class="sc-action primary" href="/debug/city-demo.html" style="min-height:42px;padding:10px 20px;white-space:nowrap;">
+      进入演示驾驶舱 →
+    </a>
+  </div>
+  <div class="product-entry-grid">
+    <a class="product-entry" href="/debug/city-demo.html">
+      <div class="eyebrow">运营演示</div><div class="title">城市总览</div>
+      <div class="desc">查看宏观态势、告警对象、运行队列，并下钻到工作台。</div><div class="go">进入城市驾驶舱 →</div>
+    </a>
+    <a class="product-entry" href="/debug/agent-workbench.html?phase=1">
+      <div class="eyebrow">五环节闭环</div><div class="title">智能体工作台</div>
+      <div class="desc">围绕同一对象完成认知、诊断、策略、方案和评价。</div><div class="go">打开工作台 →</div>
+    </a>
+    <a class="product-entry" href="/debug/human-in-loop.html">
+      <div class="eyebrow">专家协同</div><div class="title">人机协同</div>
+      <div class="desc">处理待审批方案、参数微调、人工接管和经验沉淀。</div><div class="go">进入专家工作台 →</div>
+    </a>
+    <a class="product-entry" href="/debug/timing-optimizer.html">
+      <div class="eyebrow">专项工具</div><div class="title">规划求解</div>
+      <div class="desc">使用单路口优化、干线绿波、信控地图与坐标维护工具。</div><div class="go">查看工具入口 →</div>
+    </a>
+  </div>
+  <h1>信控智能体 · 调试驾驶舱</h1>
+  <p class="subtitle">更直观地查看诊断、策略模板选择与多场景对比结果</p>
+  <p class="subtitle" style="margin-top:-10px;font-size:0.85rem;">
+    <a href="/debug/timing-optimizer.html" style="color:var(--accent)">单路口配时优化 UI</a>
+    &nbsp;·&nbsp;
+    <a href="/debug/corridor-coordination.html" style="color:var(--accent)">干线协调绿波 UI</a>
+    &nbsp;·&nbsp;
+    <a href="/debug/signalctl-map.html" style="color:var(--accent)">MySQL 信控数据地图</a>
+  </p>
+
+  <div class="cards">
+    <div class="card"><div class="label">服务状态</div><div class="value" id="kpi-health">-</div></div>
+    <div class="card"><div class="label">最近环节成功率</div><div class="value" id="kpi-phase-rate">-</div></div>
+    <div class="card"><div class="label">最近问题数</div><div class="value" id="kpi-issues">-</div></div>
+    <div class="card"><div class="label">最近场景数</div><div class="value" id="kpi-scenarios">-</div></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <section>
+        <h2>1) 服务状态</h2>
+        <div class="row">
+          <button id="btn-health">检查健康</button>
+          <span id="health-status" class="status"></span>
+        </div>
+        <pre id="health-result"></pre>
+      </section>
+
+      <section>
+        <h2>2) 五环节闭环（可视化进度）</h2>
+        <label>task_input JSON</label>
+        <textarea id="loop-input">{"region_id": "test"}</textarea>
+        <div class="row">
+          <button id="btn-loop">执行闭环</button>
+          <span id="loop-status" class="status"></span>
+        </div>
+        <div class="phase" id="phase-list"></div>
+        <pre id="loop-result"></pre>
+      </section>
+
+      <section>
+        <h2>3) 任务下发</h2>
+        <div class="row">
+          <select id="task-type">
+            <option value="global_optimize">global_optimize</option>
+            <option value="ct_check">ct_check</option>
+            <option value="congestion_response">congestion_response</option>
+          </select>
+          <button id="btn-dispatch">下发任务</button>
+          <span id="dispatch-status" class="status"></span>
+        </div>
+        <label>payload JSON</label>
+        <textarea id="dispatch-payload">{"region_id": "R1"}</textarea>
+        <pre id="dispatch-result"></pre>
+      </section>
+    </div>
+
+    <div>
+      <section>
+        <h2>4) 诊断 -> 策略模板选择（单次）</h2>
+        <label>context JSON（可留默认）</label>
+        <textarea id="diag-input">{
+  "scenario_type": "school_peak",
+  "scope": {"type": "intersection", "ids": ["SCH-INT-01"]},
+  "profile": {
+    "supply": {"road_density_km_km2": 7.2, "channelization_match_score": 0.45},
+    "demand": {"demand_supply_ratio": 1.18},
+    "state": {"saturation": 0.88, "avg_delay_s": 115, "queue_overflow_ratio": 1.1}
+  }
+}</textarea>
+        <div class="row">
+          <button id="btn-diag-template">执行链路</button>
+          <span id="diag-status" class="status"></span>
+        </div>
+        <div class="viz-box" style="margin-top:10px;">
+          <h3>模板推荐分值（recommend_score）</h3>
+          <div id="tpl-score-chart"></div>
+          <p class="status" id="tpl-score-hint" style="margin-top:6px;">执行链路后显示条形图</p>
+        </div>
+        <pre id="diag-result"></pre>
+      </section>
+
+      <section>
+        <h2>5) 多场景对比（学校/医院/活动）</h2>
+        <div class="row">
+          <button id="btn-benchmark">运行多场景基准</button>
+          <span id="bench-status" class="status"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th><th>问题数</th><th>Top问题</th><th>等级</th><th>Top模板</th>
+              </tr>
+            </thead>
+            <tbody id="bench-table-body"></tbody>
+          </table>
+        </div>
+        <div class="viz-grid">
+          <div class="viz-box">
+            <h3>各场景 Top 问题等级（柱高 ≈ 紧迫度，P0 最高）</h3>
+            <div class="vchart" id="bench-chart-scenarios"></div>
+          </div>
+          <div class="viz-box">
+            <h3>Top 问题等级分布（场景数）</h3>
+            <div id="bench-chart-distribution"></div>
+          </div>
+        </div>
+        <pre id="bench-result"></pre>
+      </section>
+
+      <section>
+        <h2>6) 已注册 Skill</h2>
+        <div class="row">
+          <button id="btn-skills">刷新列表</button>
+          <span id="skills-status" class="status"></span>
+        </div>
+        <pre id="skills-result"></pre>
+      </section>
+    </div>
+  </div>
+
+  <section>
+    <h2>7) 历史执行记录（服务端最近 N 次缓存）</h2>
+    <div class="row history-toolbar">
+      <button id="btn-history-refresh">刷新</button>
+      <button id="btn-history-clear" type="button" style="background:#6e7681;">清空</button>
+      <label style="margin:0; display:flex; align-items:center; gap:6px;">
+        <span style="color:var(--muted);font-size:0.8rem;">条数</span>
+        <input type="number" id="history-limit" value="20" min="1" max="50" style="width:72px;" />
+      </label>
+      <span id="history-status" class="status"></span>
+    </div>
+    <div class="history-list" id="history-list"></div>
+  </section>
+
+<script>
+const API_BASE = '';
+
+function setStatus(id, text, cls='') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'status ' + cls;
+}
+function setResult(id, data) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+}
+function parseJSON(id) {
+  const raw = document.getElementById(id).value.trim();
+  if (!raw) return {};
+  return JSON.parse(raw);
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** P0 最高 → 像素柱高更大 */
+function levelUrgencyPx(lvl) {
+  const s = String(lvl || '').trim().toUpperCase();
+  const m = /^P(\d+)$/.exec(s);
+  if (!m) return 28;
+  const n = parseInt(m[1], 10);
+  return Math.max(18, 128 - n * 30);
+}
+
+function renderBenchmarkCharts(rows) {
+  const scen = document.getElementById('bench-chart-scenarios');
+  const dist = document.getElementById('bench-chart-distribution');
+  if (!scen || !dist) return;
+  scen.innerHTML = '';
+  dist.innerHTML = '';
+  if (!rows.length) {
+    scen.innerHTML = '<span class="status">暂无数据，点击「运行多场景基准」</span>';
+    dist.innerHTML = '<span class="status">暂无数据</span>';
+    return;
+  }
+  const heights = rows.map(r => levelUrgencyPx(r.top_issue_level));
+  const maxH = Math.max(...heights, 1);
+  rows.forEach(row => {
+    const rawH = levelUrgencyPx(row.top_issue_level);
+    const h = Math.round((rawH / maxH) * 118);
+    const col = document.createElement('div');
+    col.className = 'vchart-col';
+    col.innerHTML =
+      '<div class="bar" style="height:' +
+      h +
+      'px"></div>' +
+      '<div class="lab">' +
+      escapeHtml(row.scenario_name || '-') +
+      '</div>' +
+      '<div class="lvl">' +
+      escapeHtml(row.top_issue_level || '?') +
+      '</div>';
+    scen.appendChild(col);
+  });
+
+  const counts = {};
+  rows.forEach(r => {
+    const k = r.top_issue_level || '未知';
+    counts[k] = (counts[k] || 0) + 1;
+  });
+  const keys = Object.keys(counts).sort((a, b) => {
+    const pa = /^P(\d+)$/.exec(String(a).toUpperCase());
+    const pb = /^P(\d+)$/.exec(String(b).toUpperCase());
+    if (pa && pb) return parseInt(pa[1], 10) - parseInt(pb[1], 10);
+    return String(a).localeCompare(String(b));
+  });
+  const maxC = Math.max(...Object.values(counts), 1);
+  keys.forEach(k => {
+    const c = counts[k];
+    const w = (c / maxC) * 100;
+    const rowEl = document.createElement('div');
+    rowEl.className = 'dist-row';
+    rowEl.innerHTML =
+      '<span class="name">' +
+      escapeHtml(k) +
+      '</span>' +
+      '<div class="track"><div class="fill" style="width:' +
+      w +
+      '%"></div></div>' +
+      '<span class="cnt">' +
+      c +
+      '</span>';
+    dist.appendChild(rowEl);
+  });
+}
+
+function renderTemplateScores(data) {
+  const box = document.getElementById('tpl-score-chart');
+  const hint = document.getElementById('tpl-score-hint');
+  if (!box) return;
+  const arr = Array.isArray(data.selected_templates) ? [...data.selected_templates] : [];
+  arr.sort((a, b) => (Number(b.recommend_score) || 0) - (Number(a.recommend_score) || 0));
+  const maxS = Math.max(...arr.map(t => Number(t.recommend_score) || 0), 1e-6);
+  box.innerHTML = '';
+  if (hint) hint.style.display = arr.length ? 'none' : 'block';
+  if (!arr.length) {
+    box.innerHTML = '<span class="status">无 selected_templates</span>';
+    return;
+  }
+  arr.forEach(t => {
+    const sc = Number(t.recommend_score) || 0;
+    const w = (sc / maxS) * 100;
+    const rowEl = document.createElement('div');
+    rowEl.className = 'hbar-row';
+    rowEl.innerHTML =
+      '<span class="tid" title="' +
+      escapeHtml(t.template_id || '') +
+      '">' +
+      escapeHtml(t.template_id || '-') +
+      '</span>' +
+      '<div class="track"><div class="fill" style="width:' +
+      w +
+      '%"></div></div>' +
+      '<span class="score">' +
+      sc.toFixed(4) +
+      '</span>';
+    box.appendChild(rowEl);
+  });
+}
+
+async function refreshHistory() {
+  setStatus('history-status', '加载中…', 'pending');
+  const limRaw = document.getElementById('history-limit');
+  const lim = Math.min(50, Math.max(1, parseInt(limRaw && limRaw.value, 10) || 20));
+  try {
+    const r = await fetch(API_BASE + '/v1/debug/history?limit=' + lim);
+    const data = await r.json();
+    const list = document.getElementById('history-list');
+    list.innerHTML = '';
+    (data.items || []).forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      const pill = document.createElement('span');
+      pill.className = 'pill ' + item.kind;
+      pill.textContent = item.kind;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.appendChild(pill);
+      meta.appendChild(document.createTextNode(' ' + (item.ts || '')));
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.textContent = '展开/收起';
+      toggle.style.cssText =
+        'float:right;font-size:0.7rem;padding:2px 8px;background:var(--border);color:var(--text);border:none;border-radius:4px;cursor:pointer;';
+      meta.appendChild(toggle);
+      const sum = document.createElement('div');
+      sum.className = 'sum';
+      sum.textContent = item.summary || '';
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(item.data, null, 2);
+      div.appendChild(meta);
+      div.appendChild(sum);
+      div.appendChild(pre);
+      toggle.addEventListener('click', () => div.classList.toggle('expanded'));
+      list.appendChild(div);
+    });
+    const n = (data.items || []).length;
+    setStatus('history-status', '共 ' + n + ' 条 · 容量 ' + (data.capacity ?? '-'), 'ok');
+  } catch (e) {
+    setStatus('history-status', '失败', 'err');
+    document.getElementById('history-list').innerHTML =
+      '<div class="history-item"><span class="status err">' + escapeHtml(String(e)) + '</span></div>';
+  }
+}
+
+async function clearHistory() {
+  setStatus('history-status', '清空中…', 'pending');
+  try {
+    const r = await fetch(API_BASE + '/v1/debug/history', { method: 'DELETE' });
+    await r.json();
+    await refreshHistory();
+  } catch (e) {
+    setStatus('history-status', '清空失败', 'err');
+  }
+}
+
+async function checkHealth() {
+  setStatus('health-status', '请求中…', 'pending');
+  try {
+    const r = await fetch(API_BASE + '/health');
+    const data = await r.json();
+    setResult('health-result', data);
+    const ok = r.ok && data.status === 'ok';
+    setStatus('health-status', ok ? '正常' : '异常', ok ? 'ok' : 'err');
+    document.getElementById('kpi-health').textContent = ok ? '正常' : '异常';
+  } catch (e) {
+    setStatus('health-status', '失败', 'err');
+    setResult('health-result', String(e));
+    document.getElementById('kpi-health').textContent = '失败';
+  }
+}
+
+async function runLoop() {
+  setStatus('loop-status', '执行中…', 'pending');
+  document.getElementById('phase-list').innerHTML = '';
+  let task_input;
+  try { task_input = parseJSON('loop-input'); }
+  catch (e) { setStatus('loop-status', 'JSON错误', 'err'); return; }
+  try {
+    const r = await fetch(API_BASE + '/v1/loop/run', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({task_input})
+    });
+    const data = await r.json();
+    setResult('loop-result', data);
+    setStatus('loop-status', r.ok ? '完成' : '失败', r.ok ? 'ok' : 'err');
+
+    const phases = Array.isArray(data.phases) ? data.phases : [];
+    const okCount = phases.filter(p => p.success).length;
+    const rate = phases.length ? Math.round((okCount / phases.length) * 100) : 0;
+    document.getElementById('kpi-phase-rate').textContent = `${rate}%`;
+
+    const wrap = document.getElementById('phase-list');
+    phases.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'phase-item';
+      const pct = p.success ? 100 : 20;
+      item.innerHTML = `<span>${p.phase || '-'}</span><div class="phase-bar"><span style="width:${pct}%"></span></div><span>${p.success ? 'OK' : 'FAIL'}</span>`;
+      wrap.appendChild(item);
+    });
+    if (r.ok) await refreshHistory();
+  } catch (e) {
+    setStatus('loop-status', '失败', 'err');
+    setResult('loop-result', String(e));
+  }
+}
+
+async function dispatchTask() {
+  setStatus('dispatch-status', '请求中…', 'pending');
+  let payload;
+  try { payload = parseJSON('dispatch-payload'); }
+  catch (e) { setStatus('dispatch-status', 'JSON错误', 'err'); return; }
+  const task_type = document.getElementById('task-type').value;
+  try {
+    const r = await fetch(API_BASE + '/v1/task/dispatch', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({task_type, payload})
+    });
+    const data = await r.json();
+    setResult('dispatch-result', data);
+    setStatus('dispatch-status', r.ok ? '已下发' : '失败', r.ok ? 'ok' : 'err');
+  } catch (e) {
+    setStatus('dispatch-status', '失败', 'err');
+    setResult('dispatch-result', String(e));
+  }
+}
+
+async function runDiagnosisTemplate() {
+  setStatus('diag-status', '执行中…', 'pending');
+  let context;
+  try { context = parseJSON('diag-input'); }
+  catch (e) { setStatus('diag-status', 'JSON错误', 'err'); return; }
+  try {
+    const r = await fetch(API_BASE + '/v1/debug/diagnosis-template', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({context})
+    });
+    const data = await r.json();
+    setResult('diag-result', data);
+    setStatus('diag-status', r.ok ? '完成' : '失败', r.ok ? 'ok' : 'err');
+    const issueCount = Array.isArray(data.priority_order) ? data.priority_order.length : 0;
+    document.getElementById('kpi-issues').textContent = issueCount;
+    if (r.ok) {
+      renderTemplateScores(data);
+      await refreshHistory();
+    }
+  } catch (e) {
+    setStatus('diag-status', '失败', 'err');
+    setResult('diag-result', String(e));
+  }
+}
+
+async function runBenchmark() {
+  setStatus('bench-status', '执行中…', 'pending');
+  try {
+    const r = await fetch(API_BASE + '/v1/debug/multiscenario-benchmark', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({context: {}})
+    });
+    const data = await r.json();
+    setResult('bench-result', data);
+    setStatus('bench-status', r.ok ? '完成' : '失败', r.ok ? 'ok' : 'err');
+
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+    document.getElementById('kpi-scenarios').textContent = rows.length;
+    const tbody = document.getElementById('bench-table-body');
+    tbody.innerHTML = '';
+    rows.forEach(row => {
+      const tr = document.createElement('tr');
+      [
+        row.scenario_name,
+        row.issue_count,
+        row.top_issue_id,
+        row.top_issue_level,
+        row.top_template_id,
+      ].forEach((cell) => {
+        const td = document.createElement('td');
+        td.textContent = cell == null || cell === '' ? '-' : String(cell);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    if (r.ok) {
+      renderBenchmarkCharts(rows);
+      await refreshHistory();
+    } else {
+      renderBenchmarkCharts([]);
+    }
+  } catch (e) {
+    setStatus('bench-status', '失败', 'err');
+    setResult('bench-result', String(e));
+    renderBenchmarkCharts([]);
+  }
+}
+
+async function listSkills() {
+  setStatus('skills-status', '请求中…', 'pending');
+  try {
+    const r = await fetch(API_BASE + '/v1/skills');
+    const data = await r.json();
+    setResult('skills-result', data);
+    setStatus('skills-status', r.ok ? '已加载' : '失败', r.ok ? 'ok' : 'err');
+  } catch (e) {
+    setStatus('skills-status', '失败', 'err');
+    setResult('skills-result', String(e));
+  }
+}
+
+document.getElementById('btn-health').addEventListener('click', checkHealth);
+document.getElementById('btn-loop').addEventListener('click', runLoop);
+document.getElementById('btn-dispatch').addEventListener('click', dispatchTask);
+document.getElementById('btn-diag-template').addEventListener('click', runDiagnosisTemplate);
+document.getElementById('btn-benchmark').addEventListener('click', runBenchmark);
+document.getElementById('btn-skills').addEventListener('click', listSkills);
+document.getElementById('btn-history-refresh').addEventListener('click', refreshHistory);
+document.getElementById('btn-history-clear').addEventListener('click', clearHistory);
+
+checkHealth();
+listSkills();
+renderBenchmarkCharts([]);
+refreshHistory();
+</script>
+</body>
+</html>

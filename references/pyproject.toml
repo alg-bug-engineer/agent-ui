@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "traffic-signal-control-agent"
+version = "0.1.0"
+description = "城市级信控智能体 - 感知-认知-决策-执行-评价-进化六位一体"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Signal Control Agent Team" }]
+dependencies = [
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "pymysql>=1.1",
+    "redis>=5.0",
+    "kafka-python>=2.0",
+    "httpx>=0.25",
+    "influxdb-client>=1.38",
+    "neo4j>=5.0",
+    "minio>=7.0",
+    "chromadb>=0.4",
+    "langchain>=0.1",
+    "langchain-community>=0.0.20",
+    "python-dotenv>=1.0",
+    "pydantic-settings>=2.0",
+    "fastapi>=0.109",
+    "uvicorn>=0.27",
+    "scipy",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio", "black", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

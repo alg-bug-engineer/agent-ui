@@ -1,0 +1,30 @@
+.DS_Store
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
+.venv/
+.venv_test/
+venv/
+
+# IDE/editor settings
+.idea/
+.vscode/
+.cursor/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+
+references/docs/
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/

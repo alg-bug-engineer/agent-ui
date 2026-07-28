@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>信控数据 · 高德地图</title>
+  <link rel="stylesheet" href="/debug/assets/debug-shell.css" />
+  <script defer src="/debug/assets/debug-ui.js"></script>
+  <style>
+    :root {
+      --bg: #0a0f1e;
+      --panel: rgba(12, 20, 34, 0.86);
+      --border: rgba(71, 100, 145, 0.42);
+      --text: #e6edf3;
+      --muted: #7d8fa3;
+      --accent: #3b82f6;
+      --cyan: #22d3ee;
+      --good: #22c55e;
+      --warn: #eab308;
+      --bad: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: "PingFang SC", -apple-system, sans-serif; background: radial-gradient(circle at 28% 12%, #12264d 0, #0a0f1e 34%, #050914 100%); color: var(--text); }
+    .layout { display: flex; height: 100%; }
+    #map { flex: 1; min-width: 0; position: relative; background: #07101f; }
+    #map::after {
+      content: ""; position: absolute; inset: 0; z-index: 210; pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(34, 211, 238, .08), transparent 34%),
+        linear-gradient(180deg, rgba(3, 8, 18, .12), rgba(3, 8, 18, .42));
+      mix-blend-mode: screen;
+    }
+    #fxCanvas { position: absolute; inset: 0; z-index: 260; width: 100%; height: 100%; pointer-events: none; }
+    aside {
+      width: 380px; flex-shrink: 0; background: var(--panel); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; max-height: 100%; backdrop-filter: blur(18px);
+      box-shadow: -18px 0 44px rgba(0, 12, 32, .48);
+    }
+    .head { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .head h1 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
+    .head p { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .scroll { flex: 1; overflow: auto; padding: 10px 12px; }
+    label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; }
+    input[type="text"], input[type="date"], select {
+      width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
+      background: #0d1117; color: var(--text); font-size: 12px; margin-bottom: 10px;
+    }
+    .row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    button {
+      padding: 7px 12px; border-radius: 6px; border: 1px solid var(--border);
+      background: rgba(59, 130, 246, 0.15); color: var(--accent); font-size: 11px; font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary { background: transparent; color: var(--muted); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .status { font-size: 11px; padding: 8px; border-radius: 6px; background: rgba(255,255,255,.04); margin-bottom: 10px; }
+    .status.err { border: 1px solid rgba(239,68,68,.35); color: #fca5a5; }
+    .status.ok { border: 1px solid rgba(34,197,94,.25); color: #86efac; }
+    .list { max-height: 200px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; }
+    .list label.item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin: 0; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 11px; color: var(--text); }
+    .list label.item:last-child { border-bottom: 0; }
+    .list label.item:hover { background: rgba(255,255,255,.04); }
+    .detail { font-size: 11px; line-height: 1.55; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
+    .detail h3 { margin: 0 0 6px; font-size: 12px; color: var(--accent); }
+    pre {
+      margin: 0; padding: 8px; background: #0d1117; border-radius: 6px; overflow: auto; max-height: 220px;
+      font-size: 10px; border: 1px solid var(--border); white-space: pre-wrap; word-break: break-all;
+    }
+    .chip { display: inline-block; padding: 2px 6px; border-radius: 4px; background: rgba(59,130,246,.2); font-size: 10px; margin-right: 4px; }
+    .viz-legend {
+      font-size: 10px; color: var(--muted); margin-bottom: 8px; padding: 8px; border: 1px solid var(--border);
+      border-radius: 6px; background: #0d1117; line-height: 1.55; display: none;
+    }
+    .viz-legend strong { color: var(--text); }
+    .flow-gradient { height: 7px; border-radius: 4px; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); margin: 6px 0 4px; }
+    .map-metrics-panel {
+      position: absolute; top: 12px; left: 12px; z-index: 320; width: min(520px, calc(100% - 24px));
+      max-height: min(44vh, 420px); display: none; flex-direction: column;
+      background: rgba(12, 20, 34, 0.82); border: 1px solid rgba(34, 211, 238, .24); border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.45), 0 0 24px rgba(34,211,238,.08); font-size: 11px; color: var(--text); overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+    .map-metrics-panel.visible { display: flex; }
+    .map-metrics-panel .mphd {
+      padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 700; color: var(--accent);
+      flex-shrink: 0;
+    }
+    .map-metrics-panel .mpbd { padding: 8px 10px 10px; overflow: auto; flex: 1; min-height: 0; }
+    .map-metrics-panel .mphint { font-size: 10px; color: var(--muted); margin-bottom: 8px; line-height: 1.45; }
+    .map-metrics-panel .mpgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .map-metrics-panel .mpgrid label { margin-bottom: 2px; }
+    .map-metrics-panel .mpgrid input {
+      width: 100%; margin-bottom: 0; padding: 5px 8px; font-size: 11px;
+    }
+    .map-metrics-panel table {
+      width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 6px;
+    }
+    .map-metrics-panel th, .map-metrics-panel td {
+      border: 1px solid var(--border); padding: 3px 5px; text-align: right; white-space: nowrap;
+    }
+    .map-metrics-panel th:first-child, .map-metrics-panel td:first-child { text-align: left; }
+    .map-metrics-panel th { background: rgba(0,0,0,.25); color: var(--muted); font-weight: 600; }
+    .map-metrics-panel .mptabs { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .map-metrics-panel .mptabs button {
+      padding: 4px 10px; font-size: 10px; margin: 0;
+    }
+    .map-metrics-panel .mptabs button.on { background: rgba(59, 130, 246, 0.35); color: #dbeafe; }
+    .map-hud {
+      position: absolute; top: 12px; right: 12px; z-index: 330; width: 310px;
+      border: 1px solid rgba(34, 211, 238, .24); border-radius: 14px;
+      background: linear-gradient(135deg, rgba(8, 15, 29, .78), rgba(13, 26, 47, .72));
+      box-shadow: 0 16px 44px rgba(0, 12, 32, .46), 0 0 28px rgba(34, 211, 238, .08);
+      backdrop-filter: blur(18px); overflow: hidden; pointer-events: auto;
+    }
+    .map-hud-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 9px 11px; border-bottom: 1px solid rgba(71, 100, 145, .32);
+      font-size: 11px; color: var(--muted);
+    }
+    .agent-pill {
+      color: #bff7ff; border: 1px solid rgba(34, 211, 238, .3); border-radius: 999px;
+      padding: 3px 8px; background: rgba(34, 211, 238, .08); box-shadow: 0 0 14px rgba(34,211,238,.08);
+    }
+    .map-hud-body { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 10px 11px; }
+    .hud-metric { border: 1px solid rgba(71, 100, 145, .26); border-radius: 10px; padding: 7px 8px; background: rgba(255,255,255,.035); }
+    .hud-val { font-family: "JetBrains Mono", "SFMono-Regular", monospace; font-size: 17px; font-weight: 800; line-height: 1; color: #dff7ff; }
+    .hud-lab { margin-top: 4px; font-size: 10px; color: var(--muted); }
+    .hud-flow { height: 2px; margin: 0 11px 10px; overflow: hidden; border-radius: 999px; background: rgba(34,211,238,.12); }
+    .hud-flow span { display: block; height: 100%; width: 42%; border-radius: inherit; background: linear-gradient(90deg, transparent, #22d3ee, #fbbf24); animation: hudFlow 2.4s linear infinite; }
+    @keyframes hudFlow { from { transform: translateX(-110%); } to { transform: translateX(250%); } }
+    .marker-dot {
+      position: relative; width: 11px; height: 11px; border-radius: 50%; border: 1px solid rgba(255,255,255,.9);
+      background: #64748b; box-shadow: 0 0 10px rgba(100,116,139,.55);
+    }
+    .marker-dot::after {
+      content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 1px solid currentColor;
+      opacity: 0; transform: scale(.35);
+    }
+    .marker-dot.on { width: 16px; height: 16px; color: var(--cyan); box-shadow: 0 0 18px currentColor, 0 0 34px rgba(34,211,238,.2); }
+    .marker-dot.on::after { animation: nodePulse 2.6s ease-out infinite; }
+    .marker-dot.hot { color: #fb7185; animation: hotBreath 1.6s ease-in-out infinite; }
+    @keyframes nodePulse { 0% { opacity: .75; transform: scale(.35); } 70%, 100% { opacity: 0; transform: scale(1.65); } }
+    @keyframes hotBreath { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.35); } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div id="map">
+      <canvas id="fxCanvas" aria-hidden="true"></canvas>
+      <div id="mapMetricsPanel" class="map-metrics-panel" aria-label="车道小时指标"></div>
+      <div class="map-hud" aria-label="地图态势概览">
+        <div class="map-hud-head">
+          <span class="agent-pill">区域/路口智能体 · 2D 态势</span>
+          <span id="hudStatus">扫描待命</span>
+        </div>
+        <div class="map-hud-body">
+          <div class="hud-metric"><div class="hud-val" id="hudSelected">0</div><div class="hud-lab">选中路口</div></div>
+          <div class="hud-metric"><div class="hud-val" id="hudFlow">—</div><div class="hud-lab">总流量</div></div>
+          <div class="hud-metric"><div class="hud-val" id="hudLevel">—</div><div class="hud-lab">负荷状态</div></div>
+        </div>
+        <div class="hud-flow"><span></span></div>
+      </div>
+    </div>
+    <aside>
+      <div class="head">
+        <h1>MySQL 信控数据地图</h1>
+        <p>路口、渠化、配时（阶段表）、流量、排队；支持多选与视野筛选。需配置 MYSQL_URL 与高德 Key（/v1/demo/frontend-config）。默认库内坐标为 WGS-84，接口已转为 GCJ-02 叠加高德；若库已是 GCJ-02 请设环境变量 MYSQL_INTERSECTION_LONLAT_SRS=gcj02。</p>
+        <div class="sc-action-row" style="margin-top:10px;">
+          <a class="sc-action" href="/debug/">调试入口</a>
+          <a class="sc-action primary" href="/debug/city-demo.html">城市总览</a>
+          <a class="sc-action" href="/debug/geocode-fix.html">坐标修正</a>
+        </div>
+      </div>
+      <div class="scroll">
+        <div id="banner" class="status">正在检查数据源…</div>
+        <label>统计日期（流量/排队）</label>
+        <input type="date" id="dataDate" />
+        <div class="row">
+          <button type="button" id="btnRefreshMetrics">刷新选中指标</button>
+          <button type="button" id="btnDefaultDate" class="secondary">填入最新日期</button>
+        </div>
+        <label>搜索路口名称</label>
+        <input type="text" id="search" placeholder="关键字过滤列表…" />
+        <div class="row">
+          <button type="button" id="btnSelectAll">全选列表</button>
+          <button type="button" id="btnClear">清空选择</button>
+          <button type="button" id="btnInView">选中视野内</button>
+        </div>
+        <label>路口列表（勾选叠加详情）</label>
+        <div class="list" id="intList"></div>
+        <div class="detail">
+          <h3>选中路口详情</h3>
+          <div id="detailHint" style="color:var(--muted);margin-bottom:6px;">点击地图标记或只选一个路口查看完整 JSON。</div>
+          <div class="viz-legend" id="vizLegend"></div>
+          <pre id="detailPre">{}</pre>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <script>
+    const API = location.origin;
+    let map = null;
+    let intersections = [];
+    const selected = new Set();
+    const idToMarker = new Map();
+    let metricsById = {};
+    let maxFlow = 1;
+    let vizOverlays = [];
+    let lastDetailWithHour = null;
+    const visualFx = {
+      ctx: null,
+      dpr: 1,
+      raf: 0,
+      laneParticles: [],
+      scanStart: Date.now(),
+    };
+
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function hourInRange(hr, h0, h1) {
+      hr = Number(hr);
+      if (Number.isNaN(hr)) return false;
+      h0 = Number(h0);
+      h1 = Number(h1);
+      if (Number.isNaN(h0)) h0 = 0;
+      if (Number.isNaN(h1)) h1 = 23;
+      if (h0 <= h1) return hr >= h0 && hr <= h1;
+      return hr >= h0 || hr <= h1;
+    }
+
+    function patchDetailWithHourRange(detail, h0, h1) {
+      const out =
+        typeof structuredClone === 'function' ? structuredClone(detail) : JSON.parse(JSON.stringify(detail));
+      const m = out.lane_hour_metrics;
+      const lanes = out.channel_overlay && out.channel_overlay.lanes;
+      if (!lanes || !lanes.length) return out;
+      const tr = (m && m.traffic && m.traffic.rows) || [];
+      const qu = (m && m.queue && m.queue.rows) || [];
+      const flowMap = new Map();
+      tr.forEach((r) => {
+        const hr = r.hr != null ? r.hr : r.hour;
+        if (!hourInRange(hr, h0, h1)) return;
+        const k = String(r.entry || '') + '\t' + Number(r.lane_num);
+        flowMap.set(k, (flowMap.get(k) || 0) + Number(r.flow || 0));
+      });
+      const qNum = new Map();
+      const qDen = new Map();
+      qu.forEach((r) => {
+        const hr = r.hr != null ? r.hr : r.hour;
+        if (!hourInRange(hr, h0, h1)) return;
+        const k = String(r.face_direction || '') + '\t' + Number(r.lane_num);
+        const n = Number(r.n || 0);
+        const avg = Number(r.queue_avg || 0);
+        qNum.set(k, (qNum.get(k) || 0) + avg * n);
+        qDen.set(k, (qDen.get(k) || 0) + n);
+      });
+      out.channel_overlay = {
+        ...out.channel_overlay,
+        lanes: lanes.map((lane) => {
+          const fk = String(lane.approach || '') + '\t' + Number(lane.lane_num);
+          let flow = Number(lane.traffic_flow) || 0;
+          if (tr.length) flow = flowMap.has(fk) ? flowMap.get(fk) : 0;
+          let qm = lane.queue_max_m;
+          if (qu.length) {
+            const den = qDen.get(fk);
+            if (den && den > 0) qm = qNum.get(fk) / den;
+            else qm = null;
+          }
+          return { ...lane, traffic_flow: flow, queue_max_m: qm, queue_avg_m: qm };
+        }),
+      };
+      return out;
+    }
+
+    function buildPivotTableHtml(rows, mode) {
+      if (!rows.length) return '<div class="mphint">无分时数据（或库表缺少小时字段）。</div>';
+      const laneKey = (r) =>
+        mode === 'traffic'
+          ? String(r.entry || '未知') + ' · 车道' + r.lane_num
+          : String(r.face_direction || '未知') + ' · 车道' + r.lane_num;
+      const hourSet = new Set();
+      const cell = new Map();
+      rows.forEach((r) => {
+        const hr = Number(r.hr != null ? r.hr : r.hour);
+        if (Number.isNaN(hr)) return;
+        hourSet.add(hr);
+        const lk = laneKey(r);
+        const k = lk + '\x00' + hr;
+        if (mode === 'traffic') {
+          cell.set(k, (cell.get(k) || 0) + Number(r.flow || 0));
+        } else {
+          cell.set(k, Number(r.queue_avg != null ? r.queue_avg : NaN));
+        }
+      });
+      const hours = [...hourSet].sort((a, b) => a - b);
+      const laneLabels = [...new Set(rows.map(laneKey))].sort();
+      let html =
+        mode === 'traffic'
+          ? '<div class="mphint">单元格：该小时段内 <strong>流量加和</strong>（与下方时段筛选一致时为多小时之和）。</div>'
+          : '<div class="mphint">单元格：该小时内的排队长度 <strong>样本平均</strong>（m）。</div>';
+      html += '<table><thead><tr><th>进口·车道</th>';
+      hours.forEach((hr) => {
+        html += '<th>' + hr + 'h</th>';
+      });
+      html += '</tr></thead><tbody>';
+      laneLabels.forEach((lk) => {
+        html += '<tr><td>' + escapeHtml(lk) + '</td>';
+        hours.forEach((hr) => {
+          const v = cell.get(lk + '\x00' + hr);
+          if (mode === 'traffic') {
+            html += '<td>' + (v != null ? v : '—') + '</td>';
+          } else {
+            html += '<td>' + (v != null && !Number.isNaN(v) ? Number(v).toFixed(1) : '—') + '</td>';
+          }
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function hideMapMetricsPanel() {
+      const el = document.getElementById('mapMetricsPanel');
+      if (!el) return;
+      el.classList.remove('visible');
+      el.innerHTML = '';
+      lastDetailWithHour = null;
+      window.signalctlApplyHourRange = null;
+    }
+
+    function renderMapMetricsPanel(detail) {
+      const el = document.getElementById('mapMetricsPanel');
+      if (!el) return;
+      lastDetailWithHour = detail;
+      const m = detail.lane_hour_metrics || {};
+      const tr = (m.traffic && m.traffic.rows) || [];
+      const qu = (m.queue && m.queue.rows) || [];
+      const nm = (detail.intersection && detail.intersection.name) || '';
+
+      const noteTraffic =
+        !m.traffic || !m.traffic.hour_dimension
+          ? '<span style="color:#fbbf24">流量表未识别小时列，无车道×小时矩阵。</span>'
+          : '流量 · ' +
+            escapeHtml(String(m.traffic.data_date || '')) +
+            ' · 小时：<code style="font-size:9px">' +
+            escapeHtml(String(m.traffic.hour_dimension)) +
+            '</code>';
+      const noteQueue =
+        !m.queue || !m.queue.hour_dimension
+          ? '<span style="color:#fbbf24">排队表未识别小时列，无车道×小时矩阵。</span>'
+          : '排队 · ' +
+            escapeHtml(String(m.queue.data_date || '')) +
+            ' · 小时：<code style="font-size:9px">' +
+            escapeHtml(String(m.queue.hour_dimension)) +
+            '</code>';
+
+      el.innerHTML =
+        '<div class="mphd">指标 · ' +
+        escapeHtml(nm) +
+        '</div><div class="mpbd">' +
+        '<div class="mphint">' +
+        '时段内：<strong>流量</strong>为各小时流量<strong>加和</strong>；<strong>排队</strong>为各小时样本平均按样本量<strong>加权平均</strong>。跨夜时段可设如 22–6。' +
+        '</div>' +
+        '<div class="mpgrid">' +
+        '<div><label>开始小时 (0–23)</label><input type="number" id="mapHourLo" min="0" max="23" value="0" onchange="window.signalctlApplyHourRange&&window.signalctlApplyHourRange()" oninput="window.signalctlApplyHourRange&&window.signalctlApplyHourRange()" /></div>' +
+        '<div><label>结束小时 (0–23)</label><input type="number" id="mapHourHi" min="0" max="23" value="23" onchange="window.signalctlApplyHourRange&&window.signalctlApplyHourRange()" oninput="window.signalctlApplyHourRange&&window.signalctlApplyHourRange()" /></div>' +
+        '</div>' +
+        '<div class="mptabs">' +
+        '<button type="button" class="on" data-tab="traffic">流量 车道×小时</button>' +
+        '<button type="button" data-tab="queue">排队 车道×小时</button>' +
+        '</div>' +
+        '<div id="mapPivotTraffic">' +
+        '<div class="mphint">' +
+        noteTraffic +
+        '</div>' +
+        buildPivotTableHtml(tr, 'traffic') +
+        '</div>' +
+        '<div id="mapPivotQueue" style="display:none">' +
+        '<div class="mphint">' +
+        noteQueue +
+        '</div>' +
+        buildPivotTableHtml(qu, 'queue') +
+        '</div>' +
+        '</div>';
+
+      el.classList.add('visible');
+
+      el.querySelectorAll('.mptabs button').forEach((btn) => {
+        btn.onclick = () => {
+          el.querySelectorAll('.mptabs button').forEach((b) => b.classList.remove('on'));
+          btn.classList.add('on');
+          const t = btn.getAttribute('data-tab');
+          document.getElementById('mapPivotTraffic').style.display = t === 'traffic' ? 'block' : 'none';
+          document.getElementById('mapPivotQueue').style.display = t === 'queue' ? 'block' : 'none';
+        };
+      });
+
+      window.signalctlApplyHourRange = function () {
+        if (
+          !lastDetailWithHour ||
+          !lastDetailWithHour.channel_overlay ||
+          !lastDetailWithHour.channel_overlay.lanes ||
+          !lastDetailWithHour.channel_overlay.lanes.length
+        ) {
+          return;
+        }
+        const lo = parseInt(document.getElementById('mapHourLo').value, 10);
+        const hi = parseInt(document.getElementById('mapHourHi').value, 10);
+        const lo2 = Math.max(0, Math.min(23, Number.isNaN(lo) ? 0 : lo));
+        const hi2 = Math.max(0, Math.min(23, Number.isNaN(hi) ? 23 : hi));
+        const patched = patchDetailWithHourRange(lastDetailWithHour, lo2, hi2);
+        drawChannelOverlay(patched);
+      };
+
+      if (detail.channel_overlay && detail.channel_overlay.lanes && detail.channel_overlay.lanes.length) {
+        window.signalctlApplyHourRange();
+      }
+    }
+
+    /** 渠化 dir：0北 1东北 2东 3东南 4南 5西南 6西 7西北；方位角为自正北顺时针（与地图绘制一致） */
+    const DIR_BEARING_OUT = { 0: 0, 1: 45, 2: 90, 3: 135, 4: 180, 5: 225, 6: 270, 7: 315 };
+
+    function axisComponents(bearingDeg) {
+      const r = (bearingDeg * Math.PI) / 180;
+      return [Math.sin(r), Math.cos(r)];
+    }
+
+    function cornerDelta(lng, lat, eastM, northM) {
+      const dLng = eastM / (111320 * Math.cos((lat * Math.PI) / 180));
+      const dLat = northM / 111320;
+      return [dLng, dLat];
+    }
+
+    /** 沿进口方向 + 垂直侧向偏移（米）生成车道四边形路径 */
+    function laneStripPath(centerLng, centerLat, dirCode, lateralM, innerM, outerM, laneWm) {
+      const base = DIR_BEARING_OUT[dirCode];
+      const out = base !== undefined ? base : (Math.abs(dirCode) % 8) * 45;
+      const [ae, an] = axisComponents(out);
+      const [pe, pn] = axisComponents(out + 90);
+      const hw = laneWm * 0.46;
+      const pts = [];
+      [
+        [innerM, lateralM - hw],
+        [outerM, lateralM - hw],
+        [outerM, lateralM + hw],
+        [innerM, lateralM + hw],
+      ].forEach(([along, latOff]) => {
+        const eastM = ae * along + pe * latOff;
+        const northM = an * along + pn * latOff;
+        const d = cornerDelta(centerLng, centerLat, eastM, northM);
+        pts.push([centerLng + d[0], centerLat + d[1]]);
+      });
+      return pts;
+    }
+
+    function laneHeatColor(flow, maxF) {
+      const t = maxF > 0 ? Math.min(1, flow / maxF) : 0;
+      const h = Math.round(120 - t * 120);
+      return 'hsl(' + h + ',72%,46%)';
+    }
+
+    function laneCenterLine(centerLng, centerLat, dirCode, lateralM, innerM, outerM) {
+      const base = DIR_BEARING_OUT[dirCode];
+      const out = base !== undefined ? base : (Math.abs(dirCode) % 8) * 45;
+      const [ae, an] = axisComponents(out);
+      const [pe, pn] = axisComponents(out + 90);
+      return [innerM, outerM].map((along) => {
+        const d = cornerDelta(centerLng, centerLat, ae * along + pe * lateralM, an * along + pn * lateralM);
+        return [centerLng + d[0], centerLat + d[1]];
+      });
+    }
+
+    function ensureFxCanvas() {
+      const canvas = document.getElementById('fxCanvas');
+      if (!canvas) return null;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+      }
+      visualFx.dpr = dpr;
+      visualFx.ctx = canvas.getContext('2d');
+      return canvas;
+    }
+
+    function lngLatToCanvas(lng, lat) {
+      if (!map) return null;
+      const p = map.lngLatToContainer(new AMap.LngLat(lng, lat));
+      return [p.x * visualFx.dpr, p.y * visualFx.dpr];
+    }
+
+    function selectedLoadSummary() {
+      const ids = Array.from(selected);
+      const flow = ids.reduce((sum, id) => sum + Number((metricsById[id] && metricsById[id].total_flow) || 0), 0);
+      const avg = ids.length ? flow / ids.length : 0;
+      return { ids, flow, avg };
+    }
+
+    function updateHud() {
+      const { ids, flow, avg } = selectedLoadSummary();
+      const selectedEl = document.getElementById('hudSelected');
+      const flowEl = document.getElementById('hudFlow');
+      const levelEl = document.getElementById('hudLevel');
+      const statusEl = document.getElementById('hudStatus');
+      if (selectedEl) selectedEl.textContent = ids.length;
+      if (flowEl) flowEl.textContent = flow > 0 ? flow : '—';
+      if (levelEl) {
+        levelEl.textContent = ids.length === 0 ? '—' : avg > maxFlow * 0.72 ? '高' : avg > maxFlow * 0.42 ? '中' : '稳';
+        levelEl.style.color = ids.length === 0 ? '' : avg > maxFlow * 0.72 ? '#fb7185' : avg > maxFlow * 0.42 ? '#fbbf24' : '#86efac';
+      }
+      if (statusEl) statusEl.textContent = ids.length === 1 ? '渠化扫描中' : ids.length > 1 ? '区域态势扫描' : '扫描待命';
+    }
+
+    function refreshVisualFxFromDetail(detail) {
+      visualFx.laneParticles = [];
+      const spec = detail && detail.channel_overlay;
+      const inter = detail && detail.intersection;
+      if (!inter || !spec || !spec.lanes || !spec.lanes.length) return;
+      const lanes = spec.lanes;
+      const grouped = {};
+      lanes.forEach((lane) => {
+        const k = String(lane.dir);
+        if (!grouped[k]) grouped[k] = [];
+        grouped[k].push(lane);
+      });
+      const laneWm = 3.35;
+      const innerM = 16;
+      Object.keys(grouped).forEach((dKey) => {
+        const dirCode = parseInt(dKey, 10);
+        const group = grouped[dKey].sort((a, b) => a.lane_num - b.lane_num);
+        const maxLocalFlow = Math.max(1, ...group.map((lane) => Number(lane.traffic_flow) || 0));
+        group.forEach((lane, idx) => {
+          const flow = Number(lane.traffic_flow) || 0;
+          if (flow <= 0) return;
+          const outerM = innerM + 38 + Math.min(62, (Number(lane.lane_len_m) || 0) * 0.38);
+          const lateral = (idx - (group.length - 1) / 2) * laneWm;
+          const line = laneCenterLine(inter.lon, inter.lat, dirCode, lateral, innerM, outerM);
+          const t = Math.min(1, flow / maxLocalFlow);
+          const count = 2 + Math.round(t * 5);
+          for (let i = 0; i < count; i += 1) {
+            visualFx.laneParticles.push({
+              line,
+              phase: (i / count + Math.random() * 0.16) % 1,
+              speed: 0.003 + t * 0.006,
+              color: t > 0.72 ? '#fb7185' : t > 0.42 ? '#fbbf24' : '#34d399',
+              size: 1.5 + t * 2.2,
+            });
+          }
+        });
+      });
+      visualFx.scanStart = Date.now();
+    }
+
+    function startVisualFxLoop() {
+      ensureFxCanvas();
+      if (visualFx.raf) cancelAnimationFrame(visualFx.raf);
+      const draw = () => {
+        const canvas = ensureFxCanvas();
+        const ctx = visualFx.ctx;
+        if (!canvas || !ctx) return;
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        const now = Date.now();
+        const pulse = (now % 2200) / 2200;
+
+        selected.forEach((id) => {
+          const it = intersections.find((x) => x.id === id);
+          if (!it) return;
+          const p = lngLatToCanvas(it.lon, it.lat);
+          if (!p) return;
+          const flow = Number((metricsById[id] && metricsById[id].total_flow) || 0);
+          const t = Math.min(1, flow / Math.max(maxFlow, 1));
+          const color = t > 0.72 ? '251,113,133' : t > 0.42 ? '251,191,36' : '34,211,238';
+          const radius = (18 + pulse * 34 + t * 22) * visualFx.dpr;
+          ctx.beginPath();
+          ctx.arc(p[0], p[1], radius, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(' + color + ',' + (0.42 * (1 - pulse)) + ')';
+          ctx.lineWidth = 1.2 * visualFx.dpr;
+          ctx.stroke();
+        });
+
+        const scanAge = ((now - visualFx.scanStart) % 2600) / 2600;
+        if (selected.size === 1) {
+          const id = Array.from(selected)[0];
+          const it = intersections.find((x) => x.id === id);
+          const p = it && lngLatToCanvas(it.lon, it.lat);
+          if (p) {
+            const angle = scanAge * Math.PI * 2;
+            const len = 150 * visualFx.dpr;
+            ctx.save();
+            ctx.translate(p[0], p[1]);
+            ctx.rotate(angle);
+            const grad = ctx.createLinearGradient(0, 0, len, 0);
+            grad.addColorStop(0, 'rgba(255,255,255,.72)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 2 * visualFx.dpr;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(len, 0);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+
+        visualFx.laneParticles.forEach((pt) => {
+          pt.phase = (pt.phase + pt.speed) % 1;
+          const a = lngLatToCanvas(pt.line[0][0], pt.line[0][1]);
+          const b = lngLatToCanvas(pt.line[1][0], pt.line[1][1]);
+          if (!a || !b) return;
+          const x = a[0] + (b[0] - a[0]) * pt.phase;
+          const y = a[1] + (b[1] - a[1]) * pt.phase;
+          const glow = ctx.createRadialGradient(x, y, 0, x, y, pt.size * 5 * visualFx.dpr);
+          glow.addColorStop(0, pt.color);
+          glow.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(x, y, pt.size * 5 * visualFx.dpr, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        visualFx.raf = requestAnimationFrame(draw);
+      };
+      draw();
+    }
+
+    function clearChannelViz() {
+      if (!map) return;
+      vizOverlays.forEach((x) => {
+        x.setMap(null);
+      });
+      vizOverlays = [];
+      visualFx.laneParticles = [];
+      const leg = document.getElementById('vizLegend');
+      if (leg) {
+        leg.style.display = 'none';
+        leg.innerHTML = '';
+      }
+    }
+
+    function drawChannelOverlay(detail) {
+      clearChannelViz();
+      const spec = detail.channel_overlay;
+      const inter = detail.intersection;
+      if (!map || !inter || !spec || !spec.lanes || !spec.lanes.length) return;
+
+      const lng = inter.lon;
+      const lat = inter.lat;
+      const lanes = spec.lanes;
+      const maxFlow = Math.max(1, ...lanes.map((l) => Number(l.traffic_flow) || 0));
+      const maxQ = Math.max(1, ...lanes.map((l) => Number(l.queue_max_m) || 0));
+
+      const byDir = {};
+      lanes.forEach((l) => {
+        const k = String(l.dir);
+        if (!byDir[k]) byDir[k] = [];
+        byDir[k].push(l);
+      });
+
+      const laneWm = 3.35;
+      const innerM = 12;
+      const polysForFit = [];
+
+      Object.keys(byDir).forEach((dKey) => {
+        const dirCode = parseInt(dKey, 10);
+        const group = byDir[dKey].sort((a, b) => a.lane_num - b.lane_num);
+        const n = group.length;
+        group.forEach((lane, idx) => {
+          const lateral = (idx - (n - 1) / 2) * laneWm;
+          const outerM = innerM + 34 + Math.min(58, (Number(lane.lane_len_m) || 0) * 0.38);
+          const path = laneStripPath(lng, lat, dirCode, lateral, innerM, outerM, laneWm);
+          const flow = Number(lane.traffic_flow) || 0;
+          const qm = Number(lane.queue_max_m);
+          const qNorm = maxQ > 0 && !Number.isNaN(qm) ? Math.min(1, qm / maxQ) : 0;
+          const strokeW = 1 + qNorm * 11;
+          const poly = new AMap.Polygon({
+            path: path,
+            fillColor: laneHeatColor(flow, maxFlow),
+            fillOpacity: 0.56,
+            strokeColor: qm > 0.5 ? '#fb7185' : '#64748b',
+            strokeOpacity: 0.92,
+            strokeWeight: Math.max(1, strokeW),
+            zIndex: 120,
+            cursor: 'pointer',
+          });
+          poly.setMap(map);
+          vizOverlays.push(poly);
+          polysForFit.push(poly);
+
+          const ctrAlong = (innerM + outerM) / 2;
+          const b = DIR_BEARING_OUT[dirCode] !== undefined ? DIR_BEARING_OUT[dirCode] : (Math.abs(dirCode) % 8) * 45;
+          const [ae, an] = axisComponents(b);
+          const [pe, pn] = axisComponents(b + 90);
+          const d1 = cornerDelta(lng, lat, ae * ctrAlong + pe * lateral, an * ctrAlong + pn * lateral);
+          const qtxt = lane.queue_max_m != null && !Number.isNaN(Number(lane.queue_max_m)) ? Number(lane.queue_max_m).toFixed(1) + 'm' : '—';
+          const txt = new AMap.Text({
+            text: lane.approach + '·车道' + lane.lane_num + '\n流量 ' + flow + '\n排队 ' + qtxt,
+            position: [lng + d1[0], lat + d1[1]],
+            style: {
+              padding: '3px 6px',
+              'background-color': 'rgba(12,16,24,0.88)',
+              'border-radius': '6px',
+              'border': '1px solid rgba(100,116,139,0.45)',
+              'font-size': '10px',
+              color: '#e2e8f0',
+              'text-align': 'center',
+              'line-height': '1.35',
+            },
+            zIndex: 200,
+          });
+          txt.setMap(map);
+          vizOverlays.push(txt);
+
+          poly.on('mouseover', () => poly.setOptions({ fillOpacity: 0.82 }));
+          poly.on('mouseout', () => poly.setOptions({ fillOpacity: 0.56 }));
+        });
+      });
+
+      const hub = new AMap.Circle({
+        center: [lng, lat],
+        radius: 8,
+        strokeColor: '#38bdf8',
+        strokeWeight: 2,
+        fillColor: 'rgba(56,189,248,0.22)',
+        zIndex: 130,
+      });
+      hub.setMap(map);
+      vizOverlays.push(hub);
+
+      const leg = document.getElementById('vizLegend');
+      leg.style.display = 'block';
+      leg.innerHTML =
+        '<strong>渠化示意</strong>（示意几何，非测绘精度）<br/>' +
+        '条带：<span style="color:#86efac">绿→黄→红</span> 表示该车道相对流量；' +
+        '<span style="color:#fb7185">描边越粗</span> 表示排队越长。<div class="flow-gradient"></div>' +
+        '<span style="opacity:.88">' +
+        (spec.legend && spec.legend.queue ? spec.legend.queue : '') +
+        '</span>';
+
+      map.setZoomAndCenter(Math.max(map.getZoom(), 17), [lng, lat], false, 280);
+      if (polysForFit.length) {
+        try {
+          map.setFitView(polysForFit, false, [70, 70, 70, 400]);
+        } catch (e) {}
+      }
+      refreshVisualFxFromDetail(detail);
+    }
+
+    function flowColor(flow) {
+      const t = Math.min(1, flow / Math.max(maxFlow, 1));
+      if (t < 0.25) return '#22c55e';
+      if (t < 0.5) return '#eab308';
+      if (t < 0.75) return '#f97316';
+      return '#ef4444';
+    }
+
+    async function loadAmap() {
+      const cfgRes = await fetch(API + '/v1/demo/frontend-config');
+      const cfg = await cfgRes.json();
+      if (!cfg.amapJsApiKey) throw new Error('未配置 AMAP_JS_API_KEY');
+      if (cfg.amapSecurityJsCode) window._AMapSecurityConfig = { securityJsCode: cfg.amapSecurityJsCode };
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src =
+          'https://webapi.amap.com/maps?v=2.0&key=' +
+          encodeURIComponent(cfg.amapJsApiKey) +
+          '&plugin=AMap.Scale,AMap.ToolBar,AMap.Polygon,AMap.Circle,AMap.Text';
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('高德脚本加载失败，请检查网络或将高德地图 JS 本地化后重试'));
+        document.head.appendChild(s);
+      });
+    }
+
+    function renderList(filter) {
+      const box = document.getElementById('intList');
+      const kw = (filter || '').trim().toLowerCase();
+      box.innerHTML = '';
+      intersections.forEach((it) => {
+        if (kw && !(it.name || '').toLowerCase().includes(kw) && !it.id.toLowerCase().includes(kw)) return;
+        const lab = document.createElement('label');
+        lab.className = 'item';
+        const ck = document.createElement('input');
+        ck.type = 'checkbox';
+        ck.checked = selected.has(it.id);
+        ck.addEventListener('change', () => {
+          if (ck.checked) selected.add(it.id); else selected.delete(it.id);
+          syncMarkersStyle();
+          loadDetailIfSingle();
+        });
+        lab.appendChild(ck);
+        const span = document.createElement('span');
+        const m = metricsById[it.id];
+        const flow = m ? m.total_flow : null;
+        span.textContent = (it.name || it.id) + (flow != null ? ' · 流量 ' + flow : '');
+        lab.appendChild(span);
+        box.appendChild(lab);
+      });
+    }
+
+    function syncMarkersStyle() {
+      maxFlow = 1;
+      selected.forEach((id) => {
+        const m = metricsById[id];
+        if (m && m.total_flow > maxFlow) maxFlow = m.total_flow;
+      });
+      idToMarker.forEach((mk, id) => {
+        const on = selected.has(id);
+        const flow = (metricsById[id] && metricsById[id].total_flow) || 0;
+        const col = on ? flowColor(flow) : '#64748b';
+        const hot = on && flow >= maxFlow * 0.72;
+        mk.setContent(
+          '<div class="marker-dot ' +
+            (on ? 'on ' : '') +
+            (hot ? 'hot' : '') +
+            '" style="background:' +
+            col +
+            ';color:' +
+            col +
+            '"></div>'
+        );
+      });
+      updateHud();
+    }
+
+    async function fetchMetrics() {
+      const ids = Array.from(selected);
+      if (!ids.length) {
+        metricsById = {};
+        syncMarkersStyle();
+        renderList(document.getElementById('search').value);
+        return;
+      }
+      const dd = document.getElementById('dataDate').value || null;
+      const res = await fetch(API + '/v1/signalctl-map/metrics/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, data_date: dd || null }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      metricsById = data.by_id || {};
+      if (data.traffic_data_date && !document.getElementById('dataDate').value) {
+        document.getElementById('dataDate').value = String(data.traffic_data_date).slice(0, 10);
+      }
+      syncMarkersStyle();
+      renderList(document.getElementById('search').value);
+    }
+
+    async function loadDetailIfSingle() {
+      const ids = Array.from(selected);
+      const pre = document.getElementById('detailPre');
+      const hint = document.getElementById('detailHint');
+      if (ids.length !== 1) {
+        clearChannelViz();
+        hideMapMetricsPanel();
+        hint.textContent = ids.length === 0 ? '未选择路口。' : '已选 ' + ids.length + ' 个路口；单选时显示完整详情并在地图绘制渠化条带。';
+        pre.textContent = JSON.stringify(ids.map((id) => ({ id, summary: metricsById[id] || null })), null, 2);
+        return;
+      }
+      hint.textContent = '加载中…';
+      const id = ids[0];
+      const dd = document.getElementById('dataDate').value || null;
+      const res = await fetch(API + '/v1/signalctl-map/intersections/' + encodeURIComponent(id) + '/detail' + (dd ? '?data_date=' + encodeURIComponent(dd) : ''));
+      if (!res.ok) {
+        clearChannelViz();
+        hideMapMetricsPanel();
+        hint.textContent = '加载失败';
+        pre.textContent = await res.text();
+        return;
+      }
+      const j = await res.json();
+      hint.innerHTML =
+        '<span class="chip">' +
+        (j.intersection && j.intersection.name) +
+        '</span>地图渠化条带 + 指标面板（车道×小时）+ 下方 JSON';
+      pre.textContent = JSON.stringify(j, null, 2);
+      renderMapMetricsPanel(j);
+      if (!(j.channel_overlay && j.channel_overlay.lanes && j.channel_overlay.lanes.length)) {
+        clearChannelViz();
+        hint.innerHTML +=
+          ' <span style="color:#fbbf24;font-size:10px">（无渠化记录或无法匹配车道，仅显示中心点）</span>';
+      }
+    }
+
+    function selectInView() {
+      if (!map) return;
+      const b = map.getBounds();
+      if (!b) return;
+      const sw = b.getSouthWest();
+      const ne = b.getNorthEast();
+      intersections.forEach((it) => {
+        if (it.lon >= sw.getLng() && it.lon <= ne.getLng() && it.lat >= sw.getLat() && it.lat <= ne.getLat()) {
+          selected.add(it.id);
+        }
+      });
+      renderList(document.getElementById('search').value);
+      syncMarkersStyle();
+      fetchMetrics().catch((e) => console.error(e));
+      loadDetailIfSingle();
+    }
+
+    async function boot() {
+      const banner = document.getElementById('banner');
+      try {
+        const st = await fetch(API + '/v1/signalctl-map/status').then((r) => r.json());
+        if (!st.ok) {
+          banner.className = 'status err';
+          banner.textContent = st.message || '数据库不可用';
+          return;
+        }
+        banner.className = 'status ok';
+        banner.textContent = '已连接 MySQL，共 ' + st.intersection_count + ' 个带坐标路口。';
+
+        await loadAmap();
+        const res = await fetch(API + '/v1/signalctl-map/intersections');
+        const data = await res.json();
+        intersections = data.intersections || [];
+
+        map = new AMap.Map('map', {
+          zoom: 12,
+          center: intersections[0] ? [intersections[0].lon, intersections[0].lat] : [117.02, 36.66],
+          mapStyle: 'amap://styles/darkblue',
+        });
+        map.addControl(new AMap.Scale());
+        map.addControl(new AMap.ToolBar({ position: { right: 12, top: 60 } }));
+        startVisualFxLoop();
+        map.on('moveend', () => {
+          visualFx.scanStart = Date.now();
+        });
+        window.addEventListener('resize', ensureFxCanvas);
+
+        intersections.forEach((it) => {
+          const mk = new AMap.Marker({
+            position: [it.lon, it.lat],
+            map,
+            anchor: 'center',
+          });
+          mk.setContent('<div class="marker-dot" style="background:#64748b;color:#64748b"></div>');
+          mk.on('click', () => {
+            if (selected.has(it.id)) selected.delete(it.id);
+            else selected.add(it.id);
+            renderList(document.getElementById('search').value);
+            syncMarkersStyle();
+            fetchMetrics().catch(console.error);
+            loadDetailIfSingle();
+          });
+          idToMarker.set(it.id, mk);
+        });
+
+        document.getElementById('search').addEventListener('input', (e) => renderList(e.target.value));
+        document.getElementById('btnSelectAll').onclick = () => {
+          intersections.forEach((x) => selected.add(x.id));
+          renderList(document.getElementById('search').value);
+          syncMarkersStyle();
+          fetchMetrics().catch(console.error);
+          loadDetailIfSingle();
+        };
+        document.getElementById('btnClear').onclick = () => {
+          selected.clear();
+          metricsById = {};
+          clearChannelViz();
+          renderList(document.getElementById('search').value);
+          syncMarkersStyle();
+          loadDetailIfSingle();
+        };
+        document.getElementById('btnInView').onclick = () => selectInView();
+        document.getElementById('btnRefreshMetrics').onclick = () => fetchMetrics().then(() => loadDetailIfSingle()).catch(console.error);
+        document.getElementById('btnDefaultDate').onclick = async () => {
+          const d = await fetch(API + '/v1/signalctl-map/default-dates').then((r) => r.json());
+          if (d.traffic_latest) document.getElementById('dataDate').value = d.traffic_latest.slice(0, 10);
+        };
+
+        renderList('');
+        updateHud();
+      } catch (e) {
+        banner.className = 'status err';
+        banner.textContent = String(e.message || e);
+        if (window.SignalControlUI) SignalControlUI.toast(String(e.message || e), 'danger');
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>

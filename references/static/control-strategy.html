@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>控制策略 · 目标导向分级管控</title>
+<link rel="stylesheet" href="/debug/assets/debug-shell.css"/>
+<script defer src="/debug/assets/debug-ui.js"></script>
+<script>
+(function(){var u=new URLSearchParams(location.search),p='/debug/agent-workbench.html?phase=3';
+if(u.get('id'))p+='&id='+u.get('id');if(u.get('type'))p+='&type='+u.get('type');
+location.replace(p);})();
+</script>
+<style>
+:root{
+  --bg:#f0f5ff;--surface:#fff;--surface2:#f6f9ff;--border:#dce8f8;
+  --accent:#1a7fff;--accent2:#00b5a3;--warn:#e68a00;--danger:#e53935;
+  --success:#1da462;--purple:#7c3aed;--text:#0d1b2e;--muted:#5f7a9c;--r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:"PingFang SC",-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;min-height:100vh;}
+
+.topnav{display:flex;align-items:center;gap:12px;padding:0 20px;height:48px;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;box-shadow:0 1px 8px rgba(26,127,255,.08);}
+.logo-text{font-size:15px;font-weight:700;color:var(--purple);}
+.nav-links{display:flex;gap:3px;margin-left:12px;}
+.nav-link{padding:4px 10px;border-radius:6px;font-size:11px;color:var(--muted);cursor:pointer;text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:all .15s;}
+.nav-link:hover{background:var(--surface2);}
+.nav-link.active{background:rgba(124,58,237,.08);color:var(--purple);border-color:rgba(124,58,237,.2);}
+.phase-nav{display:flex;align-items:center;gap:0;margin-left:auto;}
+.pn-chip{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600;white-space:nowrap;text-decoration:none;}
+.pn-chip.done{color:var(--success);background:rgba(29,164,98,.08);}
+.pn-chip.active{color:var(--purple);background:rgba(124,58,237,.1);}
+.pn-chip.next{color:var(--muted);background:var(--surface2);}
+.pn-chip.pending{color:var(--muted);background:var(--surface2);opacity:.55;}
+.pn-arrow{font-size:10px;color:var(--muted);padding:0 2px;}
+
+.issue-ctx-bar{background:linear-gradient(90deg,rgba(124,58,237,.05),rgba(26,127,255,.03));border-bottom:1px solid rgba(124,58,237,.15);padding:6px 20px;display:flex;align-items:center;gap:10px;font-size:12px;}
+.ctx-obj-tag{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid;white-space:nowrap;}
+.ctx-obj-region{color:var(--accent);background:rgba(26,127,255,.07);border-color:rgba(26,127,255,.2);}
+.ctx-obj-corridor{color:var(--accent2);background:rgba(0,181,163,.07);border-color:rgba(0,181,163,.2);}
+.ctx-obj-intersection{color:var(--purple);background:rgba(124,58,237,.06);border-color:rgba(124,58,237,.2);}
+.ctx-obj-name{font-weight:700;}
+.ctx-sep{color:var(--muted);}
+.ctx-issue{color:var(--muted);}
+.ctx-back{margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;padding:2px 8px;border-radius:5px;border:1px solid var(--border);}
+.ctx-back:hover{color:var(--purple);border-color:var(--purple);}
+
+.layout{display:grid;grid-template-columns:1fr 340px;height:calc(100vh - 82px);}
+.main-col{overflow-y:auto;display:flex;flex-direction:column;}
+.side-col{overflow-y:auto;border-left:1px solid var(--border);background:var(--surface);}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin:0 14px 12px;box-shadow:0 2px 12px rgba(26,127,255,.04);}
+.card-head{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.card-title{font-size:12px;font-weight:700;}
+.card-body{padding:10px 14px;}
+
+#strategyMap{flex:1;min-height:320px;position:relative;}
+.map-legend{position:absolute;bottom:12px;left:12px;z-index:100;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:8px;padding:8px 10px;backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);margin-bottom:3px;}
+.legend-item:last-child{margin-bottom:0;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-line{width:18px;height:3px;border-radius:2px;flex-shrink:0;}
+
+.side-section{padding:12px 14px;border-bottom:1px solid var(--border);}
+.side-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.obj-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;color:var(--text);}
+.obj-btn.active,.obj-btn:hover{background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.3);color:var(--purple);}
+
+.detail-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.dtab{padding:6px 10px;border:none;background:none;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.dtab.active{color:var(--purple);border-bottom-color:var(--purple);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.detail-item{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 9px;}
+.di-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+.di-val{font-size:11px;line-height:1.5;}
+.di-val.danger{color:var(--danger);}
+.di-val.warn{color:var(--warn);}
+.di-val.ok{color:var(--success);}
+
+.compare-wrap{display:flex;gap:8px;}
+.compare-panel{flex:1;border-radius:7px;padding:8px 10px;border:1px solid;}
+.compare-before{border-color:rgba(229,57,53,.2);background:rgba(229,57,53,.04);}
+.compare-after{border-color:rgba(29,164,98,.2);background:rgba(29,164,98,.04);}
+.cp-head{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.compare-before .cp-head{color:var(--danger);}
+.compare-after .cp-head{color:var(--success);}
+.cp-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;}
+.cp-key{color:var(--muted);}
+
+.llm-panel{background:linear-gradient(135deg,rgba(124,58,237,.04),rgba(26,127,255,.03));border:1px solid rgba(124,58,237,.15);border-radius:8px;padding:10px;}
+.llm-tag{display:inline-flex;gap:4px;font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(124,58,237,.08);color:var(--purple);font-weight:600;margin-bottom:6px;}
+.llm-text{font-size:12px;line-height:1.8;color:var(--text);}
+.llm-btn{font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;margin-top:6px;margin-right:5px;}
+.llm-btn:hover{border-color:var(--purple);color:var(--purple);}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(124,58,237,.15);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 8px currentColor;}50%{box-shadow:0 0 20px currentColor;}}
+
+.principle{padding:7px 9px;border-left:3px solid;border-radius:0 5px 5px 0;margin-bottom:6px;font-size:11px;line-height:1.5;background:var(--surface2);}
+.action-link{display:block;padding:7px 10px;border-radius:7px;text-decoration:none;font-size:12px;font-weight:600;margin-bottom:6px;border:1px solid;transition:all .15s;}
+.link-purple{color:var(--purple);background:rgba(124,58,237,.05);border-color:rgba(124,58,237,.2);}
+.link-success{color:var(--success);background:rgba(29,164,98,.05);border-color:rgba(29,164,98,.2);}
+.link-muted{color:var(--muted);background:var(--surface2);border-color:var(--border);}
+.link-purple:hover,.link-success:hover,.link-muted:hover{filter:brightness(0.95);}
+
+.diag-ctx-card{border-radius:8px;border:1px solid rgba(124,58,237,.15);background:linear-gradient(135deg,rgba(124,58,237,.04),rgba(26,127,255,.02));padding:10px;margin:0 14px 10px;}
+.dcc-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.dcc-badge{font-size:20px;}
+.dcc-title{font-size:12px;font-weight:800;color:var(--purple);}
+.dcc-subtitle{font-size:10px;color:var(--muted);margin-top:1px;}
+.dcc-chips{display:flex;gap:5px;flex-wrap:wrap;}
+.dcc-chip{padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid;}
+.dcc-chip-signal{color:var(--success);background:rgba(29,164,98,.06);border-color:rgba(29,164,98,.2);}
+.dcc-chip-mode{color:var(--purple);background:rgba(124,58,237,.06);border-color:rgba(124,58,237,.2);}
+.dcc-chip-obj{color:var(--accent);background:rgba(26,127,255,.06);border-color:rgba(26,127,255,.2);}
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <span class="logo-text">📐 控制策略</span>
+  <nav class="nav-links">
+    <a class="nav-link" href="/debug/city-demo.html">城市总览</a>
+    <a class="nav-link" href="/debug/scene-cognition.html">场景认知</a>
+    <a class="nav-link" href="/debug/problem-diagnosis.html">问题诊断</a>
+    <a class="nav-link active" href="#">控制策略</a>
+    <a class="nav-link" href="/debug/plan-generation.html">方案生成</a>
+    <a class="nav-link" href="/debug/evaluation-feedback.html">评价反馈</a>
+    <a class="nav-link" href="/debug/human-in-loop.html">人机协同</a>
+  </nav>
+  <div class="phase-nav">
+    <a class="pn-chip done" href="/debug/scene-cognition.html" id="sceneLink">✓ 场景认知</a>
+    <span class="pn-arrow">›</span>
+    <a class="pn-chip done" href="/debug/problem-diagnosis.html" id="diagLink">✓ 问题诊断</a>
+    <span class="pn-arrow">›</span>
+    <a class="pn-chip active" href="#">📐 控制策略</a>
+    <span class="pn-arrow">›</span>
+    <a class="pn-chip next" href="/debug/plan-generation.html" id="planNavLink">📋 方案生成</a>
+    <span class="pn-arrow">›</span>
+    <a class="pn-chip pending" href="/debug/evaluation-feedback.html">📊 评价反馈</a>
+  </div>
+</div>
+
+<div class="issue-ctx-bar" id="issueCtxBar">
+  <span class="ctx-obj-tag ctx-obj-region" id="ctxObjTag">—</span>
+  <span class="ctx-obj-name" id="ctxObjName">加载中…</span>
+  <span class="ctx-sep">·</span>
+  <span class="ctx-issue" id="ctxIssueName">来自诊断链路</span>
+  <a class="ctx-back" href="/debug/city-demo.html">← 返回总览</a>
+</div>
+
+<div class="layout">
+<div class="main-col">
+
+  <div class="diag-ctx-card" id="diagCtxCard" style="display:none;margin-top:12px">
+    <div class="dcc-head">
+      <span class="dcc-badge" id="dccBadge">✅</span>
+      <div><div class="dcc-title" id="dccTitle">信控策略优化 · 诊断驱动</div><div class="dcc-subtitle" id="dccSubtitle">当前对象 | 诊断结论 | 可优化范围</div></div>
+    </div>
+    <div class="dcc-chips" id="dccChips"></div>
+  </div>
+
+  <div id="strategyMap"></div>
+
+  <div class="card" id="detailCard" style="margin-top:0">
+    <div class="card-head"><span class="card-title">🎯 已选策略包详情</span></div>
+    <div class="card-body">
+      <div class="detail-tabs">
+        <button class="dtab active" onclick="switchDetailTab('overview',this)">总体描述</button>
+        <button class="dtab" onclick="switchDetailTab('trigger',this)">触发与退出</button>
+        <button class="dtab" onclick="switchDetailTab('actions',this)">关键动作</button>
+        <button class="dtab" onclick="switchDetailTab('constraints',this)">约束与参数</button>
+      </div>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <div class="card" id="compareCard">
+    <div class="card-head"><span class="card-title">📊 预期优化效果对比</span><span style="font-size:10px;color:var(--muted)">基于策略指令的模型预测值</span></div>
+    <div class="card-body" id="compareBody"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><span class="card-title">🤖 AI 策略解读</span><span style="font-size:10px;color:var(--muted)">控制策略子智能体</span></div>
+    <div class="card-body"><div id="strategyLLM"><div class="spin"></div> 正在生成策略解读…</div></div>
+  </div>
+
+</div>
+
+<div class="side-col">
+  <div class="side-section">
+    <div class="side-title">选择策略对象</div>
+    <div id="currentObjName" style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px"></div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap" id="objSelector"></div>
+  </div>
+
+  <div class="side-section">
+    <div class="side-title">策略选择原则</div>
+    <div class="principle" style="border-color:var(--danger)"><strong style="color:var(--danger)">安全底线优先</strong><br/>防溢流防锁死高于效率</div>
+    <div class="principle" style="border-color:var(--warn)"><strong style="color:var(--warn)">场景驱动策略</strong><br/>通勤/就医/活动各对应策略包</div>
+    <div class="principle" style="border-color:var(--accent)"><strong style="color:var(--accent)">背景+实时双层</strong><br/>日历方案为骨架，实时触发微调</div>
+    <div class="principle" style="border-color:var(--success)"><strong style="color:var(--success)">最小充分原则</strong><br/>能用固定时则不过度自适应</div>
+  </div>
+
+  <div class="side-section">
+    <div class="side-title">地图图例</div>
+    <div id="mapLegendSide"></div>
+  </div>
+
+  <div class="side-section">
+    <div class="side-title">下一步操作</div>
+    <a class="action-link link-success" href="/debug/plan-generation.html" id="goPlan">📋 进入方案生成 →</a>
+    <a class="action-link link-purple" href="/debug/human-in-loop.html">👷 高风险策略需审批 →</a>
+    <a class="action-link link-muted" href="/debug/problem-diagnosis.html">← 返回问题诊断</a>
+  </div>
+</div>
+</div>
+
+<script>
+const API = '';
+let currentObj = null;
+let selectedStrategy = null;
+let detailTab = 'overview';
+let strategyMap = null;
+let mapConfig = null;
+let _demoDataCS = null;
+let mapMarkers = [];
+
+const ALL_TEMPLATES = {
+  region: [
+    {id:'region_core_expansion_control',name:'核心区扩散控制',desc:'控边界/疏堵点/保核心',trigger:'高饱和持续15min，区域进出流量差>20%',exit:'饱和度<0.75持续10min',target:'安全>效率',actions:'边界控流、瓶颈疏堵、出口优先',constraints:'不破坏最小行人绿灯60s',fallback:'固定背景方案'},
+    {id:'region_boundary_flow_control',name:'区域边界控流',desc:'外圈分流与在途量管控',trigger:'供需比>1.05',exit:'供需比<0.95',target:'防扩散>效率',actions:'边界路口绿信比调整、外围分流引导',constraints:'边界路口等待时间≤120s',fallback:'最小服务方案'},
+    {id:'region_parking_guidance_linkage',name:'停车诱导联动',desc:'减少无效绕行，适用高吸引区',trigger:'停车缺口率>20%',exit:'停车缺口率<15%',target:'减少无效交通',actions:'停车诱导信息更新、换乘推荐',constraints:'不影响干道通行',fallback:'固定信号'},
+  ],
+  corridor: [
+    {id:'corridor_tidal_green_wave',name:'潮汐走廊绿波',desc:'单向或偏置绿波，通勤潮汐场景',trigger:'主方向饱和>0.8，次方向<0.5',exit:'方向性指数<1.2',target:'通行效率>安全',actions:'单向绿波、关键节点保护、次向最小服务',constraints:'行人过街≥30s',fallback:'双向平衡'},
+    {id:'corridor_green_wave_rebuild',name:'绿波带重建',desc:'全段重新计算相位差修复绿波',trigger:'停车率>0.6或实际速<设计速度60%',exit:'停车率<0.35',target:'效率优先',actions:'重算公共周期、相位差序列、绿波速度',constraints:'设计速度±10km/h',fallback:'原配时'},
+    {id:'corridor_flexible_coordination',name:'平峰柔性协调',desc:'双向绿波+公交优先',trigger:'双向流量差<20%',exit:'任一方向饱和>0.8',target:'体验>效率',actions:'双向绿波骨架、公交优先触发、支路汇入保护',constraints:'公交延误降低≥15%',fallback:'固定相位差'},
+    {id:'corridor_multiroute_diversion',name:'多路径分流',desc:'平行走廊协同减轻主干道过载',trigger:'主干道饱和>0.9，平行路饱和<0.6',exit:'主干道饱和<0.8',target:'负荷均衡',actions:'平行走廊绿灯延长、主干道轻压绿',constraints:'平行走廊能力核验',fallback:'主干道优先'},
+  ],
+  intersection: [
+    {id:'intersection_phase_rebalance',name:'相位重构纠偏',desc:'解决相位失衡·关键流向保护',trigger:'相位饱和度差>0.2',exit:'最大饱和度差<0.15',target:'均衡>效率',actions:'重构绿信比分配、调整相序、保护关键流向',constraints:'最小绿灯≥20s',fallback:'原相序'},
+    {id:'intersection_bottleneck_anti_spillback',name:'防溢流策略',desc:'出口优先/上游削峰',trigger:'排队超出存储容量',exit:'排队长度<存储容量80%',target:'安全>效率',actions:'出口绿灯保护、上游绿灯缩减',constraints:'上游不可过度压绿',fallback:'固定方案'},
+    {id:'intersection_balance_and_green_reuse',name:'削空放重分配',desc:'削减空放相位转移绿灯',trigger:'绿灯利用率<50%',exit:'绿灯利用率>65%',target:'效率优先',actions:'削减空放绿灯、转移至主通道、请求式放行',constraints:'保留最小行人绿灯',fallback:'原方案'},
+    {id:'intersection_delay_relief',name:'延误缓解',desc:'短周期与请求式放行',trigger:'平均延误>90s',exit:'延误<70s',target:'体验优先',actions:'缩短周期、增加感应放行、优化启动损失',constraints:'周期≥60s',fallback:'固定周期'},
+  ],
+};
+
+async function loadFrontendConfig(){
+  const res = await fetch(`${API}/v1/demo/frontend-config`);
+  if(!res.ok) throw new Error('前端配置加载失败');
+  mapConfig = await res.json();
+}
+function loadAmapScript(key){
+  if(window.AMap) return Promise.resolve();
+  if(mapConfig?.amapSecurityJsCode) window._AMapSecurityConfig = { securityJsCode: mapConfig.amapSecurityJsCode };
+  return new Promise((resolve,reject)=>{
+    const s = document.createElement('script');
+    s.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(key)}`;
+    s.async = true; s.onload = ()=>resolve(); s.onerror = ()=>reject(new Error('高德地图加载失败'));
+    document.head.appendChild(s);
+  });
+}
+
+function getPos(obj){
+  if(obj.lng && obj.lat) return [obj.lng, obj.lat];
+  if(obj.center) return obj.center;
+  return [117.02, 36.66];
+}
+
+function clearMapMarkers(){
+  mapMarkers.forEach(m=>{ try{strategyMap.remove(m);}catch(e){} });
+  mapMarkers = [];
+}
+
+function addMarker(pos, html, zIndex=30){
+  const m = new AMap.Marker({ position:pos, anchor:'center', content:html, zIndex });
+  strategyMap.add(m); mapMarkers.push(m);
+  return m;
+}
+function addCircle(pos, r, color, fillOpacity=0.15, strokeOpacity=0.8){
+  const m = new AMap.CircleMarker({ center:pos, radius:r, strokeColor:color, strokeWeight:2, strokeOpacity, fillColor:color, fillOpacity, zIndex:28 });
+  strategyMap.add(m); mapMarkers.push(m);
+  return m;
+}
+function addLine(path, color, weight=4, opacity=0.8){
+  const m = new AMap.Polyline({ path, strokeColor:color, strokeWeight:weight, strokeOpacity:opacity, lineJoin:'round', lineCap:'round', zIndex:26 });
+  strategyMap.add(m); mapMarkers.push(m);
+  return m;
+}
+function addPoly(path, color, fillOpacity=0.12){
+  const m = new AMap.Polygon({ path, strokeColor:color, strokeWeight:2, fillColor:color, fillOpacity, zIndex:24 });
+  strategyMap.add(m); mapMarkers.push(m);
+  return m;
+}
+
+function renderStrategyMap(obj, type){
+  if(!strategyMap) return;
+  clearMapMarkers();
+
+  const strats = obj.strategies || [];
+  const firstStrat = strats[0];
+  const tmplId = firstStrat?.templateId || '';
+  const params = firstStrat?.params || {};
+
+  if(type === 'region'){
+    if(obj.polygon) addPoly(obj.polygon, '#4da6ff', 0.08);
+    if(obj.center){
+      strategyMap.setZoomAndCenter(13.5, obj.center);
+      addMarker(obj.center, `<div style="background:rgba(26,127,255,.9);color:#fff;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(26,127,255,.3)">${obj.name}</div>`);
+    }
+
+    const bns = obj.sceneCognition?.bottlenecks || [];
+    bns.forEach(bn=>{
+      const inter = (_demoDataCS?.intersections||[]).find(i=>i.id===bn.intersectionId);
+      if(!inter) return;
+      const pos = getPos(inter);
+      addCircle(pos, 16, '#e53935', 0.25, 1);
+      addMarker(pos, `<div style="background:rgba(229,57,53,.9);color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(229,57,53,.3)">🔥 ${bn.name||inter.name} <span style="opacity:.7">疏堵点</span></div>`, 35);
+    });
+
+    const bfNodes = obj.boundaryFlows || params.boundaryNodes || [];
+    bfNodes.forEach(bf=>{
+      const iid = bf.intersectionId || bf;
+      const inter = (_demoDataCS?.intersections||[]).find(i=>i.id===iid);
+      if(!inter) return;
+      const pos = getPos(inter);
+      addCircle(pos, 14, '#e68a00', 0.2, 0.9);
+      const dir = bf.direction || '↔';
+      addMarker(pos, `<div style="background:rgba(230,138,0,.9);color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(230,138,0,.3)">${dir} 控边界 ${inter.name}</div>`, 34);
+    });
+
+    if(obj.polygon && obj.polygon.length > 2){
+      addLine([...obj.polygon, obj.polygon[0]], '#4da6ff', 3, 0.6);
+    }
+
+    updateLegendSide([
+      {type:'poly', color:'#4da6ff', label:'管控区域范围'},
+      {type:'dot', color:'#e53935', label:'疏堵点'},
+      {type:'dot', color:'#e68a00', label:'边界控流路口'},
+    ]);
+
+  } else if(type === 'corridor'){
+    if(obj.path){
+      strategyMap.setFitView(null, false, [60,60,60,60]);
+      const mid = obj.path[Math.floor(obj.path.length/2)];
+      strategyMap.setZoomAndCenter(14, mid);
+
+      addLine(obj.path, '#00e6c8', 6, 0.7);
+
+      if(tmplId.includes('tidal') || tmplId.includes('green_wave')){
+        addLine(obj.path, '#1da462', 10, 0.2);
+        const start = obj.path[0], end = obj.path[obj.path.length-1];
+        addMarker(start, `<div style="background:rgba(29,164,98,.9);color:#fff;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;box-shadow:0 2px 8px rgba(29,164,98,.3)">▶ 绿波起点</div>`, 36);
+        addMarker(end, `<div style="background:rgba(29,164,98,.7);color:#fff;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;box-shadow:0 2px 6px rgba(29,164,98,.2)">■ 绿波终点</div>`, 36);
+      }
+    }
+
+    const ints = obj.intersections || [];
+    ints.forEach((ci, idx) => {
+      const inter = (_demoDataCS?.intersections||[]).find(i=>i.id===ci.id);
+      if(!inter) return;
+      const pos = getPos(inter);
+      const sat = ci.saturation || inter.saturation || 0;
+      const color = sat > 0.85 ? '#e53935' : sat > 0.7 ? '#e68a00' : '#1da462';
+      addCircle(pos, 10, color, 0.4, 1);
+      const offset = params.phaseOffsets?.[ci.id];
+      const offsetTxt = offset !== undefined ? ` 相位差${offset}s` : '';
+      addMarker(pos, `<div style="background:rgba(255,255,255,.92);color:${color};padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;white-space:nowrap;border:1px solid ${color};box-shadow:0 2px 6px rgba(0,0,0,.12)">${idx+1}. ${ci.name||inter.name} ${(sat*100).toFixed(0)}%${offsetTxt}</div>`, 32);
+    });
+
+    updateLegendSide([
+      {type:'line', color:'#00e6c8', label:'干线走廊'},
+      {type:'line', color:'#1da462', label:'绿波方向'},
+      {type:'dot', color:'#e53935', label:'高饱和路口 >85%'},
+      {type:'dot', color:'#e68a00', label:'中饱和路口 >70%'},
+      {type:'dot', color:'#1da462', label:'正常路口'},
+    ]);
+
+  } else {
+    const pos = getPos(obj);
+    strategyMap.setZoomAndCenter(16, pos);
+
+    addCircle(pos, 22, '#7c3aed', 0.1, 0.7);
+    addCircle(pos, 12, '#7c3aed', 0.35, 1);
+
+    addMarker(pos, `<div style="background:rgba(124,58,237,.9);color:#fff;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(124,58,237,.3)">🔦 ${obj.name}</div>`, 36);
+
+    const dirs = [
+      {label:'东', angle:0, dx:0.0015, dy:0},
+      {label:'西', angle:180, dx:-0.0015, dy:0},
+      {label:'南', angle:270, dx:0, dy:-0.0012},
+      {label:'北', angle:90, dx:0, dy:0.0012},
+    ];
+    dirs.forEach(d => {
+      const armEnd = [pos[0]+d.dx, pos[1]+d.dy];
+      addLine([pos, armEnd], 'rgba(124,58,237,.35)', 3, 0.6);
+      const isBotDir = tmplId.includes('spillback') && (d.label==='南'||d.label==='北');
+      const isPhaseDir = tmplId.includes('phase_rebalance') && (d.label==='东'||d.label==='西');
+      const armColor = isBotDir ? '#e53935' : isPhaseDir ? '#e68a00' : 'rgba(124,58,237,.5)';
+      const armLabel = isBotDir ? '出口保护' : isPhaseDir ? '绿灯重分配' : '';
+      addCircle(armEnd, 6, armColor, 0.3, 0.8);
+      if(armLabel){
+        addMarker(armEnd, `<div style="background:${armColor}dd;color:#fff;padding:1px 5px;border-radius:3px;font-size:8px;font-weight:700;white-space:nowrap">${d.label}进口 ${armLabel}</div>`, 33);
+      } else {
+        addMarker(armEnd, `<div style="color:rgba(124,58,237,.7);font-size:8px;font-weight:700">${d.label}</div>`, 31);
+      }
+    });
+
+    if(obj.phaseInfo?.phases){
+      const phases = obj.phaseInfo.phases;
+      const cycle = obj.phaseInfo.cycleLength || 120;
+      let yOff = 0.0018;
+      addMarker([pos[0]-0.002, pos[1]+yOff], `<div style="background:rgba(255,255,255,.95);border:1px solid var(--border);border-radius:6px;padding:6px 8px;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+        <div style="font-size:9px;color:var(--purple);font-weight:700;margin-bottom:4px">信号配时 周期${cycle}s</div>
+        ${phases.map((p,i)=>{
+          const w = ((p.green||p.greenTime||30)/cycle*100).toFixed(0);
+          return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
+            <div style="width:${w}%;max-width:60px;height:6px;border-radius:3px;background:${i%2===0?'#1da462':'#1a7fff'};min-width:8px"></div>
+            <span style="font-size:8px;color:var(--muted);white-space:nowrap">${p.name||p.direction||'P'+(i+1)} ${p.green||p.greenTime||'—'}s</span>
+          </div>`;
+        }).join('')}
+      </div>`, 38);
+    }
+
+    updateLegendSide([
+      {type:'dot', color:'#7c3aed', label:'当前路口'},
+      {type:'dot', color:'#e53935', label:'出口保护方向'},
+      {type:'dot', color:'#e68a00', label:'绿灯重分配方向'},
+    ]);
+  }
+}
+
+function updateLegendSide(items){
+  const el = document.getElementById('mapLegendSide');
+  el.innerHTML = items.map(it=>{
+    const icon = it.type==='dot' ? `<div style="width:10px;height:10px;border-radius:50%;background:${it.color};box-shadow:0 0 6px ${it.color}"></div>`
+      : it.type==='line' ? `<div style="width:18px;height:3px;border-radius:2px;background:${it.color};box-shadow:0 0 4px ${it.color}"></div>`
+      : `<div style="width:14px;height:10px;border-radius:2px;background:${it.color};opacity:.4;border:1px solid ${it.color}"></div>`;
+    return `<div class="legend-item">${icon}<span>${it.label}</span></div>`;
+  }).join('');
+}
+
+async function init(){
+  await loadFrontendConfig();
+  await loadAmapScript(mapConfig.amapJsApiKey);
+
+  strategyMap = new AMap.Map('strategyMap', {
+    viewMode:'2D', center:[117.020,36.660], zoom:13,
+    mapStyle:'amap://styles/normal', resizeEnable:true,
+    dragEnable:true, zoomEnable:true,
+  });
+
+  const [regRes, intRes, corRes] = await Promise.all([
+    fetch(`${API}/v1/demo/regions`),
+    fetch(`${API}/v1/demo/intersections`),
+    fetch(`${API}/v1/demo/corridors`),
+  ]);
+  const {regions} = await regRes.json();
+  const {intersections} = await intRes.json();
+  const {corridors} = await corRes.json();
+  _demoDataCS = {regions, intersections, corridors};
+  const allObjs = [...regions,...intersections,...corridors];
+  renderSelector(allObjs);
+
+  const params = new URLSearchParams(location.search);
+  const initId = params.get('id');
+  const defaultObj = allObjs.find(o=>o.id===initId)||allObjs.find(o=>(o.strategies||[]).length>0)||allObjs[0];
+  if(defaultObj) selectObj(defaultObj);
+}
+
+let _allObjsList = [];
+function renderSelector(objs){
+  _allObjsList = objs;
+  const el = document.getElementById('objSelector');
+  el.innerHTML = objs.map((o,i)=>{
+    const cnt = (o.strategies||[]).length;
+    return `<button class="obj-btn" data-id="${o.id}" onclick="selectObjByIdx(${i})">${o.name}${cnt>0?` <span style="color:var(--purple)">(${cnt})</span>`:''}`;
+  }).join('');
+}
+function selectObjByIdx(i){ if(_allObjsList[i]) selectObj(_allObjsList[i]); }
+
+function selectObj(obj){
+  currentObj = obj;
+  document.querySelectorAll('.obj-btn').forEach(b=>b.classList.toggle('active',b.dataset.id===obj.id));
+  document.getElementById('currentObjName').textContent = obj.name;
+  const _type = _demoDataCS?.regions?.find(r=>r.id===obj.id)?'region':_demoDataCS?.corridors?.find(c=>c.id===obj.id)?'corridor':'intersection';
+  document.getElementById('goPlan').href = `/debug/plan-generation.html?id=${obj.id}&type=${_type}${_issueId?'&issueId='+_issueId:''}`;
+  updateContextBar(obj);
+
+  selectedStrategy = (obj.strategies||[])[0]
+    ? {...Object.values(ALL_TEMPLATES).flat().find(t=>t.id===(obj.strategies||[])[0].templateId)||{},
+       ...obj.strategies[0]}
+    : null;
+
+  renderStrategyMap(obj, _type);
+  renderDetail();
+  renderCompare(obj);
+  loadStrategyLLM(obj);
+}
+
+function selectStrategyById(id){
+  const tmpl = Object.values(ALL_TEMPLATES).flat().find(t=>t.id===id);
+  const fromObj = currentObj?.strategies?.find(s=>s.templateId===id);
+  if(tmpl) selectedStrategy = {...tmpl,...(fromObj||{})};
+  renderDetail();
+}
+
+function switchDetailTab(tab, btn){
+  detailTab = tab;
+  document.querySelectorAll('.dtab').forEach(b=>b.classList.toggle('active',b===btn));
+  renderDetail();
+}
+
+function renderDetail(){
+  const el = document.getElementById('detailContent');
+  if(!selectedStrategy){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px">请选择策略对象查看详情</div>';
+    return;
+  }
+  const s = selectedStrategy;
+  const params = s.params||{};
+  const modeLabel = s.mode==='realtime'?'⚡ 实时触发':s.mode==='periodic'?'📅 规律性场景':'—';
+  const modeCls = s.mode==='realtime'?'danger':s.mode==='periodic'?'ok':'';
+  const approvalLabel = s.requiresApproval?'⚠️ 需人工审批':'✅ 可自动执行';
+  const approvalCls = s.requiresApproval?'warn':'ok';
+
+  const tabs = {
+    overview:`<div class="detail-grid">
+      <div class="detail-item"><div class="di-label">策略名称</div><div class="di-val" style="font-weight:700">${s.name||s.templateId||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">推荐分</div><div class="di-val" style="font-size:20px;font-weight:800;color:var(--purple);line-height:1">${s.score?s.score.toFixed(2):'—'}</div></div>
+      <div class="detail-item"><div class="di-label">适用场景</div><div class="di-val">${s.desc||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">目标优先级</div><div class="di-val">${s.target||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">触发模式</div><div class="di-val ${modeCls}">${modeLabel}</div></div>
+      <div class="detail-item"><div class="di-label">执行方式</div><div class="di-val ${approvalCls}">${approvalLabel}</div></div>
+    </div>
+    ${s.objective?`<div class="detail-item" style="margin-top:8px;border-left:3px solid var(--success);padding-left:9px">
+      <div class="di-label">🎯 量化优化目标</div><div class="di-val ok" style="font-size:12px;line-height:1.6;font-weight:600">${s.objective}</div>
+    </div>`:''}`,
+    trigger:`<div class="detail-grid">
+      <div class="detail-item"><div class="di-label">⚡ 触发条件</div><div class="di-val warn">${s.trigger||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">✅ 退出条件</div><div class="di-val ok">${s.exit||'—'}</div></div>
+    </div>
+    <div class="detail-item" style="margin-top:8px"><div class="di-label">审批要求</div><div class="di-val ${approvalCls}">${approvalLabel}</div></div>`,
+    actions:`<div class="detail-item" style="margin-bottom:7px"><div class="di-label">关键动作序列</div><div class="di-val">${s.actions||'—'}</div></div>
+    ${s.description?`<div class="detail-item" style="margin-bottom:7px"><div class="di-label">策略指令描述</div><div class="di-val" style="line-height:1.6">${s.description}</div></div>`:''}
+    ${s.sideEffects?`<div class="detail-item" style="border-left:3px solid var(--warn);padding-left:9px"><div class="di-label">⚠️ 副作用</div><div class="di-val warn" style="line-height:1.6">${s.sideEffects}</div></div>`:''}
+    ${params.phaseOffsets?renderGreenWaveViz(params):''}`,
+    constraints:`<div class="detail-grid" style="margin-bottom:8px">
+      <div class="detail-item"><div class="di-label">🛡️ 硬约束</div><div class="di-val danger">${s.constraints||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">🔄 降级回退</div><div class="di-val">${s.fallback||'—'}</div></div>
+    </div>
+    ${Object.keys(params).length>0?`<div style="font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">⚙️ 执行控制参数</div>${renderParamsBlock(params)}`:''}`
+  };
+  el.innerHTML = tabs[detailTab]||'';
+}
+
+function renderGreenWaveViz(params){
+  const offsets = params.phaseOffsets;
+  if(!offsets) return '';
+  const cycle = params.cycleTarget||params.cycleAlignment||120;
+  const entries = Object.entries(offsets);
+  if(!entries.length) return '';
+  return `<div style="margin-top:10px;background:rgba(124,58,237,.04);border:1px solid rgba(124,58,237,.15);border-radius:8px;padding:10px">
+    <div style="font-size:9px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">🌊 绿波相位差示意（周期 ${cycle}s）</div>
+    <div style="position:relative;height:36px;margin-bottom:14px;margin-left:4px;margin-right:4px">
+      <div style="position:absolute;left:0;right:0;top:10px;height:3px;background:linear-gradient(90deg,rgba(29,164,98,.5),rgba(29,164,98,.15));border-radius:2px"></div>
+      ${entries.map(([id,offset])=>{
+        const pct = Math.min((offset/cycle)*100,98);
+        const shortId = id.replace('INT-JN-','');
+        return `<div style="position:absolute;left:${pct}%;top:0;transform:translateX(-50%)">
+          <div style="width:2px;height:20px;background:var(--purple);border-radius:1px;margin:0 auto"></div>
+          <div style="font-size:8px;color:var(--muted);text-align:center;margin-top:3px;white-space:nowrap">${shortId}<br><strong style="color:var(--purple)">${offset}s</strong></div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${params.speedTarget?`<div style="font-size:9px;color:var(--muted)">绿波设计车速 <strong style="color:var(--success)">${params.speedTarget} km/h</strong>，目标带宽 <strong style="color:var(--purple)">${params.bandwidthTarget||params.targetBandwidth||'—'}s</strong></div>`:''}
+  </div>`;
+}
+
+function renderParamsBlock(params){
+  const LABELS={cycleTarget:'目标周期',bandwidthTarget:'目标带宽',speedTarget:'目标车速',targetBandwidth:'目标带宽',minGreenTime:'最小绿灯',exitGreenExtension:'出口绿灯延长',upstreamGreenReduction:'上游绿灯缩减',greenReductionRate:'绿灯压缩比例',boundaryGreenBias:'边界绿灯偏置',maxBoundaryWait:'边界最大等待',activationThreshold:'启动饱和度阈值',exitThreshold:'退出饱和度阈值',triggerQueueLength:'触发排队长度',guidanceUpdateInterval:'诱导更新间隔',cycle:'协调周期',bandwidth:'绿波带宽',greenReallocRate:'绿灯重分配比例',mainDirectionGreenIncrease:'主向绿灯增量',minorDirectionGreenReduction:'次向绿灯削减',cycleAlignment:'对齐周期',cycleLengthTarget:'目标周期',maxDiversionRate:'最大分流率'};
+  const UNITS={cycleTarget:'s',bandwidthTarget:'s',speedTarget:'km/h',targetBandwidth:'s',minGreenTime:'s',exitGreenExtension:'s',upstreamGreenReduction:'s',maxBoundaryWait:'s',triggerQueueLength:'m',guidanceUpdateInterval:'s',cycle:'s',bandwidth:'s',mainDirectionGreenIncrease:'s',minorDirectionGreenReduction:'s',cycleAlignment:'s',cycleLengthTarget:'s'};
+  const KEY_PARAMS=new Set(['cycleTarget','bandwidthTarget','speedTarget','targetBandwidth','cycle','bandwidth','cycleLengthTarget','cycleAlignment']);
+  let html='';
+  const keyNums=Object.entries(params).filter(([k])=>KEY_PARAMS.has(k)&&typeof params[k]==='number');
+  if(keyNums.length){
+    html+=`<div style="display:grid;grid-template-columns:repeat(${Math.min(keyNums.length,3)},1fr);gap:6px;margin-bottom:8px">
+      ${keyNums.map(([k,v])=>`<div style="background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.15);border-radius:6px;padding:6px;text-align:center">
+        <div style="font-size:16px;font-weight:800;color:var(--purple)">${v}${UNITS[k]||''}</div>
+        <div style="font-size:8px;color:var(--muted);margin-top:2px">${LABELS[k]||k}</div>
+      </div>`).join('')}</div>`;
+  }
+  for(const [k,v] of Object.entries(params)){
+    if(KEY_PARAMS.has(k)&&typeof v==='number') continue;
+    if(Array.isArray(v)||k==='phaseOffsets'||typeof v==='object') continue;
+    const label=LABELS[k]||k;
+    if(typeof v==='boolean'){
+      html+=`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);font-size:11px"><span style="color:var(--muted)">${label}</span><span style="font-weight:700;color:${v?'var(--success)':'var(--muted)'}">${v?'✅ 启用':'✗ 关闭'}</span></div>`;
+    } else if(typeof v==='number'){
+      const unit=UNITS[k]||'';
+      html+=`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);font-size:11px"><span style="color:var(--muted)">${label}</span><span style="font-weight:700">${v<1&&v>0?Math.round(v*100)+'%':v+unit}</span></div>`;
+    }
+  }
+  return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px">${html||'<span style="font-size:10px;color:var(--muted)">暂无参数</span>'}</div>`;
+}
+
+function buildBeforeAfter(obj, type){
+  if(obj.before && obj.after) return { before:obj.before, after:obj.after };
+  const strats = obj.strategies||[];
+  if(type==='region'){
+    const before={saturation:obj.saturation,avgSpeed:obj.avgSpeed,avgDelay:obj.avgDelay,congestionIndex:obj.congestionIndex};
+    let satD=0,spdD=0,delD=0,ciD=0;
+    strats.forEach(s=>{if(s.templateId==='region_core_expansion_control'){satD+=0.11;spdD+=4.2;delD+=26;ciD+=0.9;}if(s.templateId==='region_boundary_flow_control'){satD+=0.06;spdD+=2.1;delD+=13;ciD+=0.4;}});
+    return {before,after:{saturation:+Math.max((before.saturation||0.8)-Math.min(satD,0.22),0.5).toFixed(2),avgSpeed:+Math.min((before.avgSpeed||20)+Math.min(spdD,14),42).toFixed(1),avgDelay:+Math.max((before.avgDelay||80)-Math.min(delD,48),28).toFixed(1),congestionIndex:+Math.max((before.congestionIndex||4)-Math.min(ciD,1.8),1.2).toFixed(1)}};
+  }
+  if(type==='intersection'){
+    const before={saturation:obj.saturation,delay:obj.delay,queueLength:obj.queueLength};
+    let satD=0,delD=0,qD=0;
+    strats.forEach(s=>{if(s.templateId==='intersection_phase_rebalance'){satD+=0.07;delD+=27;qD+=45;}if(s.templateId==='intersection_bottleneck_anti_spillback'){satD+=0.05;delD+=22;qD+=60;}if(s.templateId==='intersection_delay_relief'){delD+=24;satD+=0.04;qD+=20;}});
+    return {before,after:{saturation:+Math.max((before.saturation||0.8)-Math.min(satD,0.18),0.5).toFixed(2),delay:+Math.max((before.delay||80)-Math.min(delD,55),28).toFixed(1),queueLength:Math.max(Math.round((before.queueLength||100)-Math.min(qD,90)),25)}};
+  }
+  return null;
+}
+
+function renderCompare(obj){
+  const el = document.getElementById('compareBody');
+  const type = _demoDataCS?(_demoDataCS.regions?.find(r=>r.id===obj.id)?'region':_demoDataCS.corridors?.find(c=>c.id===obj.id)?'corridor':'intersection'):'intersection';
+  const data = buildBeforeAfter(obj, type);
+  if(!data){ el.innerHTML='<div style="text-align:center;padding:14px;color:var(--muted);font-size:11px">暂无前后对比数据</div>'; return; }
+  const {before,after}=data;
+  const FIELDS={avgSpeed:'平均车速(km/h)',stopRate:'停车率',delay:'延误(s)',saturation:'饱和度',bandwidth:'绿波带宽(s)',avgDelay:'平均延误(s)',congestionIndex:'拥堵指数',queueLength:'排队长度(m)'};
+  const DECREASE_GOOD=new Set(['delay','saturation','stopRate','congestionIndex','queueLength','avgDelay']);
+  const fmtV=v=>typeof v==='number'?(v<1&&v>0?(v*100).toFixed(0)+'%':(v%1===0?v:v.toFixed(1))):v;
+  el.innerHTML=`<div class="compare-wrap">
+    <div class="compare-panel compare-before"><div class="cp-head">优化前</div>${Object.entries(before).filter(([k])=>FIELDS[k]).map(([k,v])=>`<div class="cp-row"><span class="cp-key">${FIELDS[k]}</span><span style="color:var(--danger);font-weight:700">${fmtV(v)}</span></div>`).join('')}</div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 6px"><span style="font-size:18px;color:var(--success)">→</span></div>
+    <div class="compare-panel compare-after"><div class="cp-head">优化后</div>${Object.entries(after).filter(([k])=>FIELDS[k]).map(([k,v])=>{
+      const bv=before[k]; const d=typeof bv==='number'&&typeof v==='number'?v-bv:null;
+      const pct=d!==null&&bv!==0?Math.round(d/bv*100):null;
+      const isGood=pct!==null&&((pct<0&&DECREASE_GOOD.has(k))||(pct>0&&!DECREASE_GOOD.has(k)));
+      const dStr=pct!==null?`<span style="font-size:9px;font-weight:700;color:${isGood?'var(--success)':'var(--warn)'};margin-left:3px">${pct>0?'+':''}${pct}%</span>`:'';
+      return `<div class="cp-row"><span class="cp-key">${FIELDS[k]}</span><span style="color:var(--success);font-weight:700">${fmtV(v)}${dStr}</span></div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+async function loadStrategyLLM(obj){
+  const el = document.getElementById('strategyLLM');
+  el.innerHTML = `<div style="color:var(--muted);font-size:11px"><span class="spin"></span> 正在生成策略解读…</div>`;
+  try{
+    const res = await fetch(`${API}/v1/demo/llm/strategy/${obj.id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const data = await res.json();
+    el.innerHTML = `<div class="llm-panel">
+      <div class="llm-tag">🤖 ${data.fallback?'兜底结果':'AI实时生成'} ${data.from_cache?'[缓存]':''} ${data.model?'· '+data.model:''}</div>
+      <div class="llm-text">${data.text}</div>
+      ${data.fallback?'<div style="font-size:9px;color:var(--warn);margin-top:4px">⚠ 模型不可用，显示兜底文案</div>':''}
+      <button class="llm-btn" onclick="loadStrategyLLM(currentObj)">↺ 重新生成</button>
+    </div>`;
+  }catch(e){
+    el.innerHTML = `<div style="font-size:11px;color:var(--danger)">调用失败：${e.message}</div>`;
+  }
+}
+
+const _urlParams = new URLSearchParams(location.search);
+const _issueId = _urlParams.get('issueId');
+
+function updateContextBar(obj){
+  if(!obj) return;
+  const type = _demoDataCS?(_demoDataCS.regions?.find(r=>r.id===obj.id)?'region':_demoDataCS.corridors?.find(c=>c.id===obj.id)?'corridor':'intersection'):'region';
+  const tagEl = document.getElementById('ctxObjTag');
+  const typeIcons = {region:'🏙️',corridor:'🛣️',intersection:'🔦'};
+  const typeLabels = {region:'区域',corridor:'干线',intersection:'路口'};
+  tagEl.textContent = `${typeIcons[type]||''} ${typeLabels[type]||type}`;
+  tagEl.className = `ctx-obj-tag ctx-obj-${type}`;
+  document.getElementById('ctxObjName').textContent = obj.name||'—';
+  const firstIssue = (obj.issues||[])[0];
+  document.getElementById('ctxIssueName').textContent = firstIssue ? firstIssue.name : (obj.primaryIssue||'诊断已完成');
+  const qs = `?id=${obj.id}&type=${type}${_issueId?'&issueId='+_issueId:''}`;
+  document.getElementById('sceneLink').href = '/debug/scene-cognition.html'+qs;
+  document.getElementById('diagLink').href = '/debug/problem-diagnosis.html'+qs;
+  document.getElementById('planNavLink').href = '/debug/plan-generation.html'+qs;
+  const hasSignal = (obj.issues||[]).some(i=>i.category==='signal_control');
+  const hasStrat = (obj.strategies||[]).length>0;
+  let badge='✅', title='直接可优化', subtitle='信控策略直接可匹配';
+  if(!hasSignal&&!hasStrat){ badge='📋'; title='约束内最优调整'; subtitle='主因为结构性短板'; }
+  document.getElementById('dccBadge').textContent = badge;
+  document.getElementById('dccTitle').textContent = title;
+  document.getElementById('dccSubtitle').textContent = subtitle;
+  const topStrat = (obj.strategies||[])[0];
+  document.getElementById('dccChips').innerHTML = [
+    `<span class="dcc-chip dcc-chip-obj">📍 ${obj.name}</span>`,
+    `<span class="dcc-chip dcc-chip-signal">${badge} ${title}</span>`,
+    topStrat ? `<span class="dcc-chip dcc-chip-mode">📐 ${topStrat.description||topStrat.templateId||'策略已匹配'}</span>` : '',
+  ].filter(Boolean).join('');
+  document.getElementById('diagCtxCard').style.display = 'block';
+}
+
+init().catch(e=>{ document.getElementById('strategyMap').innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--danger);font-size:12px">地图初始化失败：${e.message}</div>`; });
+</script>
+</body>
+</html>

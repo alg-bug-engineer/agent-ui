@@ -1,0 +1,180 @@
+# 现场可挂载覆盖：Docker 见 SIGNAL_AGENT_BUSINESS_RULES_PATH 或 /app/config/business_rules/default.yaml
+version: "1"
+
+diagnosis:
+  thresholds:
+    saturation_high: 0.85
+    speed_low_kmh: 20.0
+    delay_high_s: 90.0
+    queue_overflow_ratio: 1.0
+    green_util_low: 0.5
+    phase_imbalance_ratio: 0.35
+  static_metrics:
+    road_density_sparse_below: 8.0
+    channelization_poor_below: 0.6
+    parking_gap_high_above: 0.2
+  category_weight:
+    signal_control: 1.1
+    dynamic: 1.0
+    static: 0.9
+  priority_level:
+    P0_min: 0.8
+    P1_min: 0.65
+    P2_min: 0.5
+
+control_strategy:
+  max_templates: 5
+  issue_template_map:
+    signal_queue_overflow:
+      - intersection_bottleneck_anti_spillback
+      - corridor_bottleneck_throughput_guard
+    signal_green_waste:
+      - intersection_balance_and_green_reuse
+    signal_phase_imbalance:
+      - intersection_phase_rebalance
+    dynamic_high_saturation:
+      - region_core_expansion_control
+      - corridor_tidal_green_wave
+    dynamic_demand_supply_imbalance:
+      - region_boundary_flow_control
+      - corridor_multiroute_diversion
+    dynamic_high_delay:
+      - corridor_flexible_coordination
+      - intersection_delay_relief
+    dynamic_low_speed:
+      - corridor_green_wave_rebuild
+    static_road_network_sparse:
+      - region_long_term_infra_gap_guard
+    static_channelization_mismatch:
+      - intersection_channelization_refactor_hint
+    static_parking_supply_gap:
+      - region_parking_guidance_linkage
+
+  template_meta:
+    region_core_expansion_control:
+      control_level: region
+      allowed_levels: [region]
+      description: 核心区扩散控制策略包（控边界/疏堵点/保核心）
+    region_boundary_flow_control:
+      control_level: region
+      allowed_levels: [region]
+      description: 区域边界控流与外圈分流策略
+    region_parking_guidance_linkage:
+      control_level: region
+      allowed_levels: [region]
+      description: 停车诱导联动与外围换乘策略
+    region_long_term_infra_gap_guard:
+      control_level: region
+      allowed_levels: [region]
+      description: 静态短板兜底管控并输出设施治理建议
+    corridor_tidal_green_wave:
+      control_level: corridor
+      allowed_levels: [region, corridor]
+      description: 潮汐走廊协调策略包（单向/偏置绿波）
+    corridor_multiroute_diversion:
+      control_level: corridor
+      allowed_levels: [region, corridor]
+      description: 多路径分流与平行走廊协同策略
+    corridor_flexible_coordination:
+      control_level: corridor
+      allowed_levels: [corridor]
+      description: 平峰柔性协调与公交优先兼顾策略
+    corridor_green_wave_rebuild:
+      control_level: corridor
+      allowed_levels: [region, corridor]
+      description: 绿波带重建与相位差修正策略
+    corridor_bottleneck_throughput_guard:
+      control_level: corridor
+      allowed_levels: [corridor]
+      description: 瓶颈通道保通与量出为入策略
+    intersection_bottleneck_anti_spillback:
+      control_level: intersection
+      allowed_levels: [region, corridor, intersection]
+      description: 路口防溢流策略包（出口优先/上游削峰）
+    intersection_balance_and_green_reuse:
+      control_level: intersection
+      allowed_levels: [region, intersection]
+      description: 削空放与绿信比重分配策略
+    intersection_phase_rebalance:
+      control_level: intersection
+      allowed_levels: [corridor, intersection]
+      description: 相位相序重构与关键流向保护策略
+    intersection_delay_relief:
+      control_level: intersection
+      allowed_levels: [region, corridor, intersection]
+      description: 延误缓解短周期与请求式放行策略
+    intersection_channelization_refactor_hint:
+      control_level: intersection
+      allowed_levels: [intersection]
+      description: 渠化与车道功能重构建议策略
+
+# 单路口信号优化 Skill 配置
+single_intersection_optimization:
+  enabled: true
+  trigger:
+    issue_codes:
+      - signal_queue_overflow
+      - signal_green_waste
+      - signal_phase_imbalance
+      - dynamic_high_saturation
+      - dynamic_high_delay
+      - static_channelization_mismatch
+    min_priority_level: P2
+  issue_param_adjustments:
+    signal_queue_overflow:
+      target_saturation: 0.75
+      over_target_penalty_weight: 30.0
+    signal_green_waste:
+      default_cycle_s: 90
+      target_saturation_min: 0.55
+    signal_phase_imbalance:
+      intensity_std_penalty_weight: 15.0
+    dynamic_high_delay:
+      default_cycle_s: 100
+      min_green_s: 15
+    dynamic_high_saturation:
+      target_saturation: 0.78
+    static_channelization_mismatch:
+      intensity_std_penalty_weight: 12.0
+  quality_thresholds:
+    max_phase_saturation_warn: 0.95
+    max_phase_saturation_reject: 1.05
+  merge_strategy: priority_first
+
+# 单路口参数指导 Skill：解释问题码→参数映射，并按场景补充工程建议（不求解）
+single_intersection_param_guidance:
+  scenario_hints:
+    normal:
+      summary: >-
+        常规场景：以诊断命中的路口级问题码为准，参数取自 single_intersection_optimization.issue_param_adjustments；
+        未命中任何映射时保持求解器默认配置。
+      suggested_constraints: {}
+    default:
+      summary: 未单独配置的场景标签时，仅输出问题码驱动参数；可在本段为现场定制场景补充说明与建议约束。
+      suggested_constraints: {}
+    school_peak:
+      summary: >-
+        学校高峰：过街与接送车流交织，若已因排队溢流等抬高惩罚权重，可适度提高最小绿，
+        避免行人相位过短导致二次溢流；具体仍需结合相位结构复核。
+      suggested_constraints:
+        min_green_s: 12
+    hospital_morning:
+      summary: >-
+        医院早高峰：急救通道可靠性要求高，若诊断含高延误或排队溢流，问题码映射已倾向缩短周期或加压目标饱和度；
+        可在此基础上略抬最小绿保障关键进口道放行时间。
+      suggested_constraints:
+        min_green_s: 14
+    event_dispersal:
+      summary: >-
+        大型活动散场：多向需求瞬时脉冲、相位不平衡更常见；优先信任 intensity_std_penalty_weight 等映射，
+        慎用过长固定周期以免清空不足。
+      suggested_constraints:
+        default_cycle_s: 110
+
+# MCP diagnosis_tool（mock）与 diagnosis.thresholds 对齐，可单独调参
+diagnosis_tool_mock:
+  saturation_high: 0.85
+  delay_high_s: 90.0
+  queue_overflow_ratio: 1.0
+  green_util_low: 0.5
+  road_density_sparse_below: 8.0

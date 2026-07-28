@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>路口坐标批量修正工具</title>
+<link rel="stylesheet" href="/debug/assets/debug-shell.css">
+<script defer src="/debug/assets/debug-ui.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#0d1929;color:#c8d6e5;display:flex;height:100vh}
+#map{flex:1;height:100%}
+#panel{width:420px;height:100%;overflow-y:auto;padding:14px;background:#101c2e;border-left:1px solid #1e2d3d}
+h2{font-size:15px;margin-bottom:10px;color:#1af}
+.status{font-size:12px;color:#6b8cb0;margin-bottom:10px;line-height:1.7}
+.btn{padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;margin:4px}
+.btn-primary{background:#1a7fff;color:#fff}
+.btn-success{background:#2ed573;color:#0d1929}
+.btn-warn{background:#f5a623;color:#0d1929}
+.result-item{padding:8px;margin:4px 0;border-radius:6px;font-size:11px;line-height:1.6;border:1px solid #1e2d3d}
+.result-item.ok{background:rgba(46,213,115,.06);border-color:rgba(46,213,115,.2)}
+.result-item.warn{background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2)}
+.result-item.err{background:rgba(255,71,87,.06);border-color:rgba(255,71,87,.2)}
+.old{color:#ff4757;text-decoration:line-through;font-size:10px}
+.new{color:#2ed573;font-weight:700}
+.dist{color:#f5a623;font-size:10px}
+textarea{width:100%;height:200px;background:#0d1929;color:#c8d6e5;border:1px solid #1e2d3d;border-radius:6px;padding:8px;font-family:monospace;font-size:10px;margin-top:8px}
+#progress{height:4px;background:#1e2d3d;border-radius:2px;margin:8px 0}
+#progressBar{height:100%;background:#1a7fff;border-radius:2px;width:0%;transition:width .3s}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="panel">
+  <h2>路口坐标批量修正工具</h2>
+  <div class="sc-action-row" style="margin-bottom:10px;">
+    <a class="sc-action" href="/debug/signalctl-map.html">信控地图</a>
+    <a class="sc-action" href="/debug/city-demo.html">城市总览</a>
+    <a class="sc-action primary" href="/debug/">调试入口</a>
+  </div>
+  <div class="status" id="statusText">点击"开始修正"按钮，将使用高德地理编码API获取每个路口的精确GCJ-02坐标。</div>
+  <div id="progress"><div id="progressBar"></div></div>
+  <div>
+    <button class="btn btn-primary" id="btnStart" onclick="startGeocode()">开始修正</button>
+    <button class="btn btn-success" id="btnApply" onclick="applyFixes()" style="display:none">应用修正到服务器</button>
+    <button class="btn btn-warn" onclick="copyJSON()">复制JSON结果</button>
+  </div>
+  <div id="results" style="margin-top:10px"></div>
+  <textarea id="jsonOutput" placeholder="修正后的坐标JSON将显示在这里..."></textarea>
+</div>
+
+<script>
+const API = location.origin;
+let map, geocoder, intersections = [], fixes = [], markers = [];
+
+async function boot(){
+  const cfgRes = await fetch(`${API}/v1/demo/frontend-config`);
+  const cfg = await cfgRes.json();
+  if(cfg.amapSecurityJsCode) window._AMapSecurityConfig = { securityJsCode: cfg.amapSecurityJsCode };
+  await new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = `https://webapi.amap.com/maps?v=2.0&key=${cfg.amapJsApiKey}&plugin=AMap.Geocoder`;
+    s.onload = resolve; s.onerror = () => reject(new Error('高德脚本加载失败，请检查网络或将高德地图 JS 本地化后重试'));
+    document.head.appendChild(s);
+  });
+  map = new AMap.Map('map', { center:[117.02, 36.66], zoom:12, mapStyle:'amap://styles/dark' });
+  geocoder = new AMap.Geocoder({ city: '济南', radius: 5000 });
+  const intRes = await fetch(`${API}/v1/demo/intersections`);
+  const intData = await intRes.json();
+  intersections = intData.intersections || [];
+  document.getElementById('statusText').textContent = `已加载 ${intersections.length} 个路口，点击"开始修正"`;
+  intersections.forEach(i => {
+    const pos = [i.lng || i.center?.[0], i.lat || i.center?.[1]];
+    if(pos[0] && pos[1]){
+      const m = new AMap.Marker({ position: pos, map, content: `<div style="width:8px;height:8px;border-radius:50%;background:#ff4757;border:1px solid #fff"></div>`, anchor:'center' });
+      m._intId = i.id;
+      markers.push(m);
+    }
+  });
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+async function geocodeOne(name, city){
+  return new Promise((resolve) => {
+    const searchName = name + '交叉口';
+    geocoder.getLocation(searchName, (status, result) => {
+      if(status === 'complete' && result.geocodes && result.geocodes.length > 0){
+        const geo = result.geocodes[0];
+        resolve({ lng: geo.location.getLng(), lat: geo.location.getLat(), formatted: geo.formattedAddress });
+      } else {
+        const parts = name.split('/');
+        if(parts.length === 2){
+          geocoder.getLocation('济南市' + parts[0] + parts[1] + '路口', (s2, r2) => {
+            if(s2 === 'complete' && r2.geocodes && r2.geocodes.length > 0){
+              const g2 = r2.geocodes[0];
+              resolve({ lng: g2.location.getLng(), lat: g2.location.getLat(), formatted: g2.formattedAddress });
+            } else {
+              resolve(null);
+            }
+          });
+        } else {
+          resolve(null);
+        }
+      }
+    });
+  });
+}
+
+function haversine(lng1,lat1,lng2,lat2){
+  const R=6371000, dLat=(lat2-lat1)*Math.PI/180, dLon=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+async function startGeocode(){
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnStart').textContent = '修正中...';
+  const resultsEl = document.getElementById('results');
+  resultsEl.innerHTML = '';
+  fixes = [];
+  let done = 0;
+
+  for(const inter of intersections){
+    const oldLng = inter.lng || inter.center?.[0];
+    const oldLat = inter.lat || inter.center?.[1];
+    const result = await geocodeOne(inter.name, '济南');
+    done++;
+    document.getElementById('progressBar').style.width = `${(done/intersections.length*100).toFixed(0)}%`;
+    document.getElementById('statusText').textContent = `修正进度: ${done}/${intersections.length} - ${inter.name}`;
+
+    if(result){
+      const dist = haversine(oldLng, oldLat, result.lng, result.lat);
+      const fix = {
+        id: inter.id,
+        name: inter.name,
+        oldLng, oldLat,
+        newLng: Math.round(result.lng * 1000000) / 1000000,
+        newLat: Math.round(result.lat * 1000000) / 1000000,
+        distance: Math.round(dist),
+        formatted: result.formatted,
+      };
+      fixes.push(fix);
+
+      const cls = dist > 500 ? 'warn' : dist > 100 ? 'ok' : 'ok';
+      resultsEl.innerHTML += `<div class="result-item ${cls}">
+        <strong>${inter.name}</strong> (${inter.id})<br>
+        <span class="old">原: ${oldLng}, ${oldLat}</span> → <span class="new">新: ${fix.newLng}, ${fix.newLat}</span>
+        <span class="dist">偏差: ${fix.distance}m</span><br>
+        <span style="font-size:9px;color:#6b8cb0">${result.formatted}</span>
+      </div>`;
+
+      const newMarker = new AMap.Marker({
+        position: [fix.newLng, fix.newLat], map,
+        content: `<div style="width:8px;height:8px;border-radius:50%;background:#2ed573;border:1px solid #fff"></div>`,
+        anchor:'center',
+      });
+
+      if(dist > 50){
+        new AMap.Polyline({
+          path: [[oldLng, oldLat], [fix.newLng, fix.newLat]],
+          strokeColor: dist > 500 ? '#f5a623' : '#2ed573',
+          strokeWeight: 1, strokeStyle: 'dashed', map,
+        });
+      }
+    } else {
+      resultsEl.innerHTML += `<div class="result-item err">
+        <strong>${inter.name}</strong> (${inter.id})<br>
+        <span style="color:#ff4757">未能获取坐标，保留原值</span>
+      </div>`;
+      fixes.push({ id: inter.id, name: inter.name, oldLng, oldLat, newLng: oldLng, newLat: oldLat, distance: 0 });
+    }
+
+    await sleep(220);
+  }
+
+  document.getElementById('statusText').textContent = `修正完成! ${fixes.length} 个路口已处理。大偏差(>500m): ${fixes.filter(f=>f.distance>500).length}个`;
+  document.getElementById('btnStart').textContent = '修正完成';
+  document.getElementById('btnApply').style.display = 'inline-block';
+  updateJSON();
+}
+
+function updateJSON(){
+  const output = {};
+  fixes.forEach(f => {
+    output[f.id] = { lng: f.newLng, lat: f.newLat, distance: f.distance };
+  });
+  document.getElementById('jsonOutput').value = JSON.stringify(output, null, 2);
+}
+
+function copyJSON(){
+  const ta = document.getElementById('jsonOutput');
+  ta.select();
+  document.execCommand('copy');
+  alert('已复制到剪贴板');
+}
+
+async function applyFixes(){
+  if(!fixes.length){ alert('请先执行修正'); return; }
+  const coordMap = {};
+  fixes.forEach(f => { coordMap[f.id] = { lng: f.newLng, lat: f.newLat }; });
+  try{
+    const res = await fetch(`${API}/v1/demo/fix-coordinates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coordinates: coordMap }),
+    });
+    if(res.ok){
+      const data = await res.json();
+      alert(`成功应用 ${data.updated || 0} 个路口坐标修正！请刷新总览页查看效果。`);
+    } else {
+      alert('应用失败: ' + (await res.text()));
+    }
+  }catch(e){
+    alert('请求失败: ' + e.message);
+  }
+}
+
+boot().catch(e => {
+  const msg = e.message || String(e);
+  document.getElementById('statusText').textContent = msg;
+  if (window.SignalControlUI) SignalControlUI.toast(msg, 'danger');
+});
+</script>
+</body>
+</html>
