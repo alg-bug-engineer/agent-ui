@@ -20,7 +20,7 @@ __pycache__/
 *.py[cod]
 *.pyo
 
-references/docs/
+references/
 
 # Test and tooling caches
 .pytest_cache/
