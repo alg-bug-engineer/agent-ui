@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { dataRepository } from '../services/dataRepository'
 import type {
   ActId,
+  ChannelizationScene,
   DailySummary,
   DevicePoint,
   EffectTrendScene,
@@ -20,6 +21,8 @@ type KnowledgeTab = 'experience' | 'case'
 type ExperienceTab = 'cognition' | 'governance' | 'plan'
 type TaskBoardTab = 'anomaly' | 'optimizing' | 'completed'
 type Severity = 'critical' | 'major' | 'warning' | 'watch'
+
+const Act6Report = defineAsyncComponent(() => import('../../act6/Act6Report.vue'))
 
 interface ExperienceData {
   summary: Array<{ label: string; value: number; unit: string }>
@@ -74,6 +77,7 @@ const emit = defineEmits<{
 }>()
 
 const target = ref<TargetIntersection | null>(null)
+const channelization = ref<ChannelizationScene | null>(null)
 const devices = ref<DevicePoint[]>([])
 const metrics = ref<MetricItem[]>([])
 const trace = ref<FlowTraceScene | null>(null)
@@ -90,6 +94,7 @@ const knowledgeTab = ref<KnowledgeTab>('experience')
 const experienceTab = ref<ExperienceTab>('cognition')
 const selectedAssetId = ref('timing')
 const taskBoardTab = ref<TaskBoardTab>('anomaly')
+const selectedPlanId = ref('')
 
 const stages: Array<{
   id: ActId
@@ -148,6 +153,31 @@ const stages: Array<{
     next: '演示完成 · 可返回首页继续扫描',
   },
 ]
+
+const stageDimensions: Partial<Record<ActId, Array<{ name: string; detail: string }>>> = {
+  1: [
+    { name: '路口认知', detail: '路网 · 方向 · 设备' },
+    { name: '异常核验', detail: '指标 · 阈值 · 周期' },
+  ],
+  2: [
+    { name: '拓扑结构', detail: '目标 · 冲突 · 上下游' },
+    { name: '流量溯源', detail: '六跳来源 · 贡献占比' },
+    { name: '问题验证', detail: '假设核验 · 病因排除' },
+  ],
+  3: [
+    { name: '案例检索', detail: '标签 · 语义 · 效果' },
+    { name: '参数生成', detail: '周期 · 绿信比 · 相位差' },
+    { name: '方案对比', detail: '目标改善 · 网络副作用' },
+  ],
+  4: [
+    { name: '方案评估', detail: '影响预估 · 安全校核' },
+    { name: '落地执行', detail: '信号下发 · 回退护栏' },
+  ],
+  5: [
+    { name: '前后对比', detail: '排队 · 延误 · 效率' },
+    { name: '晚高峰验证', detail: '逐周期 · 无反弹' },
+  ],
+}
 
 const knowledgeAssets: KnowledgeAsset[] = [
   {
@@ -289,10 +319,25 @@ const activeStageMeta = computed(() => stages[props.activeStage - 1])
 const selectedAsset = computed(
   () => knowledgeAssets.find((item) => item.id === selectedAssetId.value) ?? knowledgeAssets[0],
 )
+const activeDimensions = computed(() => stageDimensions[props.activeStage] ?? [])
 const onlineDeviceCount = computed(() => devices.value.filter((item) => item.status === 'online').length)
+const entranceLaneCount = computed(() =>
+  channelization.value?.links
+    .filter((item) => item.role === 'entrance')
+    .reduce((sum, item) => sum + item.laneCount, 0) ?? 16,
+)
 const recommendedPlan = computed(() => plan.value?.options.find((item) => item.recommended))
+const selectedPlan = computed(() =>
+  plan.value?.options.find((item) => item.id === selectedPlanId.value)
+  ?? recommendedPlan.value
+  ?? plan.value?.options[0],
+)
 const recommendedImpact = computed(() =>
   plan.value?.impacts.find((item) => item.optionId === recommendedPlan.value?.id),
+)
+const selectedPlanImpact = computed(() =>
+  plan.value?.impacts.find((item) => item.optionId === selectedPlan.value?.id)
+  ?? recommendedImpact.value,
 )
 const selectedExperience = computed(() => {
   const content: Record<ExperienceTab, { title: string; description: string; sample: string }> = {
@@ -354,6 +399,7 @@ function goNext() {
 onMounted(async () => {
   const [
     targetData,
+    channelizationData,
     deviceData,
     metricData,
     traceData,
@@ -366,6 +412,7 @@ onMounted(async () => {
     experienceData,
   ] = await Promise.all([
     dataRepository.targetIntersection(),
+    dataRepository.channelization(),
     dataRepository.devices(),
     dataRepository.metrics(),
     dataRepository.flowTrace(),
@@ -379,6 +426,7 @@ onMounted(async () => {
   ])
 
   target.value = targetData
+  channelization.value = channelizationData
   devices.value = deviceData
   metrics.value = metricData
   trace.value = traceData
@@ -386,6 +434,9 @@ onMounted(async () => {
   knowledgeBase.value = knowledgeData
   cases.value = caseData
   plan.value = planData
+  selectedPlanId.value = planData.options.find((item) => item.recommended)?.id
+    ?? planData.options[0]?.id
+    ?? ''
   effect.value = effectData
   daily.value = dailyData
   experiences.value = experienceData as unknown as ExperienceData
@@ -641,6 +692,10 @@ onMounted(async () => {
     </div>
   </section>
 
+  <section v-else-if="activeStage === 6" class="v2-review-experience">
+    <Act6Report />
+  </section>
+
   <section v-else class="v2-flow-experience">
     <div class="v2-stage-context">
       <span>{{ activeStageMeta.en }}</span>
@@ -656,19 +711,34 @@ onMounted(async () => {
       </div>
 
       <template v-if="activeStage === 1">
+        <div class="v2-dimension-banner">
+          <small>指标分析维度</small>
+          <div>
+            <span v-for="item in activeDimensions" :key="item.name">
+              <strong>{{ item.name }}</strong><b>{{ item.detail }}</b>
+            </span>
+          </div>
+        </div>
         <div class="v2-target-card">
           <small>本次演示对象</small>
           <strong>{{ target?.name ?? '解放东路与奥体西路交叉口' }}</strong>
           <p>晚高峰 · 北进口向南直行 · 溢流风险</p>
         </div>
-        <div class="v2-evidence-grid">
+        <div class="v2-cognition-grid">
           <article>
-            <span>感知数据源</span><strong>4<small>类</small></strong><p>视频 / 地磁 / 路况 / 信号</p>
+            <span>进口车道</span><strong>{{ entranceLaneCount }}<small>条</small></strong><p>十字路口 · 4 相位</p>
           </article>
           <article>
-            <span>在线设备</span><strong>{{ onlineDeviceCount }}<small>台</small></strong><p>覆盖率 91.7%</p>
+            <span>感知设备</span><strong>{{ onlineDeviceCount }}<small>台在线</small></strong><p>覆盖率 91.7%</p>
+          </article>
+          <article>
+            <span>目标方向</span><strong>北进口</strong><p>向南直行</p>
+          </article>
+          <article>
+            <span>融合数据</span><strong>4<small>类</small></strong><p>视频 / 地磁 / 路况 / 信号</p>
           </article>
         </div>
+        <div class="v2-section-title"><span>实时异常指标</span><b>4 项同步核验</b></div>
         <div class="v2-metric-stack">
           <article v-for="metric in metrics" :key="metric.id" :class="metric.status">
             <span>{{ metric.label }}</span>
@@ -679,6 +749,14 @@ onMounted(async () => {
       </template>
 
       <template v-else-if="activeStage === 2">
+        <div class="v2-dimension-banner three">
+          <small>指标分析维度</small>
+          <div>
+            <span v-for="item in activeDimensions" :key="item.name">
+              <strong>{{ item.name }}</strong><b>{{ item.detail }}</b>
+            </span>
+          </div>
+        </div>
         <ol class="v2-analysis-chain">
           <li>
             <span>01</span><div><strong>拓扑关系</strong><p>目标、冲突、上游与下游同屏分析</p></div><b>完成</b>
@@ -698,23 +776,43 @@ onMounted(async () => {
       </template>
 
       <template v-else-if="activeStage === 3">
+        <div class="v2-dimension-banner three">
+          <small>指标分析维度</small>
+          <div>
+            <span v-for="item in activeDimensions" :key="item.name">
+              <strong>{{ item.name }}</strong><b>{{ item.detail }}</b>
+            </span>
+          </div>
+        </div>
         <div class="v2-recall-summary">
-          <span>知识检索完成</span>
+          <span>案例检索完成</span>
           <strong>{{ knowledgeBase?.matchLatencySeconds ?? 1.8 }}<small>秒</small></strong>
           <p>命中 {{ knowledgeBase?.matchedCaseCount ?? 37 }} 个高相似案例与适用专家规则</p>
         </div>
-        <div class="v2-case-stack">
-          <article v-for="item in cases" :key="item.id">
-            <span>{{ item.matchScore }}%</span>
-            <div><small>{{ item.location }}</small><strong>{{ item.title }}</strong></div>
+        <div class="v2-case-evidence-stack">
+          <article v-for="item in cases.slice(0, 2)" :key="item.id">
+            <header>
+              <span>{{ item.matchScore }}<small>% 匹配</small></span>
+              <div><small>{{ item.location }}</small><strong>{{ item.title }}</strong></div>
+            </header>
+            <div class="v2-case-tags">
+              <b v-for="tag in item.tags.slice(0, 3)" :key="tag">{{ tag }}</b>
+            </div>
+            <p><span>治理动作</span>{{ item.treatment }}</p>
+            <footer><span>历史效果</span><strong>{{ item.effect }}</strong></footer>
           </article>
-        </div>
-        <div class="v2-model-badges">
-          <span>周期测算</span><span>绿信比优化</span><span>相位差协调</span>
         </div>
       </template>
 
       <template v-else-if="activeStage === 4">
+        <div class="v2-dimension-banner">
+          <small>指标分析维度</small>
+          <div>
+            <span v-for="item in activeDimensions" :key="item.name">
+              <strong>{{ item.name }}</strong><b>{{ item.detail }}</b>
+            </span>
+          </div>
+        </div>
         <div class="v2-recommended-plan">
           <small>评估通过 · 推荐执行</small>
           <strong>{{ recommendedPlan?.name ?? '方案 C · 协同组合' }}</strong>
@@ -735,6 +833,14 @@ onMounted(async () => {
       </template>
 
       <template v-else-if="activeStage === 5">
+        <div class="v2-dimension-banner">
+          <small>指标分析维度</small>
+          <div>
+            <span v-for="item in activeDimensions" :key="item.name">
+              <strong>{{ item.name }}</strong><b>{{ item.detail }}</b>
+            </span>
+          </div>
+        </div>
         <div class="v2-outcome-hero">
           <small>北进口高峰排队</small>
           <div><b>129<small>m</small></b><i>→</i><strong>78<small>m</small></strong></div>
@@ -782,13 +888,34 @@ onMounted(async () => {
           <i><span></span></i>
           <p>超出阈值 12.4%</p>
         </div>
+        <div class="v2-cycle-verification">
+          <header><strong>连续周期核验</strong><span>动态阈值 114.8m</span></header>
+          <div>
+            <article><i style="height: 74%"></i><span>T-2</span><b>118m</b></article>
+            <article><i style="height: 86%"></i><span>T-1</span><b>124m</b></article>
+            <article class="critical"><i style="height: 100%"></i><span>当前</span><b>129m</b></article>
+          </div>
+          <p>视频队尾、地磁流量与信号相位数据一致，异常置信度 <strong>96.4%</strong></p>
+        </div>
         <div class="v2-source-list">
-          <span><i></i>电警视频</span><span><i></i>地磁检测</span>
-          <span><i></i>互联网路况</span><span><i></i>信号控制</span>
+          <span><i></i><b>电警视频</b>队尾定位</span><span><i></i><b>地磁检测</b>流量校验</span>
+          <span><i></i><b>互联网路况</b>速度验证</span><span><i></i><b>信号控制</b>相位对齐</span>
         </div>
       </template>
 
       <template v-else-if="activeStage === 2">
+        <div class="v2-trace-summary">
+          <header>
+            <div><small>上游流量溯源</small><strong>{{ trace?.summary.dominantSource ?? '奥体西路北侧连续来车波' }}</strong></div>
+            <span>{{ trace?.summary.coveredSharePct.toFixed(1) ?? '92.0' }}<small>%</small></span>
+          </header>
+          <div>
+            <span v-for="item in trace?.mainCorridorChain.slice(0, 3)" :key="item.nodeId">
+              <b>第 {{ item.hop }} 跳</b><strong>{{ item.sharePct }}%</strong>
+            </span>
+          </div>
+          <p>轻风路、工业南路等支路汇入主走廊，形成连续到达波。</p>
+        </div>
         <div class="v2-causal-chain">
           <article><span>上游连续到达</span><strong>前两跳贡献 57.9%</strong></article>
           <i>＋</i>
@@ -799,6 +926,16 @@ onMounted(async () => {
         <div class="v2-exclusion">
           <span>已排除</span>
           <div><strong>下游不是病因</strong><p>占有率 42%，仍有约 168m 储车空间</p></div>
+        </div>
+        <div class="v2-hypothesis-grid">
+          <article
+            v-for="item in diagnosis?.hypotheses"
+            :key="item.id"
+            :class="{ supported: item.supported }"
+          >
+            <span>{{ item.supported ? '成立' : '排除' }}</span>
+            <div><strong>{{ item.question }}</strong><p>{{ item.evidence }}</p></div>
+          </article>
         </div>
         <div class="v2-conclusion-block warning">
           <small>研判结论</small>
@@ -812,12 +949,40 @@ onMounted(async () => {
           <i>VS</i>
           <div><span>智能体测算</span><strong>{{ plan?.generationSeconds ?? 12.4 }}<small>秒</small></strong></div>
         </div>
+        <div class="v2-timing-parameters">
+          <header><strong>配时参数生成</strong><span>12.4 秒完成测算</span></header>
+          <div class="v2-parameter-head">
+            <span>相位</span><span>当前</span><span>建议</span><span>变化</span>
+          </div>
+          <div v-for="phase in plan?.recommended.phases" :key="phase.name" class="v2-parameter-row">
+            <strong>{{ phase.name }}</strong>
+            <span>{{ phase.currentGreen }}s</span>
+            <b>{{ phase.proposedGreen }}s</b>
+            <em :class="{ changed: phase.currentGreen !== phase.proposedGreen }">
+              {{ phase.proposedGreen === phase.currentGreen ? '保持' : `${phase.proposedGreen - phase.currentGreen > 0 ? '+' : ''}${phase.proposedGreen - phase.currentGreen}s` }}
+            </em>
+          </div>
+          <footer><span>周期 <b>{{ plan?.recommended.cycleSeconds }}s</b></span><span>相位差 <b>+{{ plan?.recommended.phaseDiffSeconds }}s</b></span></footer>
+        </div>
         <div class="v2-plan-options">
-          <article v-for="item in plan?.options" :key="item.id" :class="{ recommended: item.recommended }">
+          <article
+            v-for="item in plan?.options"
+            :key="item.id"
+            :class="{ recommended: item.recommended, active: item.id === selectedPlan?.id }"
+            @click="selectedPlanId = item.id"
+          >
             <header><span>{{ item.name }}</span><b>{{ item.recommended ? '推荐' : '对照' }}</b></header>
             <p>{{ item.summary }}</p>
             <footer><span>目标 +{{ item.targetGreenDeltaSeconds }}s</span><span>上游削峰 {{ item.upstreamMeteringPct }}%</span></footer>
           </article>
+        </div>
+        <div v-if="selectedPlanImpact" class="v2-plan-impact-preview">
+          <header><strong>{{ selectedPlan?.name }} · 影响对比</strong><span>点击上方方案切换</span></header>
+          <div>
+            <span><small>北进口</small><b>{{ selectedPlanImpact.target.before }}</b><i>→</i><strong>{{ selectedPlanImpact.target.after }}</strong></span>
+            <span><small>东西向</small><b>{{ selectedPlanImpact.conflict.before }}</b><i>→</i><strong>{{ selectedPlanImpact.conflict.after }}</strong></span>
+            <span><small>下游</small><b>{{ selectedPlanImpact.downstream.before }}</b><i>→</i><strong>{{ selectedPlanImpact.downstream.after }}</strong></span>
+          </div>
         </div>
         <div class="v2-conclusion-block action">
           <small>生成结论</small>
@@ -901,7 +1066,7 @@ onMounted(async () => {
         <strong>{{ activeStageMeta.cue }}</strong>
         <small>{{ activeStageMeta.next }}</small>
       </div>
-      <button class="next" @click="goNext">{{ activeStage === 6 ? '完成并返回首页' : '下一阶段' }} →</button>
+      <button class="next" @click="goNext">下一阶段 →</button>
     </footer>
   </section>
 </template>

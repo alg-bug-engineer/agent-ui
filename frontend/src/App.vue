@@ -23,8 +23,8 @@ const stages: Array<{ id: ActId; label: string; short: string }> = [
 
 const stageMapBeats: Record<ActId, { activeAct: ActId; beat: string }> = {
   1: { activeAct: 2, beat: 'evidence' },
-  2: { activeAct: 2, beat: 'cause' },
-  3: { activeAct: 2, beat: 'options' },
+  2: { activeAct: 2, beat: 'trace' },
+  3: { activeAct: 3, beat: 'similar-cases' },
   4: { activeAct: 4, beat: 'deployment' },
   5: { activeAct: 5, beat: 'before-after' },
   6: { activeAct: 6, beat: 'report' },
