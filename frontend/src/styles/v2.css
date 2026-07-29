@@ -4480,7 +4480,305 @@
   line-height: 1.25;
 }
 
+/* Home monitoring board: large-screen readability and balanced information density. */
+.v2-home-mode .v2-panel-cap {
+  height: 62px;
+  padding-inline: 18px;
+}
+
+.v2-home-mode .v2-panel-cap > span {
+  font-size: 11px;
+  letter-spacing: 1.4px;
+}
+
+.v2-home-mode .v2-panel-cap > b {
+  font-size: 16px;
+}
+
+.v2-home-mode .v2-panel-cap > small {
+  font-size: 11px;
+}
+
+.v2-home-mode .v2-monitoring-overview {
+  padding: 15px 16px 14px;
+}
+
+.v2-home-mode .v2-monitoring-overview > header {
+  margin-bottom: 13px;
+}
+
+.v2-home-mode .v2-monitoring-overview header small {
+  font-size: 11px;
+}
+
+.v2-home-mode .v2-monitoring-overview header strong {
+  font-size: 18px;
+}
+
+.v2-home-mode .v2-monitoring-overview header > span {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-coverage-metrics article {
+  padding-block: 5px;
+}
+
+.v2-home-mode .v2-coverage-metrics strong {
+  font-size: 30px;
+}
+
+.v2-home-mode .v2-coverage-metrics span {
+  margin-top: 7px;
+  font-size: 12px;
+}
+
+.v2-home-mode .v2-coverage-metrics small {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-network-kpis {
+  padding: 11px 9px;
+}
+
+.v2-home-mode .v2-network-kpis small {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-network-kpis strong {
+  font-size: 16px;
+}
+
+.v2-home-mode .v2-network-kpis b {
+  font-size: 9px;
+}
+
+.v2-home-mode .v2-task-tabs button {
+  height: 48px;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.v2-home-mode .v2-task-tabs button > span {
+  font-size: 14px;
+}
+
+.v2-home-mode .v2-task-tabs button > b {
+  min-width: 24px;
+  padding: 3px 7px;
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-task-list {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: rgba(57, 220, 244, .24) transparent;
+  scrollbar-width: thin;
+}
+
+.v2-home-mode .v2-task-list-heading {
+  height: 38px;
+  padding-inline: 15px;
+}
+
+.v2-home-mode .v2-task-list-heading span {
+  font-size: 11px;
+}
+
+.v2-home-mode .v2-task-list-heading small {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-anomaly-item {
+  min-height: 78px;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-inline: 13px;
+  padding-block: 11px;
+}
+
+.v2-home-mode .v2-anomaly-item header {
+  gap: 8px;
+}
+
+.v2-home-mode .v2-anomaly-item header > span {
+  font-size: 9px;
+}
+
+.v2-home-mode .v2-anomaly-item header > strong {
+  font-size: 14px;
+}
+
+.v2-home-mode .v2-anomaly-item header > b,
+.v2-home-mode .v2-anomaly-item > time {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-anomaly-item p {
+  margin-block: 7px 4px;
+  font-size: 12px;
+}
+
+.v2-home-mode .v2-anomaly-item small {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-optimizing-item {
+  margin: 11px 13px 0;
+  padding: 13px;
+}
+
+.v2-home-mode .v2-optimizing-item header > span,
+.v2-home-mode .v2-optimizing-item header > b,
+.v2-home-mode .v2-optimizing-item footer {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-optimizing-item header > strong {
+  font-size: 13px;
+}
+
+.v2-home-mode .v2-optimizing-item p {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.v2-home-mode .v2-task-board-foot {
+  padding-block: 11px;
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-scan-hero {
+  width: clamp(390px, calc(100vw - 790px), 680px);
+  min-width: 0;
+  padding: 14px 20px;
+}
+
+.v2-home-mode .v2-scan-hero small {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-scan-hero strong {
+  font-size: 18px;
+}
+
+.v2-home-mode .v2-scan-hero p {
+  font-size: 11px;
+}
+
+.v2-home-mode .v2-knowledge-intro {
+  padding: 17px 18px 12px;
+}
+
+.v2-home-mode .v2-knowledge-intro small {
+  font-size: 11px;
+}
+
+.v2-home-mode .v2-knowledge-intro strong {
+  font-size: 16px;
+}
+
+.v2-home-mode .v2-knowledge-intro > span {
+  padding: 5px 9px;
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-knowledge-assets {
+  gap: 7px;
+  padding: 5px 15px 13px;
+}
+
+.v2-home-mode .v2-knowledge-assets button {
+  min-height: 68px;
+  padding: 9px 5px;
+}
+
+.v2-home-mode .v2-knowledge-assets strong {
+  font-size: 18px;
+}
+
+.v2-home-mode .v2-knowledge-assets strong small,
+.v2-home-mode .v2-knowledge-assets span {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-asset-detail {
+  grid-template-columns: 68px 1fr;
+  gap: 14px;
+  margin: 0 15px 13px;
+  padding: 13px 15px;
+}
+
+.v2-home-mode .v2-asset-detail small {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-asset-detail strong {
+  font-size: 17px;
+}
+
+.v2-home-mode .v2-asset-detail p {
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.v2-home-mode .v2-knowledge-tabs {
+  padding-inline: 15px;
+}
+
+.v2-home-mode .v2-knowledge-tabs button {
+  padding: 11px;
+  font-size: 13px;
+}
+
+.v2-home-mode .v2-knowledge-library {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 15px 15px;
+}
+
+.v2-home-mode .v2-library-subtabs {
+  gap: 8px;
+}
+
+.v2-home-mode .v2-library-subtabs button {
+  padding: 8px 5px;
+  font-size: 11px;
+}
+
+.v2-home-mode .v2-knowledge-library > article {
+  flex: 1 1 auto;
+  min-height: 132px;
+  margin-top: 11px;
+  padding: 15px 16px;
+}
+
+.v2-home-mode .v2-knowledge-library article > small,
+.v2-home-mode .v2-knowledge-library article > span {
+  font-size: 10px;
+}
+
+.v2-home-mode .v2-knowledge-library article > strong {
+  margin-top: 7px;
+  font-size: 14px;
+}
+
+.v2-home-mode .v2-knowledge-library article > p {
+  margin-block: 10px;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
 @media (min-width: 1501px) {
+  .v2-task-rail {
+    width: clamp(430px, 23vw, 480px);
+  }
+
+  .v2-knowledge-panel {
+    width: clamp(450px, 24vw, 500px);
+  }
+
   .v2-stage-left,
   .v2-stage-right {
     width: clamp(390px, 21vw, 438px);
@@ -4575,13 +4873,13 @@
   }
 
   .v2-task-rail {
-    width: 350px;
+    width: 370px;
   }
 
   .v2-knowledge-panel,
   .v2-stage-right {
     right: 14px;
-    width: 350px;
+    width: 380px;
   }
 
   .v2-knowledge-assets {
@@ -4589,15 +4887,15 @@
   }
 
   .v2-knowledge-assets button {
-    min-height: 48px;
+    min-height: 58px;
   }
 
   .v2-knowledge-assets strong {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .v2-command-center {
-    width: min(630px, calc(100vw - 740px));
+    width: min(600px, calc(100vw - 810px));
   }
 
   .v2-stage-context {
@@ -4864,6 +5162,155 @@
 
   .v2-chart-body {
     height: 100px;
+  }
+
+  .v2-home-mode .v2-panel-cap {
+    height: 50px;
+    padding-inline: 13px;
+  }
+
+  .v2-home-mode .v2-panel-cap > span,
+  .v2-home-mode .v2-panel-cap > small {
+    font-size: 9px;
+  }
+
+  .v2-home-mode .v2-panel-cap > b {
+    font-size: 14px;
+  }
+
+  .v2-home-mode .v2-monitoring-overview {
+    padding: 8px 11px;
+  }
+
+  .v2-home-mode .v2-monitoring-overview > header {
+    margin-bottom: 6px;
+  }
+
+  .v2-home-mode .v2-monitoring-overview header small,
+  .v2-home-mode .v2-monitoring-overview header > span {
+    font-size: 9px;
+  }
+
+  .v2-home-mode .v2-monitoring-overview header strong {
+    font-size: 15px;
+  }
+
+  .v2-home-mode .v2-coverage-metrics strong {
+    font-size: 24px;
+  }
+
+  .v2-home-mode .v2-coverage-metrics span {
+    margin-top: 4px;
+    font-size: 10px;
+  }
+
+  .v2-home-mode .v2-coverage-metrics small,
+  .v2-home-mode .v2-network-kpis small,
+  .v2-home-mode .v2-network-kpis b {
+    font-size: 8px;
+  }
+
+  .v2-home-mode .v2-network-kpis {
+    padding-block: 7px;
+  }
+
+  .v2-home-mode .v2-network-kpis strong {
+    font-size: 14px;
+  }
+
+  .v2-home-mode .v2-task-tabs button {
+    height: 40px;
+    font-size: 10px;
+  }
+
+  .v2-home-mode .v2-task-list-heading {
+    height: 32px;
+  }
+
+  .v2-home-mode .v2-task-list-heading span,
+  .v2-home-mode .v2-task-list-heading small {
+    font-size: 9px;
+  }
+
+  .v2-home-mode .v2-anomaly-item {
+    min-height: 64px;
+    padding-block: 7px;
+  }
+
+  .v2-home-mode .v2-anomaly-item header > strong {
+    font-size: 12px;
+  }
+
+  .v2-home-mode .v2-anomaly-item p {
+    margin-block: 4px 2px;
+    font-size: 10px;
+  }
+
+  .v2-home-mode .v2-anomaly-item small,
+  .v2-home-mode .v2-anomaly-item header > b,
+  .v2-home-mode .v2-anomaly-item > time {
+    font-size: 9px;
+  }
+
+  .v2-home-mode .v2-knowledge-intro {
+    padding: 9px 13px 6px;
+  }
+
+  .v2-home-mode .v2-knowledge-intro small,
+  .v2-home-mode .v2-knowledge-intro > span,
+  .v2-home-mode .v2-knowledge-assets span {
+    font-size: 9px;
+  }
+
+  .v2-home-mode .v2-knowledge-intro strong {
+    font-size: 14px;
+  }
+
+  .v2-home-mode .v2-knowledge-assets button {
+    min-height: 54px;
+  }
+
+  .v2-home-mode .v2-knowledge-assets strong {
+    font-size: 15px;
+  }
+
+  .v2-home-mode .v2-asset-detail {
+    grid-template-columns: 48px 1fr;
+    padding: 8px 11px;
+  }
+
+  .v2-home-mode .v2-asset-detail strong {
+    font-size: 14px;
+  }
+
+  .v2-home-mode .v2-asset-detail p,
+  .v2-home-mode .v2-library-subtabs button,
+  .v2-home-mode .v2-knowledge-library article > small,
+  .v2-home-mode .v2-knowledge-library article > span {
+    font-size: 9px;
+  }
+
+  .v2-home-mode .v2-knowledge-tabs button {
+    padding-block: 8px;
+    font-size: 11px;
+  }
+
+  .v2-home-mode .v2-knowledge-library {
+    padding-top: 7px;
+  }
+
+  .v2-home-mode .v2-knowledge-library > article {
+    min-height: 100px;
+    padding: 10px 12px;
+  }
+
+  .v2-home-mode .v2-knowledge-library article > strong {
+    font-size: 12px;
+  }
+
+  .v2-home-mode .v2-knowledge-library article > p {
+    margin-block: 6px;
+    font-size: 10px;
   }
 }
 
