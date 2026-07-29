@@ -6864,7 +6864,7 @@ button:focus-visible {
 .operating-portrait-row {
   position: absolute;
   z-index: 24;
-  right: 434px;
+  right: 466px;
   bottom: 24px;
   left: 386px;
   display: grid;
@@ -6916,7 +6916,7 @@ button:focus-visible {
   }
 
   .operating-portrait-row {
-    right: 370px;
+    right: 390px;
     left: 320px;
     gap: 7px;
   }
@@ -8228,4 +8228,189 @@ button:focus-visible {
   color: #65edb0;
   font-size: 12px;
   font-weight: 750;
+}
+
+/* Act 2: reserve the full width of the analysis workbench plus a visible gutter. */
+@media (max-width: 1500px) and (min-width: 1361px) {
+  .detail-focus-mode.act-2 .operating-portrait-row {
+    right: 422px;
+  }
+}
+
+/* Act 6: align dense report copy with the readable hierarchy used by other acts. */
+.act-6 .report-heading > div:first-child > span {
+  font-size: 10px;
+}
+
+.act-6 .report-heading p,
+.act-6 .report-verdict small,
+.act-6 .report-verdict span {
+  font-size: 10px;
+}
+
+.act-6 .report-view-switch button {
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.act-6 .report-kpis span {
+  color: #526874;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.act-6 .report-kpis small {
+  font-size: 10px;
+}
+
+.act-6 .executive-copy small {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.act-6 .executive-copy h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.act-6 .executive-copy p {
+  color: #536974;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.act-6 .executive-findings span {
+  color: #596d77;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.act-6 .executive-findings b {
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.act-6 .report-card header small {
+  font-size: 17px;
+}
+
+.act-6 .report-card header h3 {
+  color: #213746;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.act-6 .report-card header > span {
+  color: #667d89;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.act-6 .action-legend > div {
+  font-size: 10px;
+}
+
+.act-6 .action-legend span {
+  color: #526874;
+  font-weight: 600;
+}
+
+.act-6 .action-legend strong {
+  font-size: 12px;
+}
+
+.act-6 .chart-caption {
+  color: #526874;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.act-6 .effect-name span {
+  color: #405966;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.act-6 .effect-name b {
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.act-6 .effect-values span {
+  font-size: 15px;
+}
+
+.act-6 .effect-values strong {
+  font-size: 18px;
+}
+
+.act-6 .effect-values small {
+  font-size: 9px;
+}
+
+.act-6 .collaboration-stats strong {
+  font-size: 18px;
+}
+
+.act-6 .collaboration-stats span {
+  color: #526874;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.act-6 .human-timeline time {
+  font-size: 10px;
+}
+
+.act-6 .human-timeline strong {
+  color: #213746;
+  font-size: 11px;
+}
+
+.act-6 .human-timeline span {
+  color: #5b707c;
+  font-size: 9px;
+}
+
+.act-6 .human-timeline b {
+  font-size: 9px;
+}
+
+.act-6 .experience-pipeline span {
+  font-size: 10px;
+}
+
+.act-6 .experience-pipeline strong {
+  color: #314a58;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.act-6 .experience-pipeline b {
+  font-size: 18px;
+}
+
+.act-6 .experience-pipeline small {
+  color: #617681;
+  font-size: 9px;
+}
+
+.act-6 .featured-experience > div small {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.act-6 .featured-experience > div strong {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.act-6 .featured-experience p {
+  color: #536974;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.act-6 .featured-experience > span {
+  font-size: 9px;
 }
