@@ -1410,7 +1410,15 @@ function applyCamera() {
   map.setZoomAndCenter(shot.zoom, shot.center, true, 900)
 }
 
-const topologyBeats = new Set(['direction', 'cause', 'constraints', 'options', 'simulation', 'decision'])
+const topologyBeats = new Set([
+  'direction',
+  'cause',
+  'constraints',
+  'options',
+  'simulation',
+  'decision',
+  'deployment',
+])
 
 function renderTopologyStage() {
   overlayScope = 'stage'
@@ -1419,6 +1427,7 @@ function renderTopologyStage() {
   if (props.beat === 'options') renderStrategyMap()
   if (props.beat === 'simulation') renderSimulationMap()
   if (props.beat === 'decision') renderStrategyMap(true)
+  if (props.beat === 'deployment') renderStrategyMap(true)
   overlayScope = 'base'
 }
 

@@ -1,33 +1,40 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import Act1Experience from '../act1/Act1Experience.vue'
-import Act2Experience from '../act2/Act2Experience.vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import CityMap from './map/CityMap.vue'
 import { runtimeConfig } from './config/runtime'
-import { useNarrative } from './state/narrative'
 import type { ActId } from './types'
+import V2ExecutiveExperience from './v2/V2ExecutiveExperience.vue'
 
-const Act3Experience = defineAsyncComponent(() => import('../act3/Act3Experience.vue'))
-const Act4Experience = defineAsyncComponent(() => import('../act4/Act4Experience.vue'))
-const Act5Experience = defineAsyncComponent(() => import('../act5/Act5Experience.vue'))
-const Act6Report = defineAsyncComponent(() => import('../act6/Act6Report.vue'))
+type PresentationView = 'home' | 'flow'
 
-const { state, actLabel, goToAct, setBeat } = useNarrative()
+const view = ref<PresentationView>('home')
+const activeStage = ref<ActId>(1)
+const now = ref(new Date())
+let clockTimer = 0
 
-const actNames: Record<ActId, string> = {
-  1: '全域感知',
-  2: '问题诊断',
-  3: '知识匹配',
-  4: '方案生成',
-  5: '效果验证',
-  6: '复盘进化',
+const stages: Array<{ id: ActId; label: string; short: string }> = [
+  { id: 1, label: '多源感知', short: '感知' },
+  { id: 2, label: '智能研判', short: '研判' },
+  { id: 3, label: '方案生成', short: '生成' },
+  { id: 4, label: '落地执行', short: '执行' },
+  { id: 5, label: '效果优化', short: '优化' },
+  { id: 6, label: '持续优化', short: '进化' },
+]
+
+const stageMapBeats: Record<ActId, { activeAct: ActId; beat: string }> = {
+  1: { activeAct: 2, beat: 'evidence' },
+  2: { activeAct: 2, beat: 'cause' },
+  3: { activeAct: 2, beat: 'options' },
+  4: { activeAct: 4, beat: 'deployment' },
+  5: { activeAct: 5, beat: 'before-after' },
+  6: { activeAct: 6, beat: 'report' },
 }
 
-const now = ref(new Date())
-type PresentationMode = 'map' | 'detail'
-const defaultPresentationMode = (_act: ActId): PresentationMode => 'detail'
-const presentationMode = ref<PresentationMode>(defaultPresentationMode(state.activeAct))
-let clockTimer = 0
+const mapState = computed(() =>
+  view.value === 'home'
+    ? { activeAct: 1 as ActId, beat: 'scan' }
+    : stageMapBeats[activeStage.value],
+)
 
 const currentTime = computed(() =>
   now.value.toLocaleTimeString('zh-CN', {
@@ -47,22 +54,25 @@ const currentDate = computed(() =>
   }),
 )
 
-function switchAct(act: ActId) {
-  goToAct(act)
+function openFlow() {
+  activeStage.value = 1
+  view.value = 'flow'
+  requestResize()
 }
 
-function togglePresentationMode() {
-  presentationMode.value = presentationMode.value === 'map' ? 'detail' : 'map'
+function openHome() {
+  view.value = 'home'
+  requestResize()
+}
+
+function setStage(stage: ActId) {
+  activeStage.value = stage
+  requestResize()
+}
+
+function requestResize() {
   window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
 }
-
-watch(
-  () => state.activeAct,
-  (act) => {
-    presentationMode.value = defaultPresentationMode(act)
-    window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
-  },
-)
 
 onMounted(() => {
   clockTimer = window.setInterval(() => {
@@ -75,49 +85,51 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
 
 <template>
   <main
-    class="app-shell"
-    :class="[`act-${state.activeAct}`, `${presentationMode}-focus-mode`]"
+    class="app-shell v2-app"
+    :class="[
+      view === 'home' ? 'v2-home-mode act-1' : `v2-flow-mode act-${activeStage}`,
+    ]"
   >
-    <CityMap :active-act="state.activeAct" :beat="state.beat" />
+    <CityMap :active-act="mapState.activeAct" :beat="mapState.beat" />
 
-    <header class="command-header">
+    <header class="command-header v2-command-header">
       <div class="brand-block">
         <div class="brand-mark" aria-hidden="true">
           <span></span><span></span><span></span>
         </div>
         <div>
-          <p>JINAN TRAFFIC INTELLIGENCE</p>
+          <p>JINAN TRAFFIC CONTROL AGENT</p>
           <h1>{{ runtimeConfig.app.title }}</h1>
         </div>
       </div>
 
-      <nav class="act-navigation" aria-label="演示幕次">
+      <div v-if="view === 'home'" class="v2-home-headline">
+        <span><i></i> AI 自主优化模式</span>
+        <strong>感知 · 研判 · 生成 · 执行 · 评估 · 进化</strong>
+      </div>
+
+      <nav v-else class="v2-stage-navigation" aria-label="全流程信号优化演示">
         <button
-          v-for="act in ([1, 2, 3, 4, 5, 6] as ActId[])"
-          :key="act"
-          :class="{ active: state.activeAct === act }"
-          @click="switchAct(act)"
+          v-for="stage in stages"
+          :key="stage.id"
+          :class="{ active: activeStage === stage.id, done: activeStage > stage.id }"
+          :aria-current="activeStage === stage.id ? 'step' : undefined"
+          @click="setStage(stage.id)"
         >
-          <span>{{ actNames[act] }}</span>
+          <span>{{ activeStage > stage.id ? '✓' : String(stage.id).padStart(2, '0') }}</span>
+          <strong>{{ stage.label }}</strong>
         </button>
       </nav>
 
-      <div class="system-status">
-        <button
-          v-if="state.activeAct !== 6"
-          class="presentation-mode-toggle"
-          :class="{ active: presentationMode === 'detail' }"
-          :aria-pressed="presentationMode === 'detail'"
-          @click="togglePresentationMode"
-        >
-          <i></i>
-          <span>{{ presentationMode === 'map' ? '展开研判' : '收起研判' }}</span>
+      <div class="system-status v2-system-status">
+        <button v-if="view === 'flow'" class="v2-home-return" @click="openHome">
+          <span>⌂</span> 返回扫描首页
         </button>
         <div class="status-copy">
           <span class="live-dot"></span>
           <div>
             <strong>智能体在线</strong>
-            <small>{{ actLabel }} · 实时运行</small>
+            <small>{{ view === 'home' ? '全域持续扫描' : `闭环任务 · ${stages[activeStage - 1].label}` }}</small>
           </div>
         </div>
         <div class="clock">
@@ -127,43 +139,12 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
       </div>
     </header>
 
-    <section class="act-stage">
-      <Act1Experience
-        v-if="state.activeAct === 1"
-        :key="`act1-${state.replayToken}`"
-        :paused="state.paused"
-        @beat="setBeat"
-        @enter-diagnosis="goToAct(2)"
-      />
-      <Act2Experience
-        v-else-if="state.activeAct === 2"
-        :key="`act2-${state.replayToken}`"
-        @beat="setBeat"
-        @open-knowledge="goToAct(3)"
-      />
-      <Act3Experience
-        v-else-if="state.activeAct === 3"
-        :key="`act3-${state.replayToken}`"
-        @beat="setBeat"
-        @open-plan="goToAct(4)"
-      />
-      <Act4Experience
-        v-else-if="state.activeAct === 4"
-        :key="`act4-${state.replayToken}`"
-        @beat="setBeat"
-        @open-effect="goToAct(5)"
-      />
-      <Act5Experience
-        v-else-if="state.activeAct === 5"
-        :key="`act5-${state.replayToken}`"
-        @beat="setBeat"
-        @open-review="goToAct(6)"
-      />
-      <Act6Report
-        v-else
-        :key="`act6-${state.replayToken}`"
-        @beat="setBeat"
-      />
-    </section>
+    <V2ExecutiveExperience
+      :view="view"
+      :active-stage="activeStage"
+      @start="openFlow"
+      @home="openHome"
+      @stage="setStage"
+    />
   </main>
 </template>
