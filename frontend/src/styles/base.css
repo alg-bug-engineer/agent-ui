@@ -2236,31 +2236,6 @@ button:focus-visible {
 .map-load-failure strong { color: #173d54; font-size: 18px; }
 .map-load-failure span { font-size: 12px; }
 
-.map-coordinate-badge {
-  position: absolute;
-  z-index: 8;
-  right: 28px;
-  bottom: 72px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 11px;
-  color: #58717f;
-  background: rgba(248, 251, 252, .88);
-  border: 1px solid rgba(20, 69, 94, .13);
-  box-shadow: 0 8px 22px rgba(22, 53, 70, .09);
-  pointer-events: none;
-  font-size: 10px;
-}
-
-.map-coordinate-badge i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--teal);
-  box-shadow: 0 0 0 4px rgba(23, 157, 142, .13);
-}
-
 .geo-monitor-marker {
   position: relative;
   width: 26px;
@@ -2762,7 +2737,6 @@ button:focus-visible {
 @media (max-width: 1450px) {
   .reasoning-panel { width: 310px; }
   .evidence-panel { width: 350px; }
-  .map-coordinate-badge { display: none; }
   .workbench-body { grid-template-columns: 250px 1fr; }
   .workbench-header { height: 82px; }
   .collab-workbench { height: calc(100vh - 205px); min-height: 500px; }
@@ -2848,7 +2822,6 @@ button:focus-visible {
     linear-gradient(0deg, rgba(2, 8, 16, .18) 0, transparent 13%);
 }
 
-.map-coordinate-badge,
 .map-legend {
   color: rgba(220, 240, 255, .66);
   background: rgba(6, 14, 26, .9);
@@ -2856,8 +2829,6 @@ button:focus-visible {
   box-shadow: 0 10px 30px rgba(2, 8, 16, .28);
   backdrop-filter: blur(12px);
 }
-
-.map-coordinate-badge i { background: #00d4f0; box-shadow: 0 0 0 4px rgba(0,212,240,.12), 0 0 10px rgba(0,212,240,.7); }
 
 /* Act 1 / Act 2 dark map HUD */
 .act-1 .glass-panel,

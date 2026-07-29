@@ -580,7 +580,7 @@ function applyCamera() {
 function renderScene() {
   if (!mapReady.value || !AMapApi) return
   clearScene()
-  map.setMapStyle?.(props.beat === 'trace' ? 'amap://styles/dark' : runtimeConfig.amap.style)
+  map.setMapStyle?.(runtimeConfig.amap.style)
   applyCamera()
   if (props.activeAct === 1) {
     renderAct1()
@@ -672,9 +672,5 @@ onBeforeUnmount(() => {
       <span>请检查 VITE_AMAP_KEY 与 VITE_AMAP_SECURITY_CODE</span>
     </div>
     <div class="map-vignette"></div>
-    <div class="map-coordinate-badge">
-      <i></i>
-      高德地图地理坐标图层 · 可拖拽缩放
-    </div>
   </div>
 </template>
