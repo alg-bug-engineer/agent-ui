@@ -84,12 +84,12 @@ function renderCharts() {
       boundaryGap: false,
       data: effectiveness.value.hourly.map((item) => item.hour),
       axisLine: { lineStyle: { color: '#c8daf5' } },
-      axisLabel: { color: '#5f7a9c', fontSize: 10 },
+      axisLabel: { color: '#5f7a9c', fontSize: 12 },
     },
     yAxis: {
       type: 'value',
       splitLine: { lineStyle: { color: '#dce8f8' } },
-      axisLabel: { color: '#5f7a9c', fontSize: 10 },
+      axisLabel: { color: '#5f7a9c', fontSize: 12 },
     },
     series: [
       {
