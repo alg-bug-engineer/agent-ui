@@ -23,6 +23,7 @@ type TaskBoardTab = 'anomaly' | 'optimizing' | 'completed'
 type Severity = 'critical' | 'major' | 'warning' | 'watch'
 
 const Act6Report = defineAsyncComponent(() => import('../../act6/Act6Report.vue'))
+const V2EffectTrendChart = defineAsyncComponent(() => import('./V2EffectTrendChart.vue'))
 
 interface ExperienceData {
   summary: Array<{ label: string; value: number; unit: string }>
@@ -363,10 +364,15 @@ const selectedExperience = computed(() => {
   }
   return content[experienceTab.value]
 })
-const effectPeakRows = computed(() => effect.value?.hourlyComparison ?? [])
-const maxQueue = computed(() =>
-  Math.max(1, ...effectPeakRows.value.flatMap((item) => [item.before, item.after])),
-)
+function planImpactFor(optionId: string) {
+  return plan.value?.impacts.find((item) => item.optionId === optionId)
+}
+
+function planOptionVerdict(optionId: string) {
+  if (optionId === 'green-only') return '目标改善快，但东西向升至 101m，突破 92m 警戒线'
+  if (optionId === 'meter-only') return '网络副作用较小，但北进口仍有 106m，改善幅度不足'
+  return '目标降至 78m，冲突方向与下游均在安全边界内'
+}
 
 watch(
   () => props.view,
@@ -790,14 +796,6 @@ onMounted(async () => {
       </template>
 
       <template v-else-if="activeStage === 3">
-        <div class="v2-dimension-banner three">
-          <small>指标分析维度</small>
-          <div>
-            <span v-for="item in activeDimensions" :key="item.name">
-              <strong>{{ item.name }}</strong><b>{{ item.detail }}</b>
-            </span>
-          </div>
-        </div>
         <div class="v2-recall-summary">
           <span>案例检索完成</span>
           <strong>{{ knowledgeBase?.matchLatencySeconds ?? 1.8 }}<small>秒</small></strong>
@@ -853,6 +851,7 @@ onMounted(async () => {
           <strong>{{ recommendedPlan?.name ?? '方案 C · 协同组合' }}</strong>
           <p>{{ recommendedPlan?.summary }}</p>
         </div>
+        <div class="v2-section-title"><span>推荐方案预期效果</span><b>确认目标改善与网络副作用</b></div>
         <div class="v2-impact-list">
           <article>
             <span>北进口排队</span><b>{{ recommendedImpact?.target.before }}</b><i>→</i><strong>{{ recommendedImpact?.target.after }}</strong>
@@ -865,6 +864,7 @@ onMounted(async () => {
           </article>
         </div>
         <div class="v2-safety-badge"><i>✓</i><span><b>安全边界全部通过</b>未把压力转移给相邻方向</span></div>
+        <div class="v2-section-title"><span>下发前安全校核</span><b>参数、影响、链路与回退能力</b></div>
         <div class="v2-readiness-grid">
           <article><span>参数完整性</span><strong>100%</strong><small>周期 / 绿信比 / 相位差</small></article>
           <article><span>影响校核</span><strong>4 / 4</strong><small>目标、冲突、上游、下游</small></article>
@@ -965,6 +965,7 @@ onMounted(async () => {
           </div>
           <p>轻风路、工业南路等支路汇入主走廊，形成连续到达波。</p>
         </div>
+        <div class="v2-section-title v2-reasoning-divider"><span>成因分析</span><b>直接原因与排除项</b></div>
         <div class="v2-causal-chain">
           <article><span>上游连续到达</span><strong>前两跳贡献 57.9%</strong></article>
           <i>＋</i>
@@ -978,28 +979,25 @@ onMounted(async () => {
         </div>
         <div class="v2-hypothesis-grid">
           <article
-            v-for="item in diagnosis?.hypotheses"
+            v-for="item in diagnosis?.hypotheses.filter((entry) => entry.supported)"
             :key="item.id"
-            :class="{ supported: item.supported }"
+            class="supported"
           >
-            <span>{{ item.supported ? '成立' : '排除' }}</span>
+            <span>成立</span>
             <div><strong>{{ item.question }}</strong><p>{{ item.evidence }}</p></div>
           </article>
         </div>
+        <div class="v2-section-title v2-reasoning-divider"><span>研判结论</span><b>处置优先级</b></div>
         <div class="v2-conclusion-block warning">
-          <small>研判结论</small>
+          <small>治理顺序已经确认</small>
           <strong>先补足目标方向放行，再用上游削峰降低到达强度</strong>
+          <p>下游仍有承接空间，首轮无需改变下游交通组织。</p>
         </div>
       </template>
 
       <template v-else-if="activeStage === 3">
-        <div class="v2-generation-time">
-          <div><span>人工调参</span><b>{{ plan?.manualBaselineMinutes ?? 20 }}<small>分钟</small></b></div>
-          <i>VS</i>
-          <div><span>智能体测算</span><strong>{{ plan?.generationSeconds ?? 12.4 }}<small>秒</small></strong></div>
-        </div>
         <div class="v2-timing-parameters">
-          <header><strong>配时参数生成</strong><span>12.4 秒完成测算</span></header>
+          <header><strong>配时参数生成</strong><span>周期保持 148s</span></header>
           <div class="v2-parameter-head">
             <span>相位</span><span>当前</span><span>建议</span><span>变化</span>
           </div>
@@ -1022,16 +1020,29 @@ onMounted(async () => {
           >
             <header><span>{{ item.name }}</span><b>{{ item.recommended ? '推荐' : '对照' }}</b></header>
             <p>{{ item.summary }}</p>
-            <footer><span>目标 +{{ item.targetGreenDeltaSeconds }}s</span><span>上游削峰 {{ item.upstreamMeteringPct }}%</span></footer>
+            <div class="v2-option-parameters">
+              <span><small>周期</small><b>{{ item.cycleSeconds }}s</b></span>
+              <span><small>目标增量</small><b>+{{ item.targetGreenDeltaSeconds }}s</b></span>
+              <span><small>上游削峰</small><b>{{ item.upstreamMeteringPct }}%</b></span>
+              <span><small>相位差</small><b>{{ item.phaseDiffSeconds }}s</b></span>
+            </div>
+            <div v-if="planImpactFor(item.id)" class="v2-option-impact">
+              <span>目标 <b>{{ planImpactFor(item.id)?.target.after }}</b></span>
+              <span>冲突 <b>{{ planImpactFor(item.id)?.conflict.after }}</b></span>
+              <span>下游 <b>{{ planImpactFor(item.id)?.downstream.after }}</b></span>
+            </div>
+            <footer :class="{ safe: item.recommended }">{{ planOptionVerdict(item.id) }}</footer>
           </article>
         </div>
         <div v-if="selectedPlanImpact" class="v2-plan-impact-preview">
-          <header><strong>{{ selectedPlan?.name }} · 影响对比</strong><span>点击上方方案切换</span></header>
+          <header><strong>{{ selectedPlan?.name }} · 四维影响</strong><span>选择候选方案查看</span></header>
           <div>
             <span><small>北进口</small><b>{{ selectedPlanImpact.target.before }}</b><i>→</i><strong>{{ selectedPlanImpact.target.after }}</strong></span>
             <span><small>东西向</small><b>{{ selectedPlanImpact.conflict.before }}</b><i>→</i><strong>{{ selectedPlanImpact.conflict.after }}</strong></span>
+            <span><small>上游强度</small><b>{{ selectedPlanImpact.upstream.before }}</b><i>→</i><strong>{{ selectedPlanImpact.upstream.after }}</strong></span>
             <span><small>下游</small><b>{{ selectedPlanImpact.downstream.before }}</b><i>→</i><strong>{{ selectedPlanImpact.downstream.after }}</strong></span>
           </div>
+          <p>{{ planOptionVerdict(selectedPlan?.id ?? '') }}</p>
         </div>
         <div class="v2-conclusion-block action">
           <small>生成结论</small>
@@ -1041,6 +1052,7 @@ onMounted(async () => {
       </template>
 
       <template v-else-if="activeStage === 4">
+        <div class="v2-section-title"><span>执行对象与生效窗口</span><b>明确作用位置和时间</b></div>
         <div class="v2-deployment-card">
           <span class="v2-deploy-state"><i></i> 已下发并生效</span>
           <strong>解放东路 × 奥体西路信号机</strong>
@@ -1048,16 +1060,17 @@ onMounted(async () => {
           <div>
             <span><small>北进口直行</small><b>+4s</b></span>
             <span><small>上游削峰</small><b>12%</b></span>
-            <span><small>下游协调</small><b>8s</b></span>
+            <span><small>下游相位差</small><b>+8s</b></span>
           </div>
         </div>
+        <div class="v2-section-title"><span>指令回执与追溯</span><b>确认下发成功且过程可查</b></div>
         <div class="v2-command-receipt">
           <header><span><i></i> 控制指令回执</span><strong>签名校验通过</strong></header>
           <div><span>策略版本<b>V2026.07.29-03</b></span><span>任务编号<b>OPT-3701-0186</b></span></div>
           <footer><span>生效窗口</span><strong>17:00—19:10</strong><b>状态同步正常</b></footer>
         </div>
+        <div class="v2-section-title"><span>运行保护规则</span><b>越界时自动降级或回退</b></div>
         <div class="v2-guardrails">
-          <strong>自动回退护栏</strong>
           <span v-for="item in plan?.deployment.rollbackConditions" :key="item"><i>!</i>{{ item }}</span>
         </div>
         <div class="v2-execution-timeline">
@@ -1068,17 +1081,10 @@ onMounted(async () => {
       </template>
 
       <template v-else-if="activeStage === 5">
-        <div class="v2-peak-chart">
-          <header><strong>晚高峰逐周期验证</strong><span><i></i>执行前 <i></i>执行后</span></header>
-          <div class="v2-chart-body">
-            <article v-for="item in effectPeakRows" :key="item.hour">
-              <div>
-                <span class="before" :style="{ height: `${item.before / maxQueue * 100}%` }"></span>
-                <span class="after" :style="{ height: `${item.after / maxQueue * 100}%` }"></span>
-              </div>
-              <small>{{ item.hour.slice(0, 2) }}</small>
-            </article>
-          </div>
+        <div class="v2-effect-trend-card">
+          <header><strong>下发前后排队曲线</strong><span>17:00—19:00 晚高峰窗口</span></header>
+          <V2EffectTrendChart v-if="effect" :trend="effect" />
+          <p><i></i>下发后曲线持续低于下发前基线，未出现短时改善后反弹。</p>
         </div>
         <div class="v2-safe-results">
           <span><small>东西向</small><strong>71m</strong><b>&lt; 92m</b></span>

@@ -4,6 +4,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { runtimeConfig } from '../config/runtime'
 import { dataRepository } from '../services/dataRepository'
 import { buildChannelizationGeometry } from '../../act2/channelizationGeometry'
+import { rectanglesOverlap } from './labelCollision'
 import type {
   ActId,
   ChannelizationScene,
@@ -327,13 +328,13 @@ const beatNarratives: Record<string, MapNarrative> = {
   },
   'plan-generation': {
     chapter: '方案生成',
-    eyebrow: '秒级测算 · 配时落位',
-    headline: '12.4 秒完成周期、绿信比与相位差测算',
-    summary: '北进口直行拟加绿 4 秒，周期保持 148s，压缩人工调参时间。',
+    eyebrow: '参数联动 · 配时落位',
+    headline: '周期、绿信比与相位差完成联合生成',
+    summary: '北进口直行拟加绿 4 秒，周期保持 148s，下游相位差协调 8 秒。',
     tone: 'action',
     metrics: [
-      { label: '测算耗时', value: '12.4s' },
-      { label: '人工基线', value: '20min' },
+      { label: '周期', value: '148s' },
+      { label: '相位差', value: '+8s' },
       { label: '目标加绿', value: '+4s' },
     ],
   },
@@ -439,6 +440,7 @@ let simulationApplyScenario: ((id: SimulationScenarioId) => void) | null = null
 let scanTimer = 0
 let renderGeneration = 0
 const deferredTimers: number[] = []
+let viewportResizeTimer = 0
 const animationTimers: number[] = []
 const retirementFrames = new Set<number>()
 let flowParticles: Array<{
@@ -1159,7 +1161,7 @@ function renderReportOutcome() {
   )
 }
 
-function renderTopology() {
+function renderTopology(showLabels = true) {
   const features = topology.value?.features ?? []
   features.filter((feature: any) => feature.geometry.type === 'LineString').forEach((feature: any) => {
     const isAnalysisAxis = feature.properties?.name?.includes('奥体西路')
@@ -1186,7 +1188,9 @@ function renderTopology() {
       anchor: 'center',
       content: htmlElement(
         `geo-topology-node ${role}`,
-        `<i></i><span class="geo-map-info-card"><strong>${feature.properties?.name ?? ''}</strong><small>${meta}</small></span>`,
+        showLabels
+          ? `<i></i><span class="geo-map-info-card"><strong>${feature.properties?.name ?? ''}</strong><small>${meta}</small></span>`
+          : '<i></i>',
       ),
       zIndex: 105,
     }))
@@ -1271,7 +1275,7 @@ function stripIntersectionSuffix(name: string) {
   return name.replace(/(?:交叉口|路口)$/u, '').trim()
 }
 
-function renderFlowTrace() {
+function renderFlowTrace(showLabels = true) {
   const scene = flowTrace.value
   if (!scene) return
   const minimumCoverage = 10
@@ -1314,7 +1318,7 @@ function renderFlowTrace() {
       title: node.name,
     }))
 
-    if (node.role === 'target') {
+    if (node.role === 'target' && showLabels) {
       addOverlay(new AMapApi.Marker({
         position: node.position,
         anchor: 'bottom-center',
@@ -1338,16 +1342,18 @@ function renderFlowTrace() {
       addDualTraceLine(path, mainPalette, traceEdgeWeight(item.sharePct), { arrows: true, zIndex: 116 })
       addTraceParticles(path, item.hop)
       const placeLeft = item.hop % 2 === 0
-      addOverlay(new AMapApi.Marker({
-        position: upstreamNode.position,
-        anchor: 'bottom-center',
-        offset: new AMapApi.Pixel(placeLeft ? -72 : 72, -22),
-        content: htmlElement(
-          'geo-map-info-card geo-trace-label main',
-          `<strong>${stripIntersectionSuffix(upstreamNode.name)}</strong><span>主走廊 · 第 ${item.hop} 跳 · ${item.sharePct.toFixed(1)}%</span>`,
-        ),
-        zIndex: 140,
-      }))
+      if (showLabels) {
+        addOverlay(new AMapApi.Marker({
+          position: upstreamNode.position,
+          anchor: 'bottom-center',
+          offset: new AMapApi.Pixel(placeLeft ? -72 : 72, -22),
+          content: htmlElement(
+            'geo-map-info-card geo-trace-label main',
+            `<strong>${stripIntersectionSuffix(upstreamNode.name)}</strong><span>主走廊 · 第 ${item.hop} 跳 · ${item.sharePct.toFixed(1)}%</span>`,
+          ),
+          zIndex: 140,
+        }))
+      }
     }, 240 + index * 330)
     downstreamNode = upstreamNode
   })
@@ -1363,39 +1369,71 @@ function renderFlowTrace() {
 function renderSimilarCasesMap() {
   if (!target.value) return
   const center = target.value.center
+  const compact = window.innerWidth < 1600
   const placements: Array<[number, number]> = [
-    metersToGeo(center, -150, 118),
-    metersToGeo(center, 155, 72),
-    metersToGeo(center, -118, -126),
+    metersToGeo(center, -235, 150),
+    metersToGeo(center, 235, 120),
+    metersToGeo(center, -185, -175),
   ]
   const tones = ['success', 'action', 'warning'] as const
+  const relationLabels = ['相似路口结构', '相似到达特征', '相似治理动作']
 
-  similarCases.value.slice(0, 3).forEach((item, index) => {
+  similarCases.value.slice(0, compact ? 2 : 3).forEach((item, index) => {
     const position = placements[index]
     addActionLink([position, center], index === 0 ? '#22c55e' : '#00d4f0', 3.5)
     addNarrativeMarker(
       position,
       `${tones[index]} compact`,
       `知识关联 · 案例 ${item.caseId}`,
-      `${item.matchScore}% 匹配`,
-      `${item.location} · ${item.title}`,
-      { offsetX: index === 1 ? 118 : -118, offsetY: -8, zIndex: 158 },
+      relationLabels[index],
+      item.location,
+      { offsetX: 0, offsetY: -8, zIndex: 158 },
     )
   })
 
   addTargetAnchor('案例检索目标')
-  addNarrativeMarker(
-    center,
-    'action',
-    '当前问题画像',
-    '到达波叠加放行不足',
-    '路口形态、时段、流量特征与治理边界联合匹配',
-    { offsetX: 142, offsetY: -34, zIndex: 162 },
+}
+
+function suppressOverlappingMapCards() {
+  const cards = Array.from(
+    mapHost.value?.querySelectorAll<HTMLElement>(
+      '.geo-narrative-marker, .geo-trace-label, .geo-topology-node > .geo-map-info-card',
+    ) ?? [],
   )
+  const accepted: DOMRect[] = []
+  cards.forEach((card) => {
+    card.style.visibility = ''
+    card.removeAttribute('data-collision-hidden')
+    const rect = card.getBoundingClientRect()
+    if (rect.width === 0 || rect.height === 0) return
+    if (accepted.some((kept) => rectanglesOverlap(rect, kept))) {
+      card.style.visibility = 'hidden'
+      card.setAttribute('data-collision-hidden', 'true')
+      return
+    }
+    accepted.push(rect)
+  })
+}
+
+function scheduleMapCardCollisionCheck() {
+  defer(suppressOverlappingMapCards, 80)
+  defer(suppressOverlappingMapCards, 720)
+}
+
+function handleMapViewportResize() {
+  window.clearTimeout(viewportResizeTimer)
+  viewportResizeTimer = window.setTimeout(() => {
+    map?.resize?.()
+    if (props.beat === 'similar-cases') {
+      renderScene()
+      return
+    }
+    scheduleMapCardCollisionCheck()
+  }, 120)
 }
 
 function renderEffectMap() {
-  renderTopology()
+  renderTopology(false)
   const points = topologyPoints()
   const upstream = points.get('upstream') ?? []
   const targetPoint = points.get('target')?.[0]
@@ -1405,45 +1443,15 @@ function renderEffectMap() {
   if (upstream.length && targetPoint) {
     const ordered = [...upstream].sort((a, b) => b[1] - a[1])
     addActionLink([...ordered, targetPoint], '#22c55e', 6)
-    addNarrativeMarker(
-      ordered[0],
-      'success compact',
-      '到达强度',
-      '100% → 88%',
-      '削峰策略持续生效',
-      { offsetX: 126 },
-    )
   }
   if (targetPoint) {
-    addNarrativeMarker(
-      targetPoint,
-      'success',
-      '目标方向',
-      '129m → 78m',
-      '北进口排队下降 39.5%',
-      { offsetX: 136, offsetY: -22 },
-    )
-  }
-  if (branch) {
-    addNarrativeMarker(
-      branch,
-      'success compact',
-      '垂直方向',
-      '71m < 92m',
-      '未发生压力转移',
-      { offsetX: -132 },
-    )
+    addTargetAnchor('方案作用路口')
   }
   if (targetPoint && downstream) {
     addActionLink([targetPoint, downstream], '#22c55e', 6)
-    addNarrativeMarker(
-      downstream,
-      'success compact',
-      '下游承接',
-      '55% < 65%',
-      '保持安全余量',
-      { offsetX: 132 },
-    )
+  }
+  if (targetPoint && branch) {
+    addActionLink([targetPoint, branch], '#22c55e', 4)
   }
 }
 
@@ -1544,9 +1552,8 @@ function renderScene() {
     renderTopology()
     renderTopologyStage()
   } else if (props.beat === 'trace') {
-    renderTopology()
-    renderFlowTrace()
-    renderCauseMap()
+    renderTopology(false)
+    renderFlowTrace(false)
   } else if (['plan-options', 'impact-preview', 'peak-verification'].includes(props.beat)) {
     renderTopology()
   } else if (props.beat === 'knowledge-recall') {
@@ -1566,6 +1573,7 @@ function renderScene() {
   } else {
     addTargetAnchor('目标已锁定')
   }
+  scheduleMapCardCollisionCheck()
 }
 
 async function loadMap() {
@@ -1634,9 +1642,12 @@ onMounted(async () => {
   similarCases.value = caseData
   await nextTick()
   await loadMap()
+  window.addEventListener('resize', handleMapViewportResize)
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleMapViewportResize)
+  window.clearTimeout(viewportResizeTimer)
   retirementFrames.forEach((frame) => window.cancelAnimationFrame(frame))
   retirementFrames.clear()
   clearScene(true)

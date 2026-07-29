@@ -4304,6 +4304,228 @@
   font-size: 18px;
 }
 
+.v2-reasoning-divider {
+  margin-top: 15px !important;
+  padding-top: 11px;
+  border-top: 1px solid rgba(102, 218, 240, .2);
+}
+
+.v2-option-parameters {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.v2-option-parameters span {
+  min-width: 0;
+  padding: 6px 4px;
+  text-align: center;
+  background: rgba(2, 13, 23, .4);
+  border: 1px solid rgba(112, 184, 212, .1);
+}
+
+.v2-option-parameters small,
+.v2-option-parameters b {
+  display: block;
+}
+
+.v2-option-parameters small {
+  color: var(--v2-muted);
+  font-size: 9px;
+}
+
+.v2-option-parameters b {
+  margin-top: 3px;
+  color: #fff;
+  font-size: 12px;
+}
+
+.v2-option-impact {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.v2-option-impact span {
+  padding: 5px;
+  color: rgba(203, 229, 239, .68);
+  text-align: center;
+  background: rgba(255, 255, 255, .025);
+  font-size: 9px;
+}
+
+.v2-option-impact b {
+  margin-left: 3px;
+  color: #fff;
+}
+
+.v2-plan-options article > footer {
+  display: block;
+  margin-top: 7px;
+  padding: 7px 8px;
+  color: var(--v2-amber);
+  background: rgba(255, 193, 92, .06);
+  border-left: 2px solid var(--v2-amber);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.v2-plan-options article > footer.safe {
+  color: var(--v2-green);
+  background: rgba(78, 224, 170, .06);
+  border-left-color: var(--v2-green);
+}
+
+.v2-plan-options p,
+.v2-plan-options article > footer,
+.v2-plan-impact-preview p,
+.v2-deployment-card > p,
+.v2-guardrails > span {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.v2-plan-impact-preview > div {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.v2-plan-impact-preview > p {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  color: rgba(224, 241, 248, .72);
+  border-top: 1px solid rgba(78, 224, 170, .14);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.v2-section-title + .v2-deployment-card,
+.v2-section-title + .v2-command-receipt,
+.v2-section-title + .v2-guardrails {
+  margin-top: 7px;
+}
+
+.v2-effect-trend-card {
+  margin-top: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, .025);
+  border: 1px solid rgba(114, 185, 212, .16);
+}
+
+.v2-effect-trend-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.v2-effect-trend-card > header strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+.v2-effect-trend-card > header span {
+  color: var(--v2-muted);
+  font-size: 10px;
+}
+
+.v2-effect-trend-chart {
+  width: 100%;
+  height: 220px;
+  margin-top: 8px;
+}
+
+.v2-effect-trend-card > p {
+  margin: 5px 0 0;
+  color: rgba(216, 237, 245, .68);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.v2-effect-trend-card > p i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  background: var(--v2-green);
+  border-radius: 50%;
+}
+
+.v2-app .geo-narrative-marker,
+.v2-app .geo-trace-label {
+  max-width: 196px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.v2-app [data-collision-hidden="true"] {
+  pointer-events: none;
+}
+
+.v2-review-experience .act6-experience {
+  padding-top: 106px;
+  scroll-padding-top: 106px;
+}
+
+.v2-review-experience .report-kpis article {
+  height: auto;
+  min-height: 92px;
+  overflow: visible;
+}
+
+.v2-review-experience .report-kpis span,
+.v2-review-experience .report-kpis strong,
+.v2-review-experience .report-kpis small {
+  line-height: 1.25;
+}
+
+@media (min-width: 1501px) {
+  .v2-stage-left,
+  .v2-stage-right {
+    width: clamp(390px, 21vw, 438px);
+  }
+
+  .v2-flow-mode .map-executive-verdict {
+    left: calc(clamp(390px, 21vw, 438px) + 32px);
+    right: calc(clamp(390px, 21vw, 438px) + 32px);
+  }
+}
+
+@media (max-width: 1500px) {
+  .v2-option-parameters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .v2-effect-trend-chart {
+    height: 190px;
+  }
+
+  .v2-app .geo-narrative-marker,
+  .v2-app .geo-trace-label {
+    max-width: 168px;
+  }
+}
+
+@media (max-height: 820px) {
+  .v2-effect-trend-chart {
+    height: 155px;
+  }
+
+  .v2-option-parameters span {
+    padding-block: 4px;
+  }
+
+  .v2-plan-options article > footer {
+    padding-block: 5px;
+  }
+
+  .v2-review-experience .act6-experience {
+    padding-top: 88px;
+    scroll-padding-top: 88px;
+  }
+}
+
 @keyframes v2-spin {
   to { transform: rotate(360deg); }
 }
@@ -4608,7 +4830,8 @@
   }
 
   .v2-review-experience .act6-experience {
-    padding-top: 80px;
+    padding-top: 88px;
+    scroll-padding-top: 88px;
   }
 
   .v2-target-card,
@@ -4620,6 +4843,7 @@
   .v2-deployment-card,
   .v2-outcome-hero,
   .v2-peak-chart,
+  .v2-effect-trend-card,
   .v2-learning-loop {
     margin-top: 8px;
   }
