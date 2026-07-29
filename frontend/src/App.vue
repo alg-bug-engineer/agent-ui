@@ -140,7 +140,7 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
         :key="`act2-${state.replayToken}`"
         :paused="state.paused"
         @beat="setBeat"
-        @open-report="goToAct(3)"
+        @open-knowledge="goToAct(3)"
       />
       <Act3Experience
         v-else-if="state.activeAct === 3"
@@ -158,7 +158,7 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
         v-else-if="state.activeAct === 5"
         :key="`act5-${state.replayToken}`"
         @beat="setBeat"
-        @open-report="goToAct(6)"
+        @open-review="goToAct(6)"
       />
       <Act6Report
         v-else

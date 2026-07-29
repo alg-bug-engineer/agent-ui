@@ -13,7 +13,7 @@ import type {
 const props = defineProps<{ paused: boolean }>()
 const emit = defineEmits<{
   beat: [value: string]
-  openReport: []
+  openKnowledge: []
 }>()
 
 const beats = [
@@ -424,8 +424,8 @@ onBeforeUnmount(() => window.clearInterval(timer))
           </div>
         </div>
         <div class="trace-conclusion">{{ flowTrace?.summary.conclusion }}</div>
-        <button class="primary-action report-entry" @click="emit('openReport')">
-          <span>进入执行审批与效果追踪</span><b>→</b>
+        <button class="primary-action report-entry" @click="emit('openKnowledge')">
+          <span>进入知识匹配与策略生成</span><b>→</b>
         </button>
       </template>
 

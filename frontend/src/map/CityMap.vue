@@ -122,7 +122,7 @@ const nextNarrative = computed(() => {
     options: '下一步：对比不干预、单点加绿与协同组合',
     simulation: '三种方案逐项推演，地图与结果卡同步变化',
     decision: '下一步：继续向上游追溯流量源头',
-    trace: '研判完成：进入执行审批与效果追踪',
+    trace: '研判完成：进入知识匹配与策略生成',
   }
   return messages[props.beat] ?? ''
 })

@@ -11,7 +11,7 @@ use([LineChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer
 
 const emit = defineEmits<{
   beat: [value: string]
-  openReport: []
+  openReview: []
 }>()
 
 const beats = [
@@ -60,7 +60,11 @@ function goPrev() {
 }
 
 function goNext() {
-  if (currentIndex.value < beats.length - 1) selectBeat(currentIndex.value + 1)
+  if (currentIndex.value < beats.length - 1) {
+    selectBeat(currentIndex.value + 1)
+    return
+  }
+  emit('openReview')
 }
 
 function darkAxis() {
@@ -223,7 +227,9 @@ onBeforeUnmount(() => {
         </div>
         <div class="step-check-nav">
           <button :disabled="currentIndex === 0" @click="goPrev">← 上一步</button>
-          <button :disabled="currentIndex === beats.length - 1" @click="goNext">下一步 →</button>
+          <button class="next-act" @click="goNext">
+            {{ completed ? '进入复盘进化 →' : '下一步 →' }}
+          </button>
         </div>
       </div>
     </aside>
@@ -286,8 +292,8 @@ onBeforeUnmount(() => {
           <div class="tidal-chart-caption"><i></i>一周内下发后（绿）持续低于下发前（橙），未见回弹</div>
         </div>
         <div class="expected-outcome">{{ trend.conclusion }}</div>
-        <button class="primary-action report-entry" @click="emit('openReport')">
-          <span>进入每日复盘与经验沉淀</span><b>→</b>
+        <button class="primary-action report-entry" @click="emit('openReview')">
+          <span>进入复盘进化与经验沉淀</span><b>→</b>
         </button>
       </template>
 

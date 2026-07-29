@@ -59,7 +59,11 @@ function goPrev() {
 }
 
 function goNext() {
-  if (currentIndex.value < beats.length - 1) selectBeat(currentIndex.value + 1)
+  if (currentIndex.value < beats.length - 1) {
+    selectBeat(currentIndex.value + 1)
+    return
+  }
+  emit('openEffect')
 }
 
 onMounted(async () => {
@@ -114,7 +118,9 @@ onMounted(async () => {
         </div>
         <div class="step-check-nav">
           <button :disabled="currentIndex === 0" @click="goPrev">← 上一步</button>
-          <button :disabled="currentIndex === beats.length - 1" @click="goNext">下一步 →</button>
+          <button class="next-act" @click="goNext">
+            {{ completed ? '进入效果验证 →' : '下一步 →' }}
+          </button>
         </div>
       </div>
     </aside>
