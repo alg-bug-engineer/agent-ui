@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { dataRepository } from '../services/dataRepository'
 import type {
   ActId,
@@ -18,6 +18,8 @@ import type {
 type PresentationView = 'home' | 'flow'
 type KnowledgeTab = 'experience' | 'case'
 type ExperienceTab = 'cognition' | 'governance' | 'plan'
+type TaskBoardTab = 'anomaly' | 'optimizing' | 'completed'
+type Severity = 'critical' | 'major' | 'warning' | 'watch'
 
 interface ExperienceData {
   summary: Array<{ label: string; value: number; unit: string }>
@@ -37,6 +39,27 @@ interface KnowledgeAsset {
   unit: string
   detail: string
   progress: number
+}
+
+interface AnomalyTask {
+  id: string
+  intersection: string
+  problem: string
+  evidence: string
+  severity: Severity
+  severityLabel: string
+  detectedAt: string
+  score: number
+}
+
+interface OptimizingTask {
+  id: string
+  intersection: string
+  stage: string
+  action: string
+  progress: number
+  eta: string
+  tone: 'analysis' | 'action' | 'verification'
 }
 
 const props = defineProps<{
@@ -66,6 +89,7 @@ const submitting = ref(false)
 const knowledgeTab = ref<KnowledgeTab>('experience')
 const experienceTab = ref<ExperienceTab>('cognition')
 const selectedAssetId = ref('timing')
+const taskBoardTab = ref<TaskBoardTab>('anomaly')
 
 const stages: Array<{
   id: ActId
@@ -184,6 +208,83 @@ const knowledgeAssets: KnowledgeAsset[] = [
   },
 ]
 
+const anomalyTasks: AnomalyTask[] = [
+  {
+    id: 'anomaly-jiefang-aoti',
+    intersection: '解放东路 × 奥体西路',
+    problem: '北进口排队连续增长',
+    evidence: '排队 129m / 动态阈值 114.8m · 连续 3 周期',
+    severity: 'critical',
+    severityLabel: '严重',
+    detectedAt: '18:06',
+    score: 98,
+  },
+  {
+    id: 'anomaly-aoti-gongye',
+    intersection: '奥体西路 × 工业南路',
+    problem: '晚高峰相位空放',
+    evidence: '绿灯利用率 51.6% · 南北向需求持续增长',
+    severity: 'major',
+    severityLabel: '较重',
+    detectedAt: '18:04',
+    score: 86,
+  },
+  {
+    id: 'anomaly-qichuan-jiefang',
+    intersection: '齐川路 × 解放东路',
+    problem: '东进口排队增长',
+    evidence: '当前排队 103m · 较同期上升 21.4%',
+    severity: 'warning',
+    severityLabel: '一般',
+    detectedAt: '18:02',
+    score: 73,
+  },
+  {
+    id: 'anomaly-aotizhong-qingfeng',
+    intersection: '奥体中路 × 轻风路',
+    problem: '进口道饱和度偏高',
+    evidence: '饱和度 0.81 · 尚未突破动态阈值',
+    severity: 'watch',
+    severityLabel: '关注',
+    detectedAt: '17:58',
+    score: 61,
+  },
+]
+
+const optimizingTasks: OptimizingTask[] = [
+  {
+    id: 'optimizing-aotizhong-jiefang',
+    intersection: '奥体中路 × 解放东路',
+    stage: '落地执行',
+    action: '绿波协调参数已下发，正在验证连续 3 个周期',
+    progress: 78,
+    eta: '预计 42 秒',
+    tone: 'verification',
+  },
+  {
+    id: 'optimizing-gongye-aoti',
+    intersection: '工业南路 × 奥体西路',
+    stage: '方案生成',
+    action: '正在对比单点加绿、上游削峰与协同组合',
+    progress: 52,
+    eta: '预计 8 秒',
+    tone: 'action',
+  },
+  {
+    id: 'optimizing-tianchen-shunhua',
+    intersection: '天辰路 × 舜华路',
+    stage: '智能研判',
+    action: '正在核验下游承接空间与上游流量贡献',
+    progress: 31,
+    eta: '预计 15 秒',
+    tone: 'analysis',
+  },
+]
+
+const sortedAnomalyTasks = computed(() =>
+  [...anomalyTasks].sort((left, right) => right.score - left.score),
+)
+
 const activeStageMeta = computed(() => stages[props.activeStage - 1])
 const selectedAsset = computed(
   () => knowledgeAssets.find((item) => item.id === selectedAssetId.value) ?? knowledgeAssets[0],
@@ -216,6 +317,13 @@ const selectedExperience = computed(() => {
 const effectPeakRows = computed(() => effect.value?.hourlyComparison ?? [])
 const maxQueue = computed(() =>
   Math.max(1, ...effectPeakRows.value.flatMap((item) => [item.before, item.after])),
+)
+
+watch(
+  () => props.view,
+  (view) => {
+    if (view === 'home') taskBoardTab.value = 'anomaly'
+  },
 )
 
 function submitPrompt() {
@@ -288,55 +396,140 @@ onMounted(async () => {
   <section v-if="view === 'home'" class="v2-home-experience">
     <aside class="v2-panel v2-task-rail">
       <div class="v2-panel-cap">
-        <span><i></i> AGENT TASK CENTER</span>
-        <b>智能体任务中心</b>
+        <span><i></i> AGENT MONITORING BOARD</span>
+        <b>智能体监控覆盖</b>
         <small>LIVE</small>
       </div>
 
-      <div class="v2-task-summary">
-        <div>
-          <small>全市常态运行</small>
-          <strong>持续扫描中</strong>
-        </div>
-        <span class="v2-orbit"><i></i><b>986</b></span>
-      </div>
-
-      <div class="v2-section-title">
-        <span>正在执行</span>
-        <b>01</b>
-      </div>
-      <article class="v2-running-task">
+      <section class="v2-monitoring-overview">
         <header>
-          <span><i></i> 多源态势扫描</span>
-          <small>已持续 06:42:18</small>
+          <div>
+            <small>奥体片区 · 常态运行</small>
+            <strong>持续扫描中</strong>
+          </div>
+          <span><i></i> 2.4s 刷新</span>
         </header>
-        <strong>济南市重点监测路网</strong>
-        <p>视频、电警、地磁、互联网路况与信号机数据正在持续融合。</p>
-        <div class="v2-scan-progress"><span></span></div>
-        <footer><span>已覆盖 986 个路口</span><b>实时刷新</b></footer>
-      </article>
-
-      <div class="v2-section-title completed">
-        <span>已完成</span>
-        <b>180</b>
-      </div>
-      <button class="v2-completed-task" @click="emit('start')">
-        <span class="v2-task-status">闭环完成</span>
-        <small>18:21 · 晚高峰溢流治理</small>
-        <strong>解放东路 × 奥体西路</strong>
-        <p>自主完成感知、研判、方案生成、执行与效果评估。</p>
-        <div class="v2-task-result">
-          <span><small>北进口排队</small><b>129m</b></span>
-          <i>→</i>
-          <strong>78m</strong>
+        <div class="v2-coverage-metrics">
+          <article>
+            <strong>1</strong>
+            <span>监控区域</span>
+            <small>重点片区</small>
+          </article>
+          <article>
+            <strong>4</strong>
+            <span>感知链路</span>
+            <small>4 / 4 在线</small>
+          </article>
+          <article>
+            <strong>12</strong>
+            <span>扫描路口</span>
+            <small>优化中 3</small>
+          </article>
         </div>
-        <footer><span>点击按顺序回放完整处置过程</span><b>进入演示 →</b></footer>
-      </button>
+      </section>
 
-      <div class="v2-rail-foot">
-        <span><i></i> 45 项异常已发现</span>
-        <span><i></i> 96.8% 闭环完成率</span>
+      <div class="v2-network-kpis">
+        <span><small>均速</small><strong>24.6</strong><b>km/h</b></span>
+        <span><small>延误</small><strong>68</strong><b>s</b></span>
+        <span><small>拥堵指数</small><strong>3.8</strong></span>
+        <span><small>闭环率</small><strong>96.8</strong><b>%</b></span>
       </div>
+
+      <nav class="v2-task-tabs" aria-label="智能体任务状态">
+        <button
+          :class="{ active: taskBoardTab === 'anomaly' }"
+          @click="taskBoardTab = 'anomaly'"
+        >
+          <span>⚡</span>动态异常<b>{{ anomalyTasks.length }}</b>
+        </button>
+        <button
+          :class="{ active: taskBoardTab === 'optimizing' }"
+          @click="taskBoardTab = 'optimizing'"
+        >
+          <span>↻</span>优化中<b>{{ optimizingTasks.length }}</b>
+        </button>
+        <button
+          :class="{ active: taskBoardTab === 'completed' }"
+          @click="taskBoardTab = 'completed'"
+        >
+          <span>✓</span>已完成<b>180</b>
+        </button>
+      </nav>
+
+      <div class="v2-task-list">
+        <template v-if="taskBoardTab === 'anomaly'">
+          <div class="v2-task-list-heading">
+            <span>扫描区域异常路口</span>
+            <small>按问题严重程度排序</small>
+          </div>
+          <article
+            v-for="(item, index) in sortedAnomalyTasks"
+            :key="item.id"
+            :class="['v2-anomaly-item', item.severity]"
+          >
+            <i></i>
+            <div>
+              <header>
+                <span>{{ String(index + 1).padStart(2, '0') }}</span>
+                <strong>{{ item.intersection }}</strong>
+                <b>{{ item.severityLabel }}</b>
+              </header>
+              <p>{{ item.problem }}</p>
+              <small>{{ item.evidence }}</small>
+            </div>
+            <time>{{ item.detectedAt }}</time>
+          </article>
+        </template>
+
+        <template v-else-if="taskBoardTab === 'optimizing'">
+          <div class="v2-task-list-heading">
+            <span>智能体正在处置</span>
+            <small>按当前闭环阶段展示</small>
+          </div>
+          <article
+            v-for="item in optimizingTasks"
+            :key="item.id"
+            :class="['v2-optimizing-item', item.tone]"
+          >
+            <header>
+              <span>{{ item.stage }}</span>
+              <strong>{{ item.intersection }}</strong>
+              <b>{{ item.progress }}%</b>
+            </header>
+            <p>{{ item.action }}</p>
+            <div><i :style="{ width: `${item.progress}%` }"></i></div>
+            <footer><span>AI 自主优化</span><small>{{ item.eta }}</small></footer>
+          </article>
+        </template>
+
+        <template v-else>
+          <div class="v2-task-list-heading">
+            <span>已完成闭环任务</span>
+            <small>点击代表案例进入演示</small>
+          </div>
+          <button class="v2-completed-task v2-completed-entry" @click="emit('start')">
+            <span class="v2-task-status">本次演示案例</span>
+            <small>18:21 · 晚高峰溢流治理</small>
+            <strong>解放东路 × 奥体西路</strong>
+            <p>自主完成感知、研判、方案生成、执行与效果评估。</p>
+            <div class="v2-task-result">
+              <span><small>北进口排队</small><b>129m</b></span>
+              <i>→</i>
+              <strong>78m</strong>
+            </div>
+            <footer><span>已验证 3 个周期 · 未触发回退</span><b>回放完整过程 →</b></footer>
+          </button>
+          <div class="v2-completed-summary">
+            <span><strong>180</strong>今日已闭环</span>
+            <span><strong>14</strong>新增有效经验</span>
+          </div>
+        </template>
+      </div>
+
+      <footer class="v2-task-board-foot">
+        <span><i></i> 45 项异常已发现</span>
+        <span><i></i> 24 小时持续监测</span>
+      </footer>
     </aside>
 
     <section class="v2-scan-hero">
@@ -442,7 +635,7 @@ onMounted(async () => {
         <button :disabled="!prompt.trim() || submitting" @click="submitPrompt">发起研判</button>
       </div>
       <div class="v2-command-guide">
-        <span>演示建议：讲完知识库数据后，点击左侧“已完成”任务进入全流程回放</span>
+        <span>演示建议：讲完知识库数据后，切换左侧“已完成”，点击代表案例进入全流程回放</span>
         <b>支持键盘输入主动任务</b>
       </div>
     </div>
