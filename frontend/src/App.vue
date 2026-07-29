@@ -25,7 +25,7 @@ const actNames: Record<ActId, string> = {
 
 const now = ref(new Date())
 type PresentationMode = 'map' | 'detail'
-const defaultPresentationMode = (act: ActId): PresentationMode => act === 2 ? 'map' : 'detail'
+const defaultPresentationMode = (_act: ActId): PresentationMode => 'detail'
 const presentationMode = ref<PresentationMode>(defaultPresentationMode(state.activeAct))
 let clockTimer = 0
 
@@ -98,13 +98,13 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
           :class="{ active: state.activeAct === act }"
           @click="switchAct(act)"
         >
-          <small>ACT 0{{ act }}</small>
           <span>{{ actNames[act] }}</span>
         </button>
       </nav>
 
       <div class="system-status">
         <button
+          v-if="state.activeAct !== 6"
           class="presentation-mode-toggle"
           :class="{ active: presentationMode === 'detail' }"
           :aria-pressed="presentationMode === 'detail'"

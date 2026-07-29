@@ -251,7 +251,7 @@ onMounted(async () => {
         </div>
         <div class="plain-conclusion warning">
           <b>初步判断</b>
-          问题集中在北进口，垂直方向和下游尚未失稳；上游连续来车可能在放大排队。
+          问题集中在北进口，垂直方向和下游尚未失稳；上游持续来车可能继续加剧排队。
         </div>
       </template>
 
@@ -321,8 +321,8 @@ onMounted(async () => {
           </article>
         </div>
         <div class="causal-chain">
-          <span>上游连续到达波</span><i>放大</i>
-          <span>当前有效放行不足</span><i>导致</i>
+          <span>上游来车持续增加</span><i>叠加</i>
+          <span>目标方向放行不足</span><i>导致</i>
           <strong>北进口排队增长</strong>
         </div>
         <div class="plain-conclusion">

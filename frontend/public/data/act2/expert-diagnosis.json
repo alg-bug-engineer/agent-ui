@@ -167,7 +167,7 @@
       "id": "arrival-wave",
       "question": "上游连续到达波假设",
       "evidence": "上游六跳解释 92.0% 到达流量，前两跳贡献 57.9%",
-      "verdict": "成立：连续到达波是放大因素",
+      "verdict": "成立：上游持续来车加剧排队增长",
       "supported": true
     }
   ],

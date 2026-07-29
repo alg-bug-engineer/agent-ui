@@ -34,6 +34,8 @@ const collaboration = ref<HumanCollaboration | null>(null)
 const effectiveness = ref<EffectivenessData | null>(null)
 const experiences = ref<ExperienceData | null>(null)
 const activeReportView = ref<'overview' | 'collaboration'>('overview')
+const reportRoot = ref<HTMLDivElement | null>(null)
+const reportMapSpace = ref<HTMLDivElement | null>(null)
 const actionChart = ref<HTMLDivElement | null>(null)
 const trendChart = ref<HTMLDivElement | null>(null)
 let actionChartInstance: EChartsType | null = null
@@ -127,6 +129,30 @@ function resizeCharts() {
   trendChartInstance?.resize()
 }
 
+function scrollReportOutsideMap(event: WheelEvent) {
+  const root = reportRoot.value
+  if (!root || event.ctrlKey || event.deltaY === 0) return
+
+  const mapRect = reportMapSpace.value?.getBoundingClientRect()
+  const isInsideMap = Boolean(
+    mapRect
+    && event.clientX >= mapRect.left
+    && event.clientX <= mapRect.right
+    && event.clientY >= mapRect.top
+    && event.clientY <= mapRect.bottom,
+  )
+  if (isInsideMap) return
+
+  const nextScrollTop = Math.max(
+    0,
+    Math.min(root.scrollHeight - root.clientHeight, root.scrollTop + event.deltaY),
+  )
+  if (nextScrollTop === root.scrollTop) return
+
+  root.scrollTop = nextScrollTop
+  event.preventDefault()
+}
+
 watch(activeReportView, (view) => {
   if (view === 'overview') {
     void mountCharts()
@@ -149,6 +175,7 @@ function appendHumanRecord(record: HumanCollaboration['timeline'][number]) {
 
 onMounted(async () => {
   emit('beat', 'report')
+  window.addEventListener('wheel', scrollReportOutsideMap, { capture: true, passive: false })
   const [summaryData, collaborationData, effectivenessData, experienceData] = await Promise.all([
     dataRepository.dailySummary(),
     dataRepository.humanCollaboration(),
@@ -165,13 +192,18 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', resizeCharts)
+  window.removeEventListener('wheel', scrollReportOutsideMap, { capture: true })
   actionChartInstance?.dispose()
   trendChartInstance?.dispose()
 })
 </script>
 
 <template>
-  <div v-if="summary && collaboration && effectiveness && experiences" class="act-experience act6-experience">
+  <div
+    v-if="summary && collaboration && effectiveness && experiences"
+    ref="reportRoot"
+    class="act-experience act6-experience"
+  >
     <section class="report-heading">
       <div>
         <span>CITY SIGNAL CONTROL · DAILY BRIEF</span>
@@ -196,7 +228,7 @@ onBeforeUnmount(() => {
     </nav>
 
     <section v-if="activeReportView === 'overview'" class="report-map-overview">
-      <div class="report-map-space">
+      <div ref="reportMapSpace" class="report-map-space">
         <div class="report-map-caption">
           <span><i></i> 城市治理结果地图</span>
           <small>支持拖拽与缩放 · 绿色高亮为本次代表性治理结果</small>

@@ -305,7 +305,7 @@ button:focus-visible {
 .act-navigation button {
   position: relative;
   min-width: 122px;
-  padding: 10px 18px 8px;
+  padding: 8px 18px;
   border: 0;
   border-left: 1px solid rgba(181, 222, 227, .12);
   background: transparent;
@@ -339,20 +339,13 @@ button:focus-visible {
   box-shadow: 0 -3px 12px rgba(62, 209, 195, .65);
 }
 
-.act-navigation small,
 .act-navigation span {
   display: block;
 }
 
-.act-navigation small {
-  margin-bottom: 5px;
-  font: 9px "DIN Alternate", sans-serif;
-  letter-spacing: 1.5px;
-  color: #42c9c0;
-}
-
 .act-navigation span {
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 650;
   letter-spacing: 1px;
 }
 
@@ -5581,17 +5574,7 @@ button:focus-visible {
 }
 
 .detail-focus-mode.act-6 .act6-experience {
-  pointer-events: auto;
-}
-
-.map-focus-mode.act-6 .executive-summary,
-.map-focus-mode.act-6 .report-grid {
-  display: none;
-}
-
-.map-focus-mode.act-6 .report-map-overview {
-  grid-template-columns: minmax(0, 1fr) 350px;
-  min-height: min(53vh, 520px);
+  pointer-events: none;
 }
 
 .map-focus-mode.act-6 .report-map-space {
@@ -5605,9 +5588,6 @@ button:focus-visible {
   .map-focus-mode.act-2 .map-executive-verdict {
     left: 82px;
     right: 82px;
-  }
-  .map-focus-mode.act-6 .report-map-overview {
-    grid-template-columns: minmax(0, 1fr) 320px;
   }
 }
 
@@ -7637,4 +7617,615 @@ button:focus-visible {
 @media (max-width: 1360px) {
   .act3-object-list { width: 250px; }
   .act3-panel { width: 360px; }
+}
+
+/* ACT2 presentation refinements: keep the verdict clear of both analysis docks. */
+.act-2 .reasoning-panel {
+  width: 306px;
+}
+
+.detail-focus-mode.act-2 .map-executive-verdict {
+  left: 354px;
+  right: 474px;
+}
+
+/* ACT2 evidence hierarchy: make decision-driving labels and values immediately legible. */
+.act-2 .evidence-panel .evidence-heading span {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  text-shadow: 0 0 16px rgba(102, 224, 255, .2);
+}
+
+.act-2 .evidence-panel .evidence-heading b {
+  color: rgba(102, 224, 255, .28);
+  font-size: 28px;
+}
+
+.act-2 .evidence-panel .target-card {
+  border-color: rgba(102, 224, 255, .38);
+  box-shadow: inset 3px 0 rgba(102, 224, 255, .82);
+}
+
+.act-2 .evidence-panel .target-card small,
+.act-2 .evidence-panel .trace-summary span {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.act-2 .evidence-panel .target-card h2 {
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 750;
+}
+
+.act-2 .evidence-panel .target-card p {
+  color: rgba(232, 248, 255, .82);
+  font-size: 11px;
+}
+
+.act-2 .evidence-panel .cognition-axis span,
+.act-2 .evidence-panel .direction-card div span {
+  color: #8fb4c8;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.act-2 .evidence-panel .cognition-axis strong,
+.act-2 .evidence-panel .direction-card div strong {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.act-2 .evidence-panel .cognition-axis small,
+.act-2 .evidence-panel .direction-card > small {
+  color: rgba(220, 240, 255, .72);
+  font-size: 11px;
+}
+
+.act-2 .evidence-panel .cognition-proof span {
+  color: rgba(220, 240, 255, .68);
+  font-size: 8px;
+}
+
+.act-2 .evidence-panel .cognition-proof b {
+  color: #7eeaff;
+  font-size: 16px;
+}
+
+.act-2 .evidence-panel .plain-conclusion {
+  color: rgba(238, 250, 255, .82);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.act-2 .evidence-panel .plain-conclusion b {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.act-2 .evidence-panel .direction-card > b {
+  color: #7eeaff;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.act-2 .evidence-panel .direction-card > p {
+  color: rgba(232, 248, 255, .8);
+  font-size: 11px;
+}
+
+.act-2 .evidence-panel .metric-item > div:first-child span {
+  color: #b8d9e7;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.act-2 .evidence-panel .metric-item > div:first-child small,
+.act-2 .evidence-panel .metric-item .threshold {
+  font-size: 10px;
+}
+
+.act-2 .evidence-panel .metric-item > strong {
+  color: #ffffff;
+  font-size: 28px;
+  text-shadow: 0 0 14px rgba(102, 224, 255, .18);
+}
+
+.act-2 .evidence-panel .metric-item > strong small {
+  font-size: 10px;
+}
+
+.act-2 .evidence-panel .video-evidence strong {
+  font-size: 13px;
+}
+
+.act-2 .evidence-panel .video-evidence small,
+.act-2 .evidence-panel .video-evidence b {
+  font-size: 9px;
+}
+
+.act-2 .evidence-panel .trace-summary {
+  border-color: rgba(102, 224, 255, .36);
+  box-shadow: inset 3px 0 rgba(102, 224, 255, .72);
+}
+
+.act-2 .evidence-panel .trace-summary strong {
+  color: #ffffff;
+  font-size: 19px;
+}
+
+.act-2 .evidence-panel .trace-summary small {
+  color: rgba(232, 248, 255, .72);
+  font-size: 10px;
+}
+
+.act-2 .evidence-panel .trace-list.complete > div {
+  font-size: 10px;
+}
+
+.act-2 .evidence-panel .trace-list.complete > div strong {
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.act-2 .evidence-panel .trace-list.complete > div small {
+  color: rgba(220, 240, 255, .58);
+  font-size: 8px;
+}
+
+.act-2 .evidence-panel .trace-conclusion {
+  color: rgba(238, 250, 255, .82);
+  font-size: 10px;
+}
+
+.act-2 .evidence-panel .hypothesis-list header span {
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.act-2 .evidence-panel .hypothesis-list header strong {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.act-2 .evidence-panel .hypothesis-list p {
+  color: rgba(232, 248, 255, .76);
+  font-size: 10px;
+}
+
+.act-2 .evidence-panel .hypothesis-list article > b {
+  color: #7eeaff;
+  font-size: 11px;
+}
+
+.act-2 .evidence-panel .causal-chain {
+  color: rgba(232, 248, 255, .75);
+  font-size: 9px;
+}
+
+.act-2 .evidence-panel .causal-chain strong {
+  color: #ffd07a;
+  font-weight: 750;
+}
+
+.act-2 .evidence-panel .direction-card {
+  padding: 13px 13px 13px 16px;
+  border-color: rgba(143, 180, 200, .24);
+  background: linear-gradient(100deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .025));
+}
+
+.act-2 .evidence-panel .direction-card.critical div span,
+.act-2 .evidence-panel .direction-card.critical > b {
+  color: #ff8580;
+}
+
+.act-2 .evidence-panel .direction-card.warning div span,
+.act-2 .evidence-panel .direction-card.warning > b {
+  color: #ffd071;
+}
+
+.act-2 .evidence-panel .direction-card.normal div span,
+.act-2 .evidence-panel .direction-card.normal > b {
+  color: #65edb0;
+}
+
+.act-2 .evidence-panel .cognition-axis > div {
+  min-height: 88px;
+  padding: 12px;
+  border-color: rgba(102, 224, 255, .2);
+  background: linear-gradient(145deg, rgba(26, 127, 255, .075), rgba(255, 255, 255, .025));
+}
+
+.act-2 .evidence-panel .cognition-axis > .axis-primary {
+  border-color: rgba(245, 166, 35, .55);
+  box-shadow: inset 3px 0 rgba(245, 166, 35, .8);
+}
+
+.act-2 .evidence-panel .cognition-axis .axis-primary span,
+.act-2 .evidence-panel .cognition-axis .axis-primary strong {
+  color: #ffd071;
+}
+
+.act-2 .evidence-panel .metric-item.emphasis {
+  box-shadow: inset 3px 0 #f5a623, 0 0 18px rgba(245, 166, 35, .06);
+}
+
+.act-2 .verdict-metrics {
+  padding: 10px 12px;
+}
+
+.act-2 .verdict-metrics > div {
+  min-width: 102px;
+  padding: 0 15px;
+  border-left-color: rgba(148, 201, 221, .28);
+}
+
+.act-2 .verdict-metrics span {
+  color: #9fc4d3;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.act-2 .verdict-metrics b {
+  margin-top: 7px;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+  text-shadow: 0 0 14px rgba(255, 255, 255, .1);
+}
+
+.act-2 .map-executive-verdict.action .verdict-metrics b {
+  color: #83c8ff;
+}
+
+.act-2 .verdict-metrics .risk b {
+  color: #ff7770;
+  text-shadow: 0 0 16px rgba(255, 90, 87, .22);
+}
+
+.act-2 .verdict-metrics .safe b {
+  color: #61e9a0;
+  text-shadow: 0 0 16px rgba(34, 197, 94, .2);
+}
+
+.act-2 .operating-portrait-row .geo-operating-portrait {
+  padding: 14px 16px;
+}
+
+.act-2 .operating-portrait-row .geo-operating-portrait header {
+  padding-bottom: 11px;
+}
+
+.act-2 .operating-portrait-row .geo-operating-portrait header strong {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.act-2 .operating-portrait-row .geo-operating-portrait header small {
+  margin-top: 5px;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.act-2 .operating-portrait-row .geo-operating-portrait header > span {
+  font-size: 13px;
+}
+
+.act-2 .operating-portrait-row .operating-portrait-metrics {
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.act-2 .operating-portrait-row .operating-portrait-metrics small {
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.act-2 .operating-portrait-row .operating-portrait-metrics strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.act-2 .operating-portrait-row .geo-operating-portrait footer {
+  margin-top: 10px;
+  padding-top: 9px;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@media (max-width: 1500px) {
+  .act-2 .reasoning-panel {
+    width: 286px;
+  }
+
+  .detail-focus-mode.act-2 .map-executive-verdict {
+    left: 334px;
+    right: 430px;
+  }
+}
+
+@media (max-width: 1360px) {
+  .act-2 .reasoning-panel {
+    width: 266px;
+  }
+
+  .detail-focus-mode.act-2 .map-executive-verdict {
+    left: 314px;
+    right: 398px;
+  }
+}
+
+/* ACT4 / ACT5 evidence hierarchy aligned with the enlarged ACT2 workbench. */
+:is(.act-4, .act-5) .evidence-panel .evidence-heading span {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  text-shadow: 0 0 16px rgba(102, 224, 255, .2);
+}
+
+:is(.act-4, .act-5) .evidence-panel .evidence-heading b {
+  color: rgba(102, 224, 255, .28);
+  font-size: 28px;
+}
+
+:is(.act-4, .act-5) .evidence-panel .plain-conclusion {
+  color: rgba(238, 250, 255, .86);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+:is(.act-4, .act-5) .evidence-panel .plain-conclusion b {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* ACT4: plan generation, option comparison, impact preview and deployment. */
+.act-4 .evidence-panel .speed-compare > div {
+  padding: 14px 12px;
+}
+
+.act-4 .evidence-panel .speed-compare span {
+  color: #a8c8d7;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.act-4 .evidence-panel .speed-compare strong {
+  margin-top: 8px;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.act-4 .evidence-panel .speed-compare strong small {
+  font-size: 10px;
+}
+
+.act-4 .evidence-panel .speed-compare > i {
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.act-4 .evidence-panel .timing-plan-head {
+  color: rgba(220, 240, 255, .62);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.act-4 .evidence-panel .timing-plan-row {
+  padding-block: 11px;
+  color: rgba(232, 248, 255, .76);
+  font-size: 11px;
+}
+
+.act-4 .evidence-panel .timing-plan-row strong,
+.act-4 .evidence-panel .timing-plan-row b,
+.act-4 .evidence-panel .timing-plan-row em {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.act-4 .evidence-panel .cycle-meta span {
+  color: #9bbdcd;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.act-4 .evidence-panel .cycle-meta strong {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.act-4 .evidence-panel .strategy-list article {
+  padding: 13px;
+  background: linear-gradient(100deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .025));
+}
+
+.act-4 .evidence-panel .strategy-list header strong {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.act-4 .evidence-panel .strategy-list header span {
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.act-4 .evidence-panel .strategy-list h3 {
+  margin-block: 9px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.act-4 .evidence-panel .strategy-list p {
+  padding: 8px 6px;
+  color: rgba(238, 250, 255, .82);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.act-4 .evidence-panel .strategy-list p span {
+  color: #9bbdcd;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.act-4 .evidence-panel .plan-tab-row button small {
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.act-4 .evidence-panel .plan-tab-row button strong {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.act-4 .evidence-panel .impact-grid article {
+  min-height: 78px;
+  padding: 12px;
+  border-color: rgba(102, 224, 255, .2);
+  background: linear-gradient(145deg, rgba(26, 127, 255, .075), rgba(255, 255, 255, .025));
+}
+
+.act-4 .evidence-panel .impact-grid span {
+  color: #a8c8d7;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.act-4 .evidence-panel .impact-grid b {
+  font-size: 14px;
+}
+
+.act-4 .evidence-panel .impact-grid i {
+  font-size: 10px;
+}
+
+.act-4 .evidence-panel .impact-grid strong {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.act-4 .evidence-panel .impact-grid article.warning strong {
+  color: #ffd071;
+}
+
+.act-4 .evidence-panel .impact-grid article.critical strong {
+  color: #ff8580;
+}
+
+.act-4 .evidence-panel .decision-card > small {
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.act-4 .evidence-panel .decision-card h2 {
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.act-4 .evidence-panel .decision-card li {
+  color: rgba(238, 250, 255, .78);
+  font-size: 11px;
+}
+
+.act-4 .evidence-panel .guardrail-list > strong {
+  font-size: 12px;
+}
+
+.act-4 .evidence-panel .guardrail-list span {
+  color: rgba(238, 250, 255, .76);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.act-4 .evidence-panel .expected-outcome {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ACT5: deployment confirmation, before/after metrics and trend verification. */
+.act-5 .evidence-panel .target-card {
+  border-color: rgba(102, 224, 255, .38);
+  box-shadow: inset 3px 0 rgba(102, 224, 255, .82);
+}
+
+.act-5 .evidence-panel .target-card small {
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.act-5 .evidence-panel .target-card h2 {
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.act-5 .evidence-panel .target-card p {
+  color: rgba(232, 248, 255, .82);
+  font-size: 11px;
+}
+
+.act-5 .evidence-panel .outcome-grid article {
+  min-height: 94px;
+  padding: 12px;
+  border-color: rgba(102, 224, 255, .2);
+  background: linear-gradient(145deg, rgba(26, 127, 255, .075), rgba(255, 255, 255, .025));
+}
+
+.act-5 .evidence-panel .outcome-grid span {
+  color: #a8c8d7;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.act-5 .evidence-panel .outcome-values {
+  margin-top: 9px;
+}
+
+.act-5 .evidence-panel .outcome-values b {
+  font-size: 14px;
+}
+
+.act-5 .evidence-panel .outcome-values i {
+  font-size: 10px;
+}
+
+.act-5 .evidence-panel .outcome-values strong {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.act-5 .evidence-panel .outcome-values small {
+  font-size: 9px;
+}
+
+.act-5 .evidence-panel .outcome-grid em {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.act-5 .evidence-panel .tidal-chart {
+  height: 190px;
+}
+
+.act-5 .evidence-panel .tidal-chart-caption {
+  color: rgba(232, 248, 255, .72);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.act-5 .evidence-panel .expected-outcome {
+  color: #65edb0;
+  font-size: 12px;
+  font-weight: 750;
 }

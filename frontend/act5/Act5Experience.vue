@@ -76,7 +76,7 @@ function goNext() {
 function darkAxis() {
   return {
     axisLine: { lineStyle: { color: 'rgba(220,240,255,.25)' } },
-    axisLabel: { color: 'rgba(220,240,255,.45)', fontSize: 8 },
+    axisLabel: { color: 'rgba(220,240,255,.62)', fontSize: 10 },
     splitLine: { lineStyle: { color: 'rgba(255,255,255,.06)' } },
   }
 }
@@ -90,7 +90,7 @@ function renderHourlyChart() {
     tooltip: { trigger: 'axis' },
     legend: {
       top: 0,
-      textStyle: { color: 'rgba(220,240,255,.6)', fontSize: 8 },
+      textStyle: { color: 'rgba(220,240,255,.72)', fontSize: 10 },
       itemWidth: 10,
       itemHeight: 6,
     },
@@ -100,7 +100,7 @@ function renderHourlyChart() {
       data: trend.value.hourlyComparison.map((item) => item.hour),
       ...darkAxis(),
     },
-    yAxis: { type: 'value', name: '排队(m)', nameTextStyle: { color: 'rgba(220,240,255,.4)', fontSize: 8 }, ...darkAxis() },
+    yAxis: { type: 'value', name: '排队(m)', nameTextStyle: { color: 'rgba(220,240,255,.58)', fontSize: 10 }, ...darkAxis() },
     series: [
       {
         name: '下发前',
@@ -136,7 +136,7 @@ function renderDailyChart() {
     tooltip: { trigger: 'axis' },
     legend: {
       top: 0,
-      textStyle: { color: 'rgba(220,240,255,.6)', fontSize: 8 },
+      textStyle: { color: 'rgba(220,240,255,.72)', fontSize: 10 },
       itemWidth: 10,
       itemHeight: 6,
     },
@@ -146,7 +146,7 @@ function renderDailyChart() {
       data: trend.value.dailyTrend.map((item) => item.day),
       ...darkAxis(),
     },
-    yAxis: { type: 'value', name: '排队(m)', nameTextStyle: { color: 'rgba(220,240,255,.4)', fontSize: 8 }, ...darkAxis() },
+    yAxis: { type: 'value', name: '排队(m)', nameTextStyle: { color: 'rgba(220,240,255,.58)', fontSize: 10 }, ...darkAxis() },
     series: [
       {
         name: '下发前',

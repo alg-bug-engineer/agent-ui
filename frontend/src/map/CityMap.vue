@@ -28,6 +28,7 @@ const flowTrace = ref<FlowTraceScene | null>(null)
 const diagnosis = ref<ExpertDiagnosis | null>(null)
 type SimulationScenarioId = 'baseline' | 'green-only' | 'combined'
 const simulationScenario = ref<SimulationScenarioId>('baseline')
+const showStaticAoiCards = false
 
 interface MapNarrative {
   chapter: string
@@ -203,7 +204,7 @@ const beatNarratives: Record<string, MapNarrative> = {
     chapter: '路口拓扑分析',
     eyebrow: '路口拓扑 · 空间关系',
     headline: '问题集中在北进口，其他方向尚未失稳',
-    summary: '上游连续来车可能放大排队，垂直方向与下游仍有安全余量。',
+    summary: '上游持续来车正在加剧排队，垂直方向与下游仍有安全余量。',
     tone: 'warning',
     metrics: [
       { label: '北进口', value: '129m', status: 'risk' },
@@ -226,7 +227,7 @@ const beatNarratives: Record<string, MapNarrative> = {
   cause: {
     chapter: '问题验证',
     eyebrow: '问题验证 · 逐项核验',
-    headline: '上游来车放大排队，目标方向有效放行不足',
+    headline: '上游持续来车叠加放行不足，北进口排队持续增长',
     summary: '结合流量溯源结果核验关键假设，并排除下游阻塞型溢流。',
     tone: 'warning',
     metrics: [
@@ -419,7 +420,7 @@ function addPolyline(path: Array<[number, number]>, options: Record<string, unkn
   }))
 }
 
-function addTargetAnchor(label = '诊断路口') {
+function addTargetAnchor(label = '诊断路口', showLabel = true) {
   if (!target.value) return
   addOverlay(new AMapApi.CircleMarker({
     center: target.value.center,
@@ -440,13 +441,15 @@ function addTargetAnchor(label = '诊断路口') {
     fillOpacity: 1,
     zIndex: 110,
   }))
-  addOverlay(new AMapApi.Marker({
-    position: target.value.center,
-    anchor: 'bottom-left',
-    offset: new AMapApi.Pixel(16, -10),
-    content: htmlElement('geo-map-info-card geo-anchor-label', `<strong>${label}</strong><span>${target.value.name}</span>`),
-    zIndex: 112,
-  }))
+  if (showLabel) {
+    addOverlay(new AMapApi.Marker({
+      position: target.value.center,
+      anchor: 'bottom-left',
+      offset: new AMapApi.Pixel(16, -10),
+      content: htmlElement('geo-map-info-card geo-anchor-label', `<strong>${label}</strong><span>${target.value.name}</span>`),
+      zIndex: 112,
+    }))
+  }
 }
 
 function renderAct1() {
@@ -528,7 +531,7 @@ function renderAct1() {
 }
 
 function renderDevices() {
-  addTargetAnchor('设备核验中心')
+  addTargetAnchor('设备核验中心', false)
   devices.value.forEach((device) => {
     addOverlay(new AMapApi.Marker({
       position: device.position,
@@ -1317,7 +1320,7 @@ function renderScene() {
   if (props.beat === 'cognition') {
     renderChannelization()
     renderDevices()
-    renderStaticPortrait()
+    if (showStaticAoiCards) renderStaticPortrait()
   } else if (props.beat === 'evidence') {
     renderChannelization()
     renderQueueRuler()
@@ -1473,12 +1476,11 @@ onBeforeUnmount(() => {
       >
         <div class="verdict-chapter">
           <span>{{ mapNarrative.chapter }}</span>
-          <small>{{ mapNarrative.eyebrow }}</small>
         </div>
         <div class="verdict-copy">
           <strong>{{ mapNarrative.headline }}</strong>
           <p>{{ mapNarrative.summary }}</p>
-          <small v-if="nextNarrative" class="verdict-next">{{ nextNarrative }}</small>
+          <small v-if="activeAct !== 2 && nextNarrative" class="verdict-next">{{ nextNarrative }}</small>
         </div>
         <div class="verdict-metrics">
           <div v-for="metric in mapNarrative.metrics" :key="metric.label" :class="metric.status">

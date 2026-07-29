@@ -37,7 +37,7 @@ export const runtimeConfig = Object.freeze({
     overviewZoom: envNumber(import.meta.env.VITE_MAP_OVERVIEW_ZOOM, 15.4),
   },
   playback: {
-    detectionSeconds: envNumber(import.meta.env.VITE_ACT1_DETECTION_SECONDS, 10),
+    detectionSeconds: envNumber(import.meta.env.VITE_ACT1_DETECTION_SECONDS, 5),
     autoProcessSeconds: envNumber(import.meta.env.VITE_ACT1_AUTO_PROCESS_SECONDS, 10),
   },
 })
