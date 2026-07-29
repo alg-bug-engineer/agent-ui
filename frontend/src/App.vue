@@ -138,7 +138,6 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
       <Act2Experience
         v-else-if="state.activeAct === 2"
         :key="`act2-${state.replayToken}`"
-        :paused="state.paused"
         @beat="setBeat"
         @open-knowledge="goToAct(3)"
       />

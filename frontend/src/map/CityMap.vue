@@ -101,12 +101,8 @@ const narrativeBeatOrder = [
   'cognition',
   'evidence',
   'direction',
-  'cause',
-  'constraints',
-  'options',
-  'simulation',
-  'decision',
   'trace',
+  'cause',
 ]
 
 const narrativeProgress = computed(() => {
@@ -120,13 +116,9 @@ const nextNarrative = computed(() => {
   const messages: Record<string, string> = {
     cognition: '下一步：把排队长度与动态阈值放到道路上核验',
     evidence: '下一步：镜头拉远，建立目标、冲突方向与上下游拓扑关系',
-    direction: '下一步：沿拓扑关系逐项排除成因',
-    cause: '下一步：先划定安全边界，再生成控制动作',
-    constraints: '下一步：把三个治理动作放到地图具体位置',
-    options: '下一步：对比不干预、单点加绿与协同组合',
-    simulation: '三种方案逐项推演，地图与结果卡同步变化',
-    decision: '下一步：继续向上游追溯流量源头',
-    trace: '研判完成：进入知识匹配与策略生成',
+    direction: '下一步：沿上游走廊追踪流量来源与贡献',
+    trace: '下一步：结合流量溯源结果逐项验证问题成因',
+    cause: '问题验证完成：进入知识匹配与策略生成',
   }
   return messages[props.beat] ?? ''
 })
@@ -232,10 +224,10 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   cause: {
-    chapter: '溢流判因',
-    eyebrow: '因果链 · 逐项排除',
+    chapter: '问题验证',
+    eyebrow: '问题验证 · 逐项核验',
     headline: '上游来车放大排队，目标方向有效放行不足',
-    summary: '下游仍有 168m 储车空间，排除下游阻塞型溢流。',
+    summary: '结合流量溯源结果核验关键假设，并排除下游阻塞型溢流。',
     tone: 'warning',
     metrics: [
       { label: '上游前两跳', value: '57.9%', status: 'risk' },
@@ -280,10 +272,10 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   trace: {
-    chapter: '源头治理',
-    eyebrow: '源头治理 · 六跳溯源',
+    chapter: '流量溯源',
+    eyebrow: '流量溯源 · 六跳追踪',
     headline: '奥体西路北侧连续来车波是主要源头',
-    summary: '主走廊六跳累计解释 92.0% 到达流量，治理动作落到具体上游节点。',
+    summary: '主走廊六跳累计解释 92.0% 到达流量，明确各上游节点的流量贡献。',
     tone: 'action',
     metrics: [
       { label: '累计解释', value: '92.0%' },
@@ -427,7 +419,7 @@ function addPolyline(path: Array<[number, number]>, options: Record<string, unkn
   }))
 }
 
-function addTargetAnchor(label = '诊断路口', detail?: string) {
+function addTargetAnchor(label = '诊断路口') {
   if (!target.value) return
   addOverlay(new AMapApi.CircleMarker({
     center: target.value.center,
@@ -452,10 +444,7 @@ function addTargetAnchor(label = '诊断路口', detail?: string) {
     position: target.value.center,
     anchor: 'bottom-left',
     offset: new AMapApi.Pixel(16, -10),
-    content: htmlElement(
-      'geo-map-info-card geo-anchor-label',
-      `<strong>${label}</strong><span>${detail ?? target.value.name}</span>`,
-    ),
+    content: htmlElement('geo-map-info-card geo-anchor-label', `<strong>${label}</strong><span>${target.value.name}</span>`),
     zIndex: 112,
   }))
 }
@@ -1265,10 +1254,10 @@ function applyCamera() {
     simulation: { zoom: 16.3, center: [117.1113, 36.6647] },
     decision: { zoom: 16.3, center: [117.1113, 36.6647] },
     trace: { zoom: 14.45, center: [117.1112, 36.6717] },
-    'knowledge-recall': { zoom: 17.6, center: targetCenter },
-    'similar-cases': { zoom: 17.6, center: targetCenter },
-    'tidal-pattern': { zoom: 17.6, center: targetCenter },
-    'strategy-brief': { zoom: 17.6, center: targetCenter },
+    'knowledge-recall': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'similar-cases': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'tidal-pattern': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'strategy-brief': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
     'plan-generation': { zoom: 16.5, center: targetCenter },
     'plan-options': { zoom: 16.3, center: [117.1113, 36.6647] },
     'impact-preview': { zoom: 16.3, center: [117.1113, 36.6647] },
@@ -1346,7 +1335,7 @@ function renderScene() {
   } else if (props.beat === 'tidal-pattern') {
     addTargetAnchor('潮汐特征研判')
   } else if (props.beat === 'strategy-brief') {
-    addTargetAnchor('治理方向已确定')
+    addTargetAnchor('策略匹配完成')
   } else if (['plan-generation', 'deployment'].includes(props.beat)) {
     addTargetAnchor('配时方案锁定路口')
   } else if (['deployment-confirm', 'before-after', 'closing'].includes(props.beat)) {

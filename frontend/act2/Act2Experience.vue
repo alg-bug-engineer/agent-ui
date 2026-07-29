@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { dataRepository } from '../src/services/dataRepository'
 import type {
   ChannelizationScene,
@@ -10,7 +10,6 @@ import type {
   TargetIntersection,
 } from '../src/types'
 
-const props = defineProps<{ paused: boolean }>()
 const emit = defineEmits<{
   beat: [value: string]
   openKnowledge: []
@@ -21,60 +20,30 @@ const beats = [
     id: 'cognition',
     title: '路口认知',
     subtitle: '先看清路、方向与感知条件',
-    duration: 5.8,
   },
   {
     id: 'evidence',
     title: '异常核验',
     subtitle: '先确认异常是否真实、是否持续',
-    duration: 6.5,
   },
   {
     id: 'direction',
     title: '路口拓扑分析',
     subtitle: '把目标、冲突方向与上下游放进同一张路网',
-    duration: 6.2,
-  },
-  {
-    id: 'cause',
-    title: '溢流判因',
-    subtitle: '逐项验证，不凭直觉下结论',
-    duration: 6.8,
-  },
-  {
-    id: 'constraints',
-    title: '约束检查',
-    subtitle: '先划安全边界，再谈怎么调',
-    duration: 6.4,
-  },
-  {
-    id: 'options',
-    title: '方案生成',
-    subtitle: '目标缓解与网络副作用并列',
-    duration: 7,
-  },
-  {
-    id: 'simulation',
-    title: '反事实推演',
-    subtitle: '比较“不调、只加绿、组合调控”',
-    duration: 8,
-  },
-  {
-    id: 'decision',
-    title: '专家决策',
-    subtitle: '动作、依据、护栏同时交付',
-    duration: 7.2,
   },
   {
     id: 'trace',
-    title: '源头治理',
-    subtitle: '把方案落到具体上游节点',
-    duration: 9,
+    title: '流量溯源',
+    subtitle: '沿上游走廊追踪流量来源与贡献',
+  },
+  {
+    id: 'cause',
+    title: '问题验证',
+    subtitle: '结合流量来源逐项核验问题成因',
   },
 ] as const
 
 const currentIndex = ref(0)
-const elapsed = ref(0)
 const target = ref<TargetIntersection | null>(null)
 const devices = ref<DevicePoint[]>([])
 const metrics = ref<MetricItem[]>([])
@@ -84,21 +53,14 @@ const diagnosis = ref<ExpertDiagnosis | null>(null)
 const expandedEvidence = ref(false)
 const evidencePanel = ref<HTMLElement | null>(null)
 const transitionDirection = ref<'forward' | 'backward'>('forward')
-let timer = 0
 
 const current = computed(() => beats[currentIndex.value])
 const stepTransitionName = computed(() => `step-flow-${transitionDirection.value}`)
 const stepTrackProgress = computed(() =>
   beats.length <= 1 ? 1 : currentIndex.value / (beats.length - 1),
 )
-const completed = computed(() =>
-  currentIndex.value === beats.length - 1 && elapsed.value >= current.value.duration,
-)
-const overallProgress = computed(() => {
-  const done = beats.slice(0, currentIndex.value).reduce((sum, beat) => sum + beat.duration, 0)
-  const total = beats.reduce((sum, beat) => sum + beat.duration, 0)
-  return Math.min(100, ((done + elapsed.value) / total) * 100)
-})
+const completed = computed(() => currentIndex.value === beats.length - 1)
+const overallProgress = computed(() => ((currentIndex.value + 1) / beats.length) * 100)
 
 const channelStats = computed(() => {
   const entrances = channelization.value?.links.filter((link) => link.role === 'entrance') ?? []
@@ -119,7 +81,6 @@ function moveToBeat(index: number) {
   if (index < 0 || index >= beats.length) return
   transitionDirection.value = index >= currentIndex.value ? 'forward' : 'backward'
   currentIndex.value = index
-  elapsed.value = 0
   emit('beat', beats[index].id)
   void nextTick(() => {
     evidencePanel.value?.scrollTo({ top: 0, behavior: 'smooth' })
@@ -128,6 +89,18 @@ function moveToBeat(index: number) {
 
 function selectBeat(index: number) {
   moveToBeat(index)
+}
+
+function goPrev() {
+  if (currentIndex.value > 0) moveToBeat(currentIndex.value - 1)
+}
+
+function goNext() {
+  if (currentIndex.value < beats.length - 1) {
+    moveToBeat(currentIndex.value + 1)
+    return
+  }
+  emit('openKnowledge')
 }
 
 onMounted(async () => {
@@ -147,16 +120,7 @@ onMounted(async () => {
   channelization.value = channelData
   diagnosis.value = diagnosisData
   emit('beat', current.value.id)
-  timer = window.setInterval(() => {
-    if (props.paused || completed.value) return
-    elapsed.value += 0.1
-    if (elapsed.value >= current.value.duration && currentIndex.value < beats.length - 1) {
-      moveToBeat(currentIndex.value + 1)
-    }
-  }, 100)
 })
-
-onBeforeUnmount(() => window.clearInterval(timer))
 </script>
 
 <template>
@@ -204,9 +168,17 @@ onBeforeUnmount(() => window.clearInterval(timer))
         </li>
       </ol>
 
-      <div class="reasoning-footer">
-        <span class="live-dot"></span>
-        {{ completed ? '诊断完成 · 已形成策略与安全护栏' : `研判进行中 · ${current.title}` }}
+      <div class="step-check-bar">
+        <div class="step-check-status">
+          <span class="live-dot"></span>
+          {{ completed ? '问题验证完成 · 诊断结论已确认' : `当前步骤已就绪 · ${current.title}` }}
+        </div>
+        <div class="step-check-nav">
+          <button :disabled="currentIndex === 0" @click="goPrev">← 上一步</button>
+          <button class="next-act" @click="goNext">
+            {{ completed ? '进入知识匹配 →' : '下一步 →' }}
+          </button>
+        </div>
       </div>
     </aside>
 
@@ -317,8 +289,27 @@ onBeforeUnmount(() => window.clearInterval(timer))
         </div>
       </template>
 
-      <template v-else-if="current.id === 'cause'">
-        <div class="evidence-heading"><span>三类成因逐项验证</span><b>04</b></div>
+      <template v-else-if="current.id === 'trace'">
+        <div class="evidence-heading"><span>上游流量来源与贡献</span><b>04</b></div>
+        <div class="trace-summary">
+          <span>主要流量来源</span>
+          <strong>{{ flowTrace?.summary.dominantSource }}</strong>
+          <small>六跳主走廊累计解释 {{ flowTrace?.summary.coveredSharePct.toFixed(1) }}%</small>
+        </div>
+        <div class="trace-list complete">
+          <div v-for="item in flowTrace?.mainCorridorChain" :key="item.nodeId">
+            <b>{{ String(item.hop).padStart(2, '0') }}</b>
+            <span>{{ flowTrace?.nodes.find((node) => node.id === item.nodeId)?.name }}</span>
+            <strong>{{ item.sharePct.toFixed(1) }}%</strong>
+            <i :style="{ width: `${Math.max(8, item.sharePct * 2.5)}%` }"></i>
+            <small>累计 {{ item.cumulativePct.toFixed(1) }}%</small>
+          </div>
+        </div>
+        <div class="trace-conclusion">{{ flowTrace?.summary.conclusion }}</div>
+      </template>
+
+      <template v-else>
+        <div class="evidence-heading"><span>关键问题逐项验证</span><b>05</b></div>
         <div class="hypothesis-list">
           <article v-for="item in diagnosis?.hypotheses" :key="item.id" :class="{ supported: item.supported }">
             <header>
@@ -335,125 +326,9 @@ onBeforeUnmount(() => window.clearInterval(timer))
           <strong>北进口排队增长</strong>
         </div>
         <div class="plain-conclusion">
-          <b>因果结论</b>
+          <b>验证结论</b>
           先改善目标方向放行，再用上游削峰压低到达强度；无需把下游当作病因处理。
         </div>
-      </template>
-
-      <template v-else-if="current.id === 'constraints'">
-        <div class="evidence-heading"><span>调控前先画安全边界</span><b>05</b></div>
-        <div class="constraint-grid">
-          <article
-            v-for="item in diagnosis?.constraints"
-            :key="item.label"
-            :class="item.tone"
-          >
-            <span>{{ item.label }}</span>
-            <strong>{{ item.value }}</strong>
-            <small>{{ item.boundary }}</small>
-            <p>{{ item.conclusion }}</p>
-          </article>
-        </div>
-        <div class="boundary-answer">
-          <span>目标方向增配</span><strong>具备条件，首轮增加 4 秒</strong>
-          <span>垂直方向约束</span><strong>等待将增加，排队控制在 92m 内</strong>
-          <span>下游承接约束</span><strong>当前可承接，占有率达到 65% 即停止</strong>
-          <span>上游削峰条件</span><strong>具备条件，截流比例控制在 12%</strong>
-        </div>
-      </template>
-
-      <template v-else-if="current.id === 'options'">
-        <div class="evidence-heading"><span>三种策略，不只看目标口</span><b>06</b></div>
-        <div class="strategy-list">
-          <article
-            v-for="item in diagnosis?.options"
-            :key="item.id"
-            :class="{ recommended: item.recommended }"
-          >
-            <header>
-              <strong>{{ item.name }}</strong>
-              <span>{{ item.recommended ? '推荐进入推演' : '对照方案' }}</span>
-            </header>
-            <h3>{{ item.action }}</h3>
-            <div>
-              <p><span>目标方向</span>{{ item.targetEffect }}</p>
-              <p><span>垂直方向</span>{{ item.conflictEffect }}</p>
-              <p><span>下游</span>{{ item.downstreamEffect }}</p>
-            </div>
-            <footer>{{ item.verdict }}</footer>
-          </article>
-        </div>
-      </template>
-
-      <template v-else-if="current.id === 'simulation'">
-        <div class="evidence-heading"><span>执行前反事实推演</span><b>07</b></div>
-        <div class="scenario-table">
-          <div class="scenario-head">
-            <span>方案</span><span>北进口</span><span>东西向</span><span>下游</span><span>风险</span>
-          </div>
-          <div
-            v-for="item in diagnosis?.scenarios"
-            :key="item.id"
-            :class="['scenario-row', { selected: item.id === 'combined' }]"
-          >
-            <strong>{{ item.name }}</strong>
-            <span>{{ item.targetQueueM }}m</span>
-            <span>{{ item.conflictQueueM }}m</span>
-            <span>{{ item.downstreamOccupancyPct }}%</span>
-            <b :class="`risk-${item.risk}`">{{ item.risk }}</b>
-            <p>{{ item.conclusion }}</p>
-          </div>
-        </div>
-        <div class="counterfactual-callout">
-          <span>单点加绿风险</span>
-          <strong>北进口 +8s 虽降至 88m，却让东西向升至 101m，超过 92m 警戒线。</strong>
-        </div>
-        <div class="plain-conclusion">
-          <b>推演结论</b>
-          组合方案不是效果最激进的方案，却是三个方向同时不过界的方案。
-        </div>
-      </template>
-
-      <template v-else-if="current.id === 'decision'">
-        <div class="evidence-heading"><span>专家决策与安全护栏</span><b>08</b></div>
-        <div class="decision-card">
-          <small>最终建议</small>
-          <h2>{{ diagnosis?.recommendation.title }}</h2>
-          <ol>
-            <li v-for="action in diagnosis?.recommendation.actions" :key="action">{{ action }}</li>
-          </ol>
-        </div>
-        <div class="decision-rationale">
-          <span>为什么这样调</span>
-          <p>{{ diagnosis?.recommendation.rationale }}</p>
-        </div>
-        <div class="guardrail-list">
-          <strong>自动回退条件</strong>
-          <span v-for="item in diagnosis?.recommendation.guardrails" :key="item"><i>!</i>{{ item }}</span>
-        </div>
-        <div class="expected-outcome">{{ diagnosis?.recommendation.expectedOutcome }}</div>
-      </template>
-
-      <template v-else>
-        <div class="evidence-heading"><span>上游来源与落点</span><b>09</b></div>
-        <div class="trace-summary">
-          <span>源头治理优先级</span>
-          <strong>{{ flowTrace?.summary.dominantSource }}</strong>
-          <small>六跳主走廊累计解释 {{ flowTrace?.summary.coveredSharePct.toFixed(1) }}%</small>
-        </div>
-        <div class="trace-list complete">
-          <div v-for="item in flowTrace?.mainCorridorChain" :key="item.nodeId">
-            <b>{{ String(item.hop).padStart(2, '0') }}</b>
-            <span>{{ flowTrace?.nodes.find((node) => node.id === item.nodeId)?.name }}</span>
-            <strong>{{ item.sharePct.toFixed(1) }}%</strong>
-            <i :style="{ width: `${Math.max(8, item.sharePct * 2.5)}%` }"></i>
-            <small>累计 {{ item.cumulativePct.toFixed(1) }}%</small>
-          </div>
-        </div>
-        <div class="trace-conclusion">{{ flowTrace?.summary.conclusion }}</div>
-        <button class="primary-action report-entry" @click="emit('openKnowledge')">
-          <span>进入知识匹配与策略生成</span><b>→</b>
-        </button>
       </template>
           </div>
         </Transition>
