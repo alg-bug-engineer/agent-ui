@@ -22,90 +22,54 @@ const beats = [
     title: '路口认知',
     subtitle: '先看清路、方向与感知条件',
     duration: 5.8,
-    question: '这个路口是什么结构，本次到底分析哪股车流？',
-    observation: '北进口 4 条入口车道，设备覆盖 91.7%，数据可用于研判。',
-    inference: '以“北进口向南直行”为分析方向，东西向为垂直冲突方向。',
-    next: '分别检查四个空间方向的运行状态。',
   },
   {
     id: 'direction',
     title: '方向拆解',
     subtitle: '主方向、垂直、下游、上游',
     duration: 6.2,
-    question: '问题集中在哪里，周边方向分别是什么状态？',
-    observation: '北进口排队 129m；东西向尚稳定；下游仍有空间；上游来车集中。',
-    inference: '不是全路口普遍拥堵，而是目标方向供需失衡。',
-    next: '用指标和现场证据确认异常是否持续。',
   },
   {
     id: 'evidence',
     title: '异常核验',
     subtitle: '指标、阈值与现场交叉验证',
     duration: 6.5,
-    question: '129m 是偶发波动，还是已经形成持续性异常？',
-    observation: '连续 3 个周期超阈值，饱和度 0.89，绿灯利用率仅 54.2%。',
-    inference: '排队异常成立，且仍处于增长过程。',
-    next: '区分下游阻塞、放行不足和上游来车三类原因。',
   },
   {
     id: 'cause',
     title: '溢流判因',
     subtitle: '逐项验证，不凭直觉下结论',
     duration: 6.8,
-    question: '排队为什么增长：下游堵、绿灯少，还是上游车流集中？',
-    observation: '下游占有率仅 42%；当前有效放行不足；前两跳来车贡献 57.9%。',
-    inference: '直接原因是放行不足，连续到达波是放大因素，下游阻塞可排除。',
-    next: '检查加放、垂直方向和下游的安全边界。',
   },
   {
     id: 'constraints',
     title: '约束检查',
     subtitle: '先划安全边界，再谈怎么调',
     duration: 6.4,
-    question: '如果给北进口更多绿灯，哪里可能先恶化？',
-    observation: '东西向最多让渡约 4s；下游占有率上限 65%；上游可截流 12%。',
-    inference: '可以适度加放，但不能单点激进加绿。',
-    next: '生成单点加绿、上游截流和协同组合方案。',
   },
   {
     id: 'options',
     title: '方案生成',
     subtitle: '目标缓解与网络副作用并列',
     duration: 7,
-    question: '有哪些可选动作，各自把压力转移到哪里？',
-    observation: '只加绿见效快但挤压东西向；只截流安全但消散慢；组合方案更均衡。',
-    inference: '候选方案必须同时评价目标、垂直方向和下游。',
-    next: '用同一组边界做反事实推演。',
   },
   {
     id: 'simulation',
     title: '反事实推演',
     subtitle: '比较“不调、只加绿、组合调控”',
     duration: 8,
-    question: '每个方案执行后，三个方向分别会发生什么？',
-    observation: '只加绿会使东西向排队升至 101m；组合方案控制在 71m。',
-    inference: '直觉方案存在转移拥堵风险，组合方案总体风险最低。',
-    next: '形成可执行动作与自动回退条件。',
   },
   {
     id: 'decision',
     title: '专家决策',
     subtitle: '动作、依据、护栏同时交付',
     duration: 7.2,
-    question: '最终为什么这样调，出现什么情况必须回退？',
-    observation: '目标方向 +4s、上游削峰 12%、下游绿波协调可同时守住边界。',
-    inference: '采用协同组合，不采用北进口单点 +8s。',
-    next: '继续向上游定位到达波来源，支撑源头治理。',
   },
   {
     id: 'trace',
     title: '源头治理',
     subtitle: '把方案落到具体上游节点',
     duration: 9,
-    question: '上游截流应该落在哪些节点，为什么是这些节点？',
-    observation: '六跳主走廊解释 92.0% 到达流量，轻风路单点贡献 34.8%。',
-    inference: '优先在轻风路、工业南路实施小比例削峰。',
-    next: '进入执行审批与效果追踪。',
   },
 ] as const
 
@@ -144,10 +108,6 @@ const channelStats = computed(() => {
 const onlineDeviceCount = computed(() =>
   devices.value.filter((item) => item.status === 'online').length,
 )
-const showSpatialReasoning = computed(() =>
-  ['direction', 'cause', 'constraints', 'options', 'simulation', 'decision'].includes(current.value.id),
-)
-
 function selectBeat(index: number) {
   currentIndex.value = index
   elapsed.value = 0
@@ -202,13 +162,6 @@ onBeforeUnmount(() => window.clearInterval(timer))
         </div>
       </div>
 
-      <div class="reasoning-focus">
-        <small>当前要回答</small>
-        <strong>{{ current.question }}</strong>
-        <p><b>观察</b>{{ current.observation }}</p>
-        <p><b>判断</b>{{ current.inference }}</p>
-      </div>
-
       <div class="reasoning-progress">
         <span :style="{ width: `${overallProgress}%` }"></span>
       </div>
@@ -231,7 +184,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
 
       <div class="reasoning-footer">
         <span class="live-dot"></span>
-        {{ completed ? '诊断完成：已形成策略与安全护栏' : `下一步：${current.next}` }}
+        {{ completed ? '诊断完成 · 已形成策略与安全护栏' : `研判进行中 · ${current.title}` }}
       </div>
     </aside>
 
@@ -304,7 +257,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
       </template>
 
       <template v-else-if="current.id === 'evidence'">
-        <div class="evidence-heading"><span>异常是否真的成立？</span><b>03</b></div>
+        <div class="evidence-heading"><span>异常成立性核验</span><b>03</b></div>
         <div class="metric-list compact">
           <div
             v-for="metric in metrics"
@@ -338,7 +291,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
       </template>
 
       <template v-else-if="current.id === 'cause'">
-        <div class="evidence-heading"><span>三个原因逐一验证</span><b>04</b></div>
+        <div class="evidence-heading"><span>三类成因逐项验证</span><b>04</b></div>
         <div class="hypothesis-list">
           <article v-for="item in diagnosis?.hypotheses" :key="item.id" :class="{ supported: item.supported }">
             <header>
@@ -375,10 +328,10 @@ onBeforeUnmount(() => window.clearInterval(timer))
           </article>
         </div>
         <div class="boundary-answer">
-          <span>能不能加绿？</span><strong>能，但最多先加 4 秒</strong>
-          <span>垂直方向会不会恶化？</span><strong>会增加等待，必须守住 92m</strong>
-          <span>下游会不会恶化？</span><strong>当前可承接，超过 65% 即停止</strong>
-          <span>能不能上游截流？</span><strong>能，小比例削峰约 12%</strong>
+          <span>目标方向增配</span><strong>具备条件，首轮增加 4 秒</strong>
+          <span>垂直方向约束</span><strong>等待将增加，排队控制在 92m 内</strong>
+          <span>下游承接约束</span><strong>当前可承接，占有率达到 65% 即停止</strong>
+          <span>上游削峰条件</span><strong>具备条件，截流比例控制在 12%</strong>
         </div>
       </template>
 
@@ -425,7 +378,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
           </div>
         </div>
         <div class="counterfactual-callout">
-          <span>为什么不直接多加绿？</span>
+          <span>单点加绿风险</span>
           <strong>北进口 +8s 虽降至 88m，却让东西向升至 101m，超过 92m 警戒线。</strong>
         </div>
         <div class="plain-conclusion">
@@ -482,40 +435,6 @@ onBeforeUnmount(() => window.clearInterval(timer))
         <small>{{ diagnosis?.source.operationalEvidence }}</small>
       </div>
     </aside>
-
-    <div v-if="showSpatialReasoning" class="spatial-reasoning-strip">
-      <div class="strip-title">
-        <span>空间因果链</span>
-        <small>{{ current.title }} · 同屏检查四个方向</small>
-      </div>
-      <div class="main-flow">
-        <article class="upstream">
-          <span>上游来车</span><strong>贡献 57.9%</strong><small>可截流 12%</small>
-        </article>
-        <i>→</i>
-        <article class="target">
-          <span>分析方向</span><strong>北进口 129m</strong><small>需要增加有效放行</small>
-        </article>
-        <i>→</i>
-        <article class="downstream">
-          <span>下游承接</span><strong>占有率 42%</strong><small>上限 65%</small>
-        </article>
-      </div>
-      <div class="conflict-flow">
-        <span>垂直冲突方向</span>
-        <strong>东西向排队 63m</strong>
-        <i></i>
-        <small>警戒 92m · 最多让渡约 4s</small>
-      </div>
-      <div v-if="['simulation', 'decision'].includes(current.id)" class="strip-decision">
-        组合推演：北进口 <b>78m</b> · 东西向 <b>71m</b> · 下游 <b>55%</b>
-      </div>
-    </div>
-
-    <div v-if="['decision', 'trace'].includes(current.id)" class="map-verdict">
-      <span>专家结论</span>
-      <strong>{{ current.id === 'trace' ? '优先在轻风路—工业南路削峰' : '不单点猛加绿，采用协同组合' }}</strong>
-    </div>
 
     <div v-if="expandedEvidence" class="evidence-modal" @click.self="expandedEvidence = false">
       <div class="modal-card">

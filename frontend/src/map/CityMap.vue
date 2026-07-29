@@ -179,7 +179,8 @@ function renderAct1() {
   if (['issue', 'pending'].includes(props.beat) && target.value) {
     addOverlay(new AMapApi.Marker({
       position: target.value.center,
-      anchor: 'bottom-center',
+      anchor: 'bottom-left',
+      offset: new AMapApi.Pixel(-21, 0),
       content: htmlElement(
         'geo-issue-pin',
         '<span class="pin-head"><b>!</b></span><span class="pin-caption"><strong>检测到排队异常</strong><small>北进口 · 连续 3 个周期超阈值</small></span>',
@@ -439,23 +440,29 @@ function addDualTraceLine(
 }
 
 function addTraceParticles(path: Array<[number, number]>, hop: number) {
-  ;[0.08, 0.42, 0.76].forEach((phase, index) => {
-    const marker = addOverlay(new AMapApi.Marker({
-      position: sampleGeoPath(path, phase),
-      anchor: 'center',
-      content: htmlElement(
-        'geo-trace-particle',
-        `<i style="animation-delay:${index * 180}ms">➤</i>`,
-      ),
-      zIndex: 136,
-    }))
-    flowParticles.push({
-      marker,
-      path,
-      phase,
-      speed: 0.105 + hop * 0.004,
+  const arrowCount = 5
+  Array.from({ length: arrowCount }, (_, index) => (index + 0.5) / arrowCount)
+    .forEach((phase, index) => {
+      const marker = addOverlay(new AMapApi.Marker({
+        position: sampleGeoPath(path, phase),
+        anchor: 'center',
+        content: htmlElement(
+          'geo-trace-particle',
+          `<i style="animation-delay:${index * 110}ms">›</i>`,
+        ),
+        zIndex: 136,
+      }))
+      flowParticles.push({
+        marker,
+        path,
+        phase,
+        speed: 0.105 + hop * 0.004,
+      })
     })
-  })
+}
+
+function stripIntersectionSuffix(name: string) {
+  return name.replace(/(?:交叉口|路口)$/u, '').trim()
 }
 
 function renderFlowTrace() {
@@ -466,7 +473,6 @@ function renderFlowTrace() {
   const mainIds = new Set([scene.targetId, ...scene.mainCorridorChain.map((item) => item.nodeId)])
   const visibleNodes = scene.nodes.filter((node) =>
     mainIds.has(node.id)
-    || node.role === 'downstream'
     || (node.coverage != null && node.coverage >= minimumCoverage),
   )
   const visibleIds = new Set(visibleNodes.map((node) => node.id))
@@ -493,23 +499,27 @@ function renderFlowTrace() {
     })
 
   visibleNodes.forEach((node) => {
-    const palette = node.role === 'target'
-      ? { fill: '#22c55e', halo: '#86efac' }
-      : mainIds.has(node.id)
-        ? { fill: '#f59e0b', halo: '#fbbf24' }
-        : node.role === 'downstream'
-          ? { fill: '#06b6d4', halo: '#67e8f9' }
-          : { fill: '#3b82f6', halo: '#93c5fd' }
-    addOverlay(new AMapApi.CircleMarker({
-      center: node.position,
-      radius: node.role === 'target' ? 9 : mainIds.has(node.id) ? 6 : 4,
-      strokeColor: palette.halo,
-      strokeWeight: node.role === 'target' ? 5 : 3,
-      strokeOpacity: 0.58,
-      fillColor: palette.fill,
-      fillOpacity: 1,
-      zIndex: node.role === 'target' ? 132 : 104,
+    const nodeRole = node.role === 'target' ? 'target' : mainIds.has(node.id) ? 'main' : 'branch'
+    addOverlay(new AMapApi.Marker({
+      position: node.position,
+      anchor: 'center',
+      content: htmlElement(`geo-trace-node ${nodeRole}`, '<i></i>'),
+      zIndex: node.role === 'target' ? 132 : mainIds.has(node.id) ? 112 : 96,
+      title: node.name,
     }))
+
+    if (node.role === 'target') {
+      addOverlay(new AMapApi.Marker({
+        position: node.position,
+        anchor: 'bottom-center',
+        offset: new AMapApi.Pixel(0, -18),
+        content: htmlElement(
+          'geo-trace-label target',
+          `<strong>${stripIntersectionSuffix(node.name)}</strong><span>目标 · 100%</span>`,
+        ),
+        zIndex: 145,
+      }))
+    }
   })
 
   const ordered = [...scene.mainCorridorChain].sort((a, b) => a.hop - b.hop)
@@ -524,25 +534,17 @@ function renderFlowTrace() {
       const placeLeft = item.hop % 2 === 0
       addOverlay(new AMapApi.Marker({
         position: upstreamNode.position,
-        anchor: placeLeft ? 'bottom-right' : 'bottom-left',
-        offset: new AMapApi.Pixel(placeLeft ? -10 : 10, -9),
+        anchor: 'bottom-center',
+        offset: new AMapApi.Pixel(placeLeft ? -24 : 24, -18),
         content: htmlElement(
           'geo-trace-label main',
-          `<strong>${upstreamNode.name}</strong><span>第 ${item.hop} 跳 · 贡献 ${item.sharePct.toFixed(1)}% · 累计 ${item.cumulativePct.toFixed(1)}%</span>`,
+          `<strong>${stripIntersectionSuffix(upstreamNode.name)}</strong><span>主走廊 · 第 ${item.hop} 跳 · ${item.sharePct.toFixed(1)}%</span>`,
         ),
         zIndex: 140,
       }))
     }, 240 + index * 330)
     downstreamNode = upstreamNode
   })
-
-  addOverlay(new AMapApi.Marker({
-    position: nodeMap.get(scene.targetId)?.position ?? runtimeConfig.map.target,
-    anchor: 'bottom-center',
-    offset: new AMapApi.Pixel(0, -14),
-    content: htmlElement('geo-trace-target', '<b>目标节点</b><span>排队异常 · 反向溯源起点</span>'),
-    zIndex: 150,
-  }))
 
   animationTimers.push(window.setInterval(() => {
     flowParticles.forEach((particle) => {
@@ -578,6 +580,7 @@ function applyCamera() {
 function renderScene() {
   if (!mapReady.value || !AMapApi) return
   clearScene()
+  map.setMapStyle?.(props.beat === 'trace' ? 'amap://styles/dark' : runtimeConfig.amap.style)
   applyCamera()
   if (props.activeAct === 1) {
     renderAct1()

@@ -155,8 +155,8 @@ onBeforeUnmount(() => {
   <div v-if="summary && collaboration && effectiveness && experiences" class="act-experience act6-experience">
     <section class="report-heading">
       <div>
-        <span>AI TRAFFIC OPERATIONS DAILY</span>
-        <h2>城市信控智能体运行日报</h2>
+        <span>CITY SIGNAL CONTROL · DAILY BRIEF</span>
+        <h2>城市信号控制运行日报</h2>
         <p>{{ summary.reportDate }} · {{ summary.scope }}</p>
       </div>
       <div class="report-verdict">
@@ -182,6 +182,19 @@ onBeforeUnmount(() => {
         <strong>{{ item.value }}</strong>
         <small>{{ item.delta }}</small>
       </article>
+    </section>
+
+    <section v-if="activeReportView === 'overview'" class="executive-summary">
+      <div class="executive-copy">
+        <small>运行综述</small>
+        <h3>{{ summary.headline }}</h3>
+        <p>{{ summary.narrative }}</p>
+      </div>
+      <div class="executive-findings">
+        <span><b>运行状态</b>重点路口风险处置及时</span>
+        <span><b>安全边界</b>高风险动作均保留人工确认</span>
+        <span><b>经验沉淀</b>有效处置过程已进入知识库</span>
+      </div>
     </section>
 
     <section v-if="activeReportView === 'overview'" class="report-grid">
@@ -220,7 +233,7 @@ onBeforeUnmount(() => {
       </article>
 
       <article class="report-card human-loop">
-        <header><div><small>04</small><h3>人机协同与安全留痕</h3></div><span>AI 建议 + 专家把关</span></header>
+        <header><div><small>04</small><h3>人机协同与安全留痕</h3></div><span>智能建议 · 专家把关</span></header>
         <div class="collaboration-stats">
           <div v-for="item in collaboration.overview" :key="item.label" :class="item.tone">
             <strong>{{ item.value }}</strong><span>{{ item.label }}</span>
@@ -257,16 +270,6 @@ onBeforeUnmount(() => {
             <p>{{ experiences.featured[0].result }}</p>
           </div>
           <span v-for="tag in experiences.featured[0].tags" :key="tag">{{ tag }}</span>
-        </div>
-      </article>
-
-      <article class="report-card ai-summary">
-        <header><div><small>06</small><h3>AI 日报总结</h3></div><span>自动生成</span></header>
-        <div class="summary-seal">AI</div>
-        <h4>{{ summary.headline }}</h4>
-        <p>{{ summary.narrative }}</p>
-        <div class="summary-footer">
-          <span>✓ 运行稳定</span><span>✓ 风险可控</span><span>✓ 经验已归档</span>
         </div>
       </article>
     </section>

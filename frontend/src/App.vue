@@ -9,7 +9,7 @@ import type { ActId } from './types'
 
 const Act6Report = defineAsyncComponent(() => import('../act6/Act6Report.vue'))
 
-const { state, actLabel, goToAct, setBeat, togglePaused, replay } = useNarrative()
+const { state, actLabel, goToAct, setBeat } = useNarrative()
 const now = ref(new Date())
 let clockTimer = 0
 
@@ -107,13 +107,5 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
         @beat="setBeat"
       />
     </section>
-
-    <div class="presentation-controls">
-      <button :aria-label="state.paused ? '继续播放' : '暂停播放'" @click="togglePaused">
-        {{ state.paused ? '继续' : '暂停' }}
-      </button>
-      <button aria-label="重新播放当前幕" @click="replay">重播本幕</button>
-      <span>{{ runtimeConfig.app.dataMode === 'demo' ? '演示数据' : '实时数据' }} · {{ state.taskSource }}</span>
-    </div>
   </main>
 </template>

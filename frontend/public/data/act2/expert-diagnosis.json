@@ -4,7 +4,7 @@
     "operationalEvidence": "演示诊断数据（基于目标路口场景构造）",
     "strategyProjection": "演示反事实推演（用于呈现专家分析逻辑）"
   },
-  "question": "北进口排队接近溢流，应该单点加绿、协调下游，还是从上游截流？",
+  "question": "北进口溢流风险控制策略研判",
   "directions": [
     {
       "id": "target",
@@ -46,21 +46,21 @@
   "hypotheses": [
     {
       "id": "downstream-block",
-      "question": "是不是下游堵住，导致车辆放不出去？",
+      "question": "下游阻塞假设",
       "evidence": "下游占有率 42%，仍有约 168m 储车空间，未形成回溢",
       "verdict": "排除：不是下游阻塞型溢流",
       "supported": false
     },
     {
       "id": "release-shortage",
-      "question": "是不是当前方向绿灯不足或放行效率偏低？",
+      "question": "目标方向放行不足假设",
       "evidence": "北进口饱和度 0.89，绿灯利用率仅 54.2%，连续 3 周期排队增长",
       "verdict": "成立：有效放行不足是直接原因",
       "supported": true
     },
     {
       "id": "arrival-wave",
-      "question": "是不是上游连续来车，把排队不断推高？",
+      "question": "上游连续到达波假设",
       "evidence": "上游六跳解释 92.0% 到达流量，前两跳贡献 57.9%",
       "verdict": "成立：连续到达波是放大因素",
       "supported": true
