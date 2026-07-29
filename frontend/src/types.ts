@@ -326,10 +326,10 @@ export interface TimingPlanOption {
 
 export interface TimingPlanImpact {
   optionId: string
-  target: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' }
-  conflict: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' }
-  upstream: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' }
-  downstream: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' }
+  target: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' | 'success' }
+  conflict: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' | 'success' }
+  upstream: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' | 'success' }
+  downstream: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' | 'success' }
 }
 
 export interface TimingPlanScene {

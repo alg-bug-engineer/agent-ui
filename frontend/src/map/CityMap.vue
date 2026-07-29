@@ -98,19 +98,21 @@ const activeStrategyCard = computed(() =>
 
 const operatingPortrait = computed(() => diagnosis.value?.operatingPortrait ?? null)
 
-const narrativeBeatOrder = [
-  'cognition',
-  'evidence',
-  'direction',
-  'trace',
-  'cause',
-]
+const narrativeBeatOrderByAct: Record<number, string[]> = {
+  1: ['scan', 'issue', 'pending'],
+  2: ['cognition', 'evidence', 'direction', 'trace', 'cause', 'constraints', 'options', 'simulation', 'decision'],
+  3: ['knowledge-recall', 'similar-cases', 'tidal-pattern', 'strategy-brief'],
+  4: ['plan-generation', 'plan-options', 'impact-preview', 'deployment'],
+  5: ['deployment-confirm', 'before-after', 'peak-verification', 'closing'],
+}
 
 const narrativeProgress = computed(() => {
-  if (props.activeAct === 1) return props.beat === 'scan' ? 8 : 14
   if (props.activeAct === 6) return 100
-  const index = narrativeBeatOrder.indexOf(props.beat)
-  return index < 0 ? 0 : Math.round(((index + 1) / narrativeBeatOrder.length) * 100)
+  const order = narrativeBeatOrderByAct[props.activeAct] ?? []
+  if (!order.length) return 0
+  if (props.activeAct === 1) return props.beat === 'scan' ? 8 : props.beat === 'issue' ? 55 : 100
+  const index = order.indexOf(props.beat)
+  return index < 0 ? 0 : Math.round(((index + 1) / order.length) * 100)
 })
 
 const nextNarrative = computed(() => {
@@ -120,6 +122,18 @@ const nextNarrative = computed(() => {
     direction: '下一步：沿上游走廊追踪流量来源与贡献',
     trace: '下一步：结合流量溯源结果逐项验证问题成因',
     cause: '问题验证完成：进入知识匹配与策略生成',
+    'knowledge-recall': '下一步：对照命中的真实相似案例，提炼共性处置经验',
+    'similar-cases': '下一步：用潮汐曲线确认问题窗口是否集中在晚高峰',
+    'tidal-pattern': '下一步：形成分时段治理方向，准备进入配时方案生成',
+    'strategy-brief': '治理方向已确定：进入配时方案生成',
+    'plan-generation': '下一步：对比单点加绿、上游截流与协同组合三类方案',
+    'plan-options': '下一步：把推荐方案放到目标、冲突、上下游四维同屏预估',
+    'impact-preview': '下一步：下发信号机，并绑定自动回退护栏',
+    deployment: '方案已锁定：进入执行后效果闭环验证',
+    'deployment-confirm': '下一步：对比下发前后排队、延误、效率与绿灯利用率',
+    'before-after': '下一步：在晚高峰窗口逐周期确认改善是否持续',
+    'peak-verification': '下一步：用一周趋势确认无回弹，转入每日复盘',
+    closing: '效果验证完成：进入每日复盘与经验沉淀',
   }
   return messages[props.beat] ?? ''
 })
@@ -282,6 +296,150 @@ const beatNarratives: Record<string, MapNarrative> = {
       { label: '累计解释', value: '92.0%' },
       { label: '前两跳贡献', value: '57.9%' },
       { label: '主走廊', value: '6 跳' },
+    ],
+  },
+  'knowledge-recall': {
+    chapter: '知识检索',
+    eyebrow: '交管知识库 · 场景召回',
+    headline: '1.8s 内命中 37 个高相似度晚高峰排队案例',
+    summary: '检索条件锁定排队溢出、晚高峰潮汐与有效放行不足等现场标签。',
+    tone: 'action',
+    metrics: [
+      { label: '实战案例', value: '1432' },
+      { label: '命中案例', value: '37', status: 'safe' },
+      { label: '检索耗时', value: '1.8s' },
+    ],
+  },
+  'similar-cases': {
+    chapter: '相似案例',
+    eyebrow: '真实案例 · 标签对齐',
+    headline: '3 个一线案例均命中晚高峰排队溢出标签体系',
+    summary: '共性做法指向定向加放，而非全天大幅加绿。',
+    tone: 'warning',
+    metrics: [
+      { label: '最高匹配', value: '92%' },
+      { label: '对照案例', value: '3' },
+      { label: '共性语义', value: '潮汐失稳' },
+    ],
+  },
+  'tidal-pattern': {
+    chapter: '潮汐特征',
+    eyebrow: '早晚双峰 · 问题窗口',
+    headline: '晚高峰 17:00–19:00 显著更重，早高峰仅中度抬升',
+    summary: '问题窗口集中在晚高峰，平峰与早高峰不宜套用同一重策略。',
+    tone: 'critical',
+    metrics: [
+      { label: '晚高峰排队', value: '129m', status: 'risk' },
+      { label: '早高峰排队', value: '74m' },
+      { label: '平峰排队', value: '≤32m', status: 'safe' },
+    ],
+  },
+  'strategy-brief': {
+    chapter: '治理方向',
+    eyebrow: '分时段策略 · 现场专属',
+    headline: '仅在晚高峰窗口启用专属组合策略',
+    summary: '优先补足有效放行，同步约束垂直方向与下游承接，再进入配时生成。',
+    tone: 'success',
+    metrics: [
+      { label: '重点窗口', value: '17–19时' },
+      { label: '策略类型', value: '组合治理' },
+      { label: '下一环节', value: '方案生成', status: 'safe' },
+    ],
+  },
+  'plan-generation': {
+    chapter: '方案生成',
+    eyebrow: '秒级测算 · 配时落位',
+    headline: '12.4 秒完成周期、绿信比与相位差测算',
+    summary: '北进口直行拟加绿 4 秒，周期保持 148s，压缩人工调参时间。',
+    tone: 'action',
+    metrics: [
+      { label: '测算耗时', value: '12.4s' },
+      { label: '人工基线', value: '20min' },
+      { label: '目标加绿', value: '+4s' },
+    ],
+  },
+  'plan-options': {
+    chapter: '方案对比',
+    eyebrow: '三类方案 · 择优执行',
+    headline: '协同组合在三处空间角色上同时不过界',
+    summary: '单点加绿见效快但转移压力，上游截流偏慢，组合方案作为推荐。',
+    tone: 'warning',
+    metrics: [
+      { label: '方案 A', value: '单点加绿' },
+      { label: '方案 B', value: '上游截流' },
+      { label: '方案 C', value: '协同组合', status: 'safe' },
+    ],
+  },
+  'impact-preview': {
+    chapter: '影响预估',
+    eyebrow: '四维同屏 · 安全边界',
+    headline: '推荐方案让目标方向下降，且不转移压力',
+    summary: '北进口、东西向、上游强度与下游占有率均保持在安全边界内。',
+    tone: 'success',
+    metrics: [
+      { label: '北进口', value: '129→78m', status: 'safe' },
+      { label: '东西向', value: '63→71m', status: 'safe' },
+      { label: '下游', value: '42→55%', status: 'safe' },
+    ],
+  },
+  deployment: {
+    chapter: '落地执行',
+    eyebrow: '信号下发 · 护栏生效',
+    headline: '方案已绑定自动回退条件，准备进入效果验证',
+    summary: '东西向、下游与上游截流任一越界即自动回退，保障执行安全。',
+    tone: 'action',
+    metrics: [
+      { label: '下发对象', value: '目标信号机' },
+      { label: '护栏', value: '3 条' },
+      { label: '验证周期', value: '3' },
+    ],
+  },
+  'deployment-confirm': {
+    chapter: '执行确认',
+    eyebrow: '方案生效 · 闭环启动',
+    headline: '协同组合已平稳生效，未触发自动回退',
+    summary: '已跟踪 3 个信号周期，进入下发前后核心指标对比。',
+    tone: 'success',
+    metrics: [
+      { label: '生效时间', value: '17:00' },
+      { label: '跟踪周期', value: '3' },
+      { label: '回退触发', value: '0', status: 'safe' },
+    ],
+  },
+  'before-after': {
+    chapter: '前后对比',
+    eyebrow: '四项指标 · 同步改善',
+    headline: '排队、延误、效率、绿灯利用率同步向好',
+    summary: '改善幅度均衡，未出现拆东墙补西墙的代价转移。',
+    tone: 'success',
+    metrics: [
+      { label: '排队', value: '-39.5%', status: 'safe' },
+      { label: '延误', value: '-39.5%', status: 'safe' },
+      { label: '效率', value: '+27.5%', status: 'safe' },
+    ],
+  },
+  'peak-verification': {
+    chapter: '晚高峰验证',
+    eyebrow: '逐周期跟踪 · 持续低于基线',
+    headline: '晚高峰窗口内排队稳定低于下发前曲线',
+    summary: '未出现执行初期见效、后期反弹，改善在问题窗口内持续成立。',
+    tone: 'action',
+    metrics: [
+      { label: '峰值前', value: '129m', status: 'risk' },
+      { label: '峰值后', value: '78m', status: 'safe' },
+      { label: '窗口', value: '17–19时' },
+    ],
+  },
+  closing: {
+    chapter: '持续跟踪',
+    eyebrow: '一周趋势 · 无回弹',
+    headline: '一周内晚高峰排队下降 35%–43%，未见回弹',
+    summary: '效果闭环成立，可转入每日复盘与经验沉淀。',
+    tone: 'success',
+    metrics: [
+      { label: '改善幅度', value: '35–43%', status: 'safe' },
+      { label: '回弹', value: '未出现', status: 'safe' },
+      { label: '下一环节', value: '每日复盘' },
     ],
   },
 }
@@ -1338,7 +1496,7 @@ function renderScene() {
   } else if (props.beat === 'tidal-pattern') {
     addTargetAnchor('潮汐特征研判')
   } else if (props.beat === 'strategy-brief') {
-    addTargetAnchor('策略匹配完成')
+    addTargetAnchor('治理方向已确定')
   } else if (['plan-generation', 'deployment'].includes(props.beat)) {
     addTargetAnchor('配时方案锁定路口')
   } else if (['deployment-confirm', 'before-after', 'closing'].includes(props.beat)) {
