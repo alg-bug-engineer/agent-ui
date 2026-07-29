@@ -55,24 +55,24 @@
   "impacts": [
     {
       "optionId": "green-only",
-      "target": { "label": "北进口排队", "before": "129m", "after": "88m", "tone": "normal" },
+      "target": { "label": "北进口排队", "before": "129m", "after": "88m", "tone": "success" },
       "conflict": { "label": "东西向排队", "before": "63m", "after": "101m", "tone": "critical" },
-      "upstream": { "label": "上游到达强度", "before": "100%", "after": "100%（未处理）", "tone": "warning" },
-      "downstream": { "label": "下游占有率", "before": "42%", "after": "61%", "tone": "warning" }
+      "upstream": { "label": "上游到达强度", "before": "100%", "after": "100%", "tone": "normal" },
+      "downstream": { "label": "下游占有率", "before": "42%", "after": "61%", "tone": "critical" }
     },
     {
       "optionId": "meter-only",
-      "target": { "label": "北进口排队", "before": "129m", "after": "106m", "tone": "warning" },
+      "target": { "label": "北进口排队", "before": "129m", "after": "106m", "tone": "success" },
       "conflict": { "label": "东西向排队", "before": "63m", "after": "64m", "tone": "normal" },
-      "upstream": { "label": "上游到达强度", "before": "100%", "after": "88%", "tone": "normal" },
-      "downstream": { "label": "下游占有率", "before": "42%", "after": "47%", "tone": "normal" }
+      "upstream": { "label": "上游到达强度", "before": "100%", "after": "88%", "tone": "success" },
+      "downstream": { "label": "下游占有率", "before": "42%", "after": "47%", "tone": "critical" }
     },
     {
       "optionId": "combined",
-      "target": { "label": "北进口排队", "before": "129m", "after": "78m", "tone": "normal" },
-      "conflict": { "label": "东西向排队", "before": "63m", "after": "71m", "tone": "normal" },
-      "upstream": { "label": "上游到达强度", "before": "100%", "after": "88%", "tone": "normal" },
-      "downstream": { "label": "下游占有率", "before": "42%", "after": "55%", "tone": "normal" }
+      "target": { "label": "北进口排队", "before": "129m", "after": "78m", "tone": "success" },
+      "conflict": { "label": "东西向排队", "before": "63m", "after": "71m", "tone": "critical" },
+      "upstream": { "label": "上游到达强度", "before": "100%", "after": "88%", "tone": "success" },
+      "downstream": { "label": "下游占有率", "before": "42%", "after": "55%", "tone": "critical" }
     }
   ],
   "deployment": {

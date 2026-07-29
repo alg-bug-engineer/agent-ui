@@ -188,7 +188,7 @@ onBeforeUnmount(() => {
     </div>
 
     <Transition name="act3-list-pop">
-      <aside v-if="objectListReady" class="act3-object-list">
+      <aside v-if="objectListReady" class="act3-object-list" :class="{ 'act3-object-list-strategy': showStrategySlots }">
         <template v-if="showStrategySlots && strategyBrief">
           <div class="act3-list-head">
             <span class="live-dot"></span>
