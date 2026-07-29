@@ -571,6 +571,18 @@ function applyCamera() {
     simulation: { zoom: 16.3, center: [117.1113, 36.6647] },
     decision: { zoom: 16.3, center: [117.1113, 36.6647] },
     trace: { zoom: 14.45, center: [117.1112, 36.6717] },
+    'knowledge-recall': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'similar-cases': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'tidal-pattern': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'strategy-brief': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'plan-generation': { zoom: 16.5, center: targetCenter },
+    'plan-options': { zoom: 16.3, center: [117.1113, 36.6647] },
+    'impact-preview': { zoom: 16.3, center: [117.1113, 36.6647] },
+    deployment: { zoom: 16.5, center: targetCenter },
+    'deployment-confirm': { zoom: 16.5, center: targetCenter },
+    'before-after': { zoom: 16.5, center: targetCenter },
+    'peak-verification': { zoom: 16.3, center: [117.1113, 36.6647] },
+    closing: { zoom: 14.9, center: overviewCenter },
     report: { zoom: 14.9, center: overviewCenter },
   }
   const shot = shots[props.beat] ?? shots.scan
@@ -596,6 +608,20 @@ function renderScene() {
     renderTopology()
   } else if (props.beat === 'trace') {
     renderFlowTrace()
+  } else if (['plan-options', 'impact-preview', 'peak-verification'].includes(props.beat)) {
+    renderTopology()
+  } else if (props.beat === 'knowledge-recall') {
+    addTargetAnchor('相似案例匹配')
+  } else if (props.beat === 'similar-cases') {
+    addTargetAnchor('案例匹配完成')
+  } else if (props.beat === 'tidal-pattern') {
+    addTargetAnchor('潮汐特征研判')
+  } else if (props.beat === 'strategy-brief') {
+    addTargetAnchor('策略匹配完成')
+  } else if (['plan-generation', 'deployment'].includes(props.beat)) {
+    addTargetAnchor('配时方案锁定路口')
+  } else if (['deployment-confirm', 'before-after', 'closing'].includes(props.beat)) {
+    addTargetAnchor('执行效果追踪中')
   } else {
     addTargetAnchor('目标已锁定')
   }

@@ -3,13 +3,19 @@ import type {
   DailySummary,
   DetectedIssue,
   DevicePoint,
+  EffectTrendScene,
   ExpertDiagnosis,
   FlowTraceScene,
   HumanCollaboration,
+  KnowledgeBaseStats,
   MetricItem,
   MonitoredIntersection,
   MonitoringArea,
+  SimilarCase,
+  StrategyBrief,
   TargetIntersection,
+  TidalFlowScene,
+  TimingPlanScene,
 } from '../types'
 import { runtimeConfig } from '../config/runtime'
 
@@ -33,6 +39,12 @@ export const dataRepository = {
   topology: () => getJson<Record<string, unknown>>('act2/topology.geojson'),
   flowTrace: () => getJson<FlowTraceScene>('act2/flow-trace.json'),
   expertDiagnosis: () => getJson<ExpertDiagnosis>('act2/expert-diagnosis.json'),
+  knowledgeBase: () => getJson<KnowledgeBaseStats>('act3/knowledge-base.json'),
+  similarCases: () => getJson<SimilarCase[]>('act3/similar-cases.json'),
+  tidalFlow: () => getJson<TidalFlowScene>('act3/tidal-flow.json'),
+  strategyBrief: () => getJson<StrategyBrief>('act3/strategy-brief.json'),
+  timingPlan: () => getJson<TimingPlanScene>('act4/timing-plan.json'),
+  effectTrend: () => getJson<EffectTrendScene>('act5/effect-trend.json'),
   dailySummary: () => getJson<DailySummary>('act6/daily-summary.json'),
   humanCollaboration: () =>
     getJson<HumanCollaboration>('act6/human-collaboration.json'),

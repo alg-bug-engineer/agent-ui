@@ -10,15 +10,29 @@ const state = reactive({
 })
 
 export function useNarrative() {
-  const actLabel = computed(() => {
-    if (state.activeAct === 1) return '全域感知'
-    if (state.activeAct === 2) return '问题诊断'
-    return '复盘进化'
-  })
+  const actLabels: Record<ActId, string> = {
+    1: '全域感知',
+    2: '问题诊断',
+    3: '知识匹配',
+    4: '方案生成',
+    5: '效果验证',
+    6: '复盘进化',
+  }
+
+  const actLabel = computed(() => actLabels[state.activeAct])
+
+  const defaultBeats: Record<ActId, string> = {
+    1: 'scan',
+    2: 'cognition',
+    3: 'knowledge-recall',
+    4: 'plan-generation',
+    5: 'deployment-confirm',
+    6: 'report',
+  }
 
   function goToAct(act: ActId, beat?: string) {
     state.activeAct = act
-    state.beat = beat ?? (act === 1 ? 'scan' : act === 2 ? 'locate' : 'report')
+    state.beat = beat ?? defaultBeats[act]
     state.paused = false
     state.replayToken += 1
   }

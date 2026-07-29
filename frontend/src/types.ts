@@ -1,4 +1,4 @@
-export type ActId = 1 | 2 | 6
+export type ActId = 1 | 2 | 3 | 4 | 5 | 6
 
 export interface MonitoringArea {
   name: string
@@ -197,6 +197,142 @@ export interface DailySummary {
   narrative: string
   kpis: Array<{ label: string; value: string; delta: string; tone: string }>
   actions: Array<{ name: string; value: number; color: string }>
+}
+
+export interface CaseTagHit {
+  dimension: string
+  value: string
+}
+
+export interface KnowledgeBaseStats {
+  totalCases: number
+  sceneFeatures: number
+  reasoningRules: number
+  retrievalQuery: {
+    problemType: string
+    period: string
+    geometry: string
+    keywords: string[]
+  }
+  matchedCaseCount: number
+  matchLatencySeconds: number
+}
+
+export interface SimilarCase {
+  id: string
+  caseId: number
+  title: string
+  location: string
+  matchScore: number
+  tags: string[]
+  hitTags: CaseTagHit[]
+  hitSemantics: CaseTagHit[]
+  scenario: string
+  diagnosis: string
+  treatment: string
+  effect: string
+  source: {
+    account: string
+    title: string
+    link: string
+  }
+}
+
+export interface TidalFlowHour {
+  hour: string
+  flow: number
+  saturation: number
+  queueM: number
+  period: 'offpeak' | 'morning-peak' | 'evening-peak'
+}
+
+export interface TidalFlowScene {
+  morningPeakWindow: { start: string; end: string }
+  eveningPeakWindow: { start: string; end: string }
+  hourly: TidalFlowHour[]
+  insight: {
+    title: string
+    offpeakSummary: string
+    morningSummary: string
+    peakSummary: string
+    conclusion: string
+  }
+}
+
+export interface StrategyBrief {
+  title: string
+  principles: string[]
+  timeSlots: Array<{
+    period: string
+    label: string
+    strategy: string
+    tone: 'normal' | 'warning' | 'critical'
+  }>
+  recommendedDirection: string
+  conclusion: string
+}
+
+export interface TimingPhase {
+  name: string
+  currentGreen: number
+  proposedGreen: number
+  ratio: number
+}
+
+export interface TimingPlanOption {
+  id: string
+  name: string
+  summary: string
+  cycleSeconds: number
+  phaseDiffSeconds: number
+  targetGreenDeltaSeconds: number
+  upstreamMeteringPct: number
+  recommended: boolean
+}
+
+export interface TimingPlanImpact {
+  optionId: string
+  target: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' }
+  conflict: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' }
+  upstream: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' }
+  downstream: { label: string; before: string; after: string; tone: 'critical' | 'warning' | 'normal' }
+}
+
+export interface TimingPlanScene {
+  generationSeconds: number
+  manualBaselineMinutes: number
+  current: { cycleSeconds: number; phases: TimingPhase[] }
+  recommended: { cycleSeconds: number; phaseDiffSeconds: number; phases: TimingPhase[] }
+  options: TimingPlanOption[]
+  impacts: TimingPlanImpact[]
+  deployment: {
+    status: string
+    controller: string
+    effectiveAt: string
+    rollbackConditions: string[]
+  }
+}
+
+export interface EffectMetricComparison {
+  id: string
+  label: string
+  unit: string
+  before: number
+  after: number
+  improvementPct: number
+  direction: 'up' | 'down'
+}
+
+export interface EffectTrendScene {
+  deployment: {
+    planName: string
+    deployedAt: string
+    effectiveCycles: number
+  }
+  metrics: EffectMetricComparison[]
+  hourlyComparison: Array<{ hour: string; before: number; after: number }>
+  dailyTrend: Array<{ day: string; queueBeforeM: number; queueAfterM: number }>
+  conclusion: string
 }
 
 export interface HumanCollaboration {
