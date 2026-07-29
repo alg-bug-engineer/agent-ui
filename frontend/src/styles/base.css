@@ -363,6 +363,46 @@ button:focus-visible {
   gap: 24px;
 }
 
+.presentation-mode-toggle {
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: #a9c7d2;
+  background: rgba(0, 212, 240, .06);
+  border: 1px solid rgba(0, 212, 240, .22);
+  cursor: pointer;
+  font-size: 9px;
+  letter-spacing: .5px;
+  transition: .25s ease;
+}
+
+.presentation-mode-toggle:hover,
+.presentation-mode-toggle.active {
+  color: #effcff;
+  background: rgba(0, 212, 240, .13);
+  border-color: rgba(0, 212, 240, .52);
+}
+
+.presentation-mode-toggle i {
+  position: relative;
+  width: 13px;
+  height: 9px;
+  border-top: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+
+.presentation-mode-toggle i::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  width: 5px;
+  height: 1px;
+  background: currentColor;
+}
+
 .status-copy {
   display: flex;
   align-items: center;
@@ -4845,4 +4885,135 @@ button:focus-visible {
   .report-result-primary { margin-top: 10px; padding: 10px 12px; }
   .report-result-primary strong { font-size: 23px; }
   .report-result-guards > span { padding-block: 7px; }
+}
+
+/* Leadership presentation mode: edge rails replace permanent side docks. */
+.act-1 .area-panel,
+.act-1 .scan-panel,
+.act-1 .issue-panel,
+.act-2 .reasoning-panel,
+.act-2 .evidence-panel {
+  transition: width .32s ease, transform .32s ease, opacity .25s ease, box-shadow .25s ease;
+}
+
+.map-focus-mode.act-1 .area-panel,
+.map-focus-mode.act-1 .scan-panel,
+.map-focus-mode.act-1 .issue-panel,
+.map-focus-mode.act-2 .reasoning-panel,
+.map-focus-mode.act-2 .evidence-panel {
+  width: 48px !important;
+  min-width: 48px;
+  padding: 0 !important;
+  overflow: hidden;
+  background: rgba(4, 15, 28, .86);
+  border-color: rgba(0, 212, 240, .24);
+  box-shadow: 0 10px 26px rgba(2, 8, 16, .18);
+}
+
+.map-focus-mode.act-1 .area-panel > *,
+.map-focus-mode.act-1 .scan-panel > *,
+.map-focus-mode.act-1 .issue-panel > *,
+.map-focus-mode.act-2 .reasoning-panel > *,
+.map-focus-mode.act-2 .evidence-panel > * {
+  display: none !important;
+}
+
+.map-focus-mode.act-1 .area-panel::after,
+.map-focus-mode.act-1 .scan-panel::after,
+.map-focus-mode.act-1 .issue-panel::after,
+.map-focus-mode.act-2 .reasoning-panel::after,
+.map-focus-mode.act-2 .evidence-panel::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #9dc5d2;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-size: 10px;
+  letter-spacing: 3px;
+}
+
+.map-focus-mode.act-1 .area-panel {
+  height: 176px;
+}
+.map-focus-mode.act-1 .area-panel::after { content: "城市态势"; }
+.map-focus-mode.act-1 .scan-panel,
+.map-focus-mode.act-1 .issue-panel {
+  height: 176px;
+}
+.map-focus-mode.act-1 .scan-panel::after { content: "区域扫描"; }
+.map-focus-mode.act-1 .issue-panel::after {
+  content: "异常事件";
+  color: #ffd17f;
+}
+
+.map-focus-mode.act-2 .reasoning-panel::after { content: "专家研判链"; }
+.map-focus-mode.act-2 .evidence-panel {
+  height: 242px;
+}
+.map-focus-mode.act-2 .evidence-panel::after { content: "分析证据"; }
+
+.map-focus-mode.act-1 .map-executive-verdict,
+.map-focus-mode.act-2 .map-executive-verdict {
+  left: 96px;
+  right: 96px;
+}
+
+.detail-focus-mode.act-1 .map-executive-verdict,
+.detail-focus-mode.act-2 .map-executive-verdict {
+  opacity: .94;
+}
+
+/* Let the real map receive drag and zoom events inside the Act 6 map window. */
+.act-6 .act6-experience {
+  pointer-events: none;
+}
+
+.act-6 .report-heading,
+.act-6 .report-view-switch,
+.act-6 .report-map-result,
+.act-6 .report-kpis,
+.act-6 .executive-summary,
+.act-6 .report-grid,
+.act-6 .collab-workbench {
+  pointer-events: auto;
+}
+
+.act-6 .report-map-overview,
+.act-6 .report-map-space,
+.act-6 .report-map-caption,
+.act-6 .report-map-legend {
+  pointer-events: none;
+}
+
+.detail-focus-mode.act-6 .act6-experience {
+  pointer-events: auto;
+}
+
+.map-focus-mode.act-6 .executive-summary,
+.map-focus-mode.act-6 .report-grid {
+  display: none;
+}
+
+.map-focus-mode.act-6 .report-map-overview {
+  grid-template-columns: minmax(0, 1fr) 350px;
+  min-height: min(53vh, 520px);
+}
+
+.map-focus-mode.act-6 .report-map-space {
+  border-color: rgba(34, 197, 94, .38);
+}
+
+@media (max-width: 1500px) {
+  .system-status { gap: 12px; }
+  .presentation-mode-toggle { padding-inline: 9px; }
+  .map-focus-mode.act-1 .map-executive-verdict,
+  .map-focus-mode.act-2 .map-executive-verdict {
+    left: 82px;
+    right: 82px;
+  }
+  .map-focus-mode.act-6 .report-map-overview {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
 }

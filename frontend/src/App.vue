@@ -11,6 +11,7 @@ const Act6Report = defineAsyncComponent(() => import('../act6/Act6Report.vue'))
 
 const { state, actLabel, goToAct, setBeat } = useNarrative()
 const now = ref(new Date())
+const presentationMode = ref<'map' | 'detail'>('map')
 let clockTimer = 0
 
 const currentTime = computed(() =>
@@ -33,6 +34,12 @@ const currentDate = computed(() =>
 
 function switchAct(act: ActId) {
   goToAct(act)
+  presentationMode.value = 'map'
+}
+
+function togglePresentationMode() {
+  presentationMode.value = presentationMode.value === 'map' ? 'detail' : 'map'
+  window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
 }
 
 onMounted(() => {
@@ -45,7 +52,10 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
 </script>
 
 <template>
-  <main class="app-shell" :class="`act-${state.activeAct}`">
+  <main
+    class="app-shell"
+    :class="[`act-${state.activeAct}`, `${presentationMode}-focus-mode`]"
+  >
     <CityMap :active-act="state.activeAct" :beat="state.beat" />
 
     <header class="command-header">
@@ -72,6 +82,15 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
       </nav>
 
       <div class="system-status">
+        <button
+          class="presentation-mode-toggle"
+          :class="{ active: presentationMode === 'detail' }"
+          :aria-pressed="presentationMode === 'detail'"
+          @click="togglePresentationMode"
+        >
+          <i></i>
+          <span>{{ presentationMode === 'map' ? '展开研判' : '地图主视图' }}</span>
+        </button>
         <div class="status-copy">
           <span class="live-dot"></span>
           <div>

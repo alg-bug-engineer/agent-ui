@@ -2,13 +2,13 @@
 import { LineChart, PieChart } from 'echarts/charts'
 import { GraphicComponent, GridComponent, TooltipComponent } from 'echarts/components'
 import { init, use, type EChartsType } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { SVGRenderer } from 'echarts/renderers'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { dataRepository } from '../src/services/dataRepository'
 import type { DailySummary, HumanCollaboration } from '../src/types'
 import HumanCollaborationWorkbench from './HumanCollaborationWorkbench.vue'
 
-use([LineChart, PieChart, GraphicComponent, GridComponent, TooltipComponent, CanvasRenderer])
+use([LineChart, PieChart, GraphicComponent, GridComponent, TooltipComponent, SVGRenderer])
 
 interface EffectivenessData {
   metrics: Array<{
@@ -42,7 +42,9 @@ let trendChartInstance: EChartsType | null = null
 function renderCharts() {
   if (!summary.value || !effectiveness.value || !actionChart.value || !trendChart.value) return
 
-  actionChartInstance = init(actionChart.value)
+  actionChartInstance?.dispose()
+  trendChartInstance?.dispose()
+  actionChartInstance = init(actionChart.value, undefined, { renderer: 'svg' })
   actionChartInstance.setOption({
     tooltip: { trigger: 'item' },
     series: [{
@@ -71,7 +73,7 @@ function renderCharts() {
     }],
   })
 
-  trendChartInstance = init(trendChart.value)
+  trendChartInstance = init(trendChart.value, undefined, { renderer: 'svg' })
   trendChartInstance.setOption({
     grid: { left: 32, right: 12, top: 16, bottom: 26 },
     tooltip: { trigger: 'axis' },
@@ -113,10 +115,28 @@ function renderCharts() {
   })
 }
 
+async function mountCharts() {
+  await nextTick()
+  await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
+  renderCharts()
+  window.requestAnimationFrame(resizeCharts)
+}
+
 function resizeCharts() {
   actionChartInstance?.resize()
   trendChartInstance?.resize()
 }
+
+watch(activeReportView, (view) => {
+  if (view === 'overview') {
+    void mountCharts()
+  } else {
+    actionChartInstance?.dispose()
+    trendChartInstance?.dispose()
+    actionChartInstance = null
+    trendChartInstance = null
+  }
+})
 
 function appendHumanRecord(record: HumanCollaboration['timeline'][number]) {
   if (!collaboration.value) return
@@ -139,8 +159,7 @@ onMounted(async () => {
   collaboration.value = collaborationData
   effectiveness.value = effectivenessData as unknown as EffectivenessData
   experiences.value = experienceData as unknown as ExperienceData
-  await nextTick()
-  renderCharts()
+  await mountCharts()
   window.addEventListener('resize', resizeCharts)
 })
 
@@ -180,7 +199,7 @@ onBeforeUnmount(() => {
       <div class="report-map-space">
         <div class="report-map-caption">
           <span><i></i> 城市治理结果地图</span>
-          <small>地图显示今日闭环监测路口，绿色高亮为本次代表性治理结果</small>
+          <small>支持拖拽与缩放 · 绿色高亮为本次代表性治理结果</small>
         </div>
         <div class="report-map-legend">
           <span><i class="closed"></i>已闭环</span>
