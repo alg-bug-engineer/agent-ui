@@ -95,6 +95,7 @@ const experienceTab = ref<ExperienceTab>('cognition')
 const selectedAssetId = ref('timing')
 const taskBoardTab = ref<TaskBoardTab>('anomaly')
 const selectedPlanId = ref('')
+const selectedCaseId = ref('')
 
 const stages: Array<{
   id: ActId
@@ -109,7 +110,7 @@ const stages: Array<{
     label: '多源感知',
     en: 'MULTI-SOURCE PERCEPTION',
     statement: '把路口、方向、设备与实时指标放在同一张空间底图上',
-    cue: '对应讲稿：实时采集流量、排队、延误等 10 余项指标；以解放东路—奥体西路交叉口为例。',
+    cue: '运行要点：实时采集流量、排队、延误等 10 余项指标，完成路口认知与异常核验。',
     next: '下一页：智能研判如何确认问题',
   },
   {
@@ -117,7 +118,7 @@ const stages: Array<{
     label: '智能研判',
     en: 'INTELLIGENT DIAGNOSIS',
     statement: '上游连续来车叠加有效放行不足，形成北进口溢流风险',
-    cue: '对应讲稿：自动识别溢流积压和相位空放，结合实时车流与周边道路承载情况精准判断配时短板。',
+    cue: '运行要点：融合拓扑、流量来源与问题验证，确认溢流积压和相位空放的直接成因。',
     next: '下一页：调用案例与规则生成方案',
   },
   {
@@ -125,7 +126,7 @@ const stages: Array<{
     label: '方案生成',
     en: 'PLAN GENERATION',
     statement: '案例、专家规则与信控模型共同生成三套候选方案',
-    cue: '对应讲稿：匹配相似案例及专家规则，联动信控专业模型测算周期、绿信比和相位差。',
+    cue: '运行要点：检索相似案例与专家规则，联动专业模型生成并对比周期、绿信比和相位差。',
     next: '下一页：方案评估并落地执行',
   },
   {
@@ -133,7 +134,7 @@ const stages: Array<{
     label: '落地执行',
     en: 'DEPLOYMENT',
     statement: '组合方案通过安全边界校核，绑定护栏后下发信号机',
-    cue: '对应讲稿：仅用十几秒即可生成多套优选方案，并完成评估、下发与自动回退保护。',
+    cue: '运行要点：完成方案影响评估、安全校核、信号下发和自动回退保护。',
     next: '下一页：查看执行前后效果',
   },
   {
@@ -141,7 +142,7 @@ const stages: Array<{
     label: '效果优化',
     en: 'EFFECT OPTIMIZATION',
     statement: '排队由 129 米下降至 78 米，晚高峰持续低于原有基线',
-    cue: '对应讲稿：效果评估与持续优化——高峰排队长度明显下降，路口溢出问题得到缓解。',
+    cue: '运行要点：持续核验高峰排队、延误和绿灯利用率，确认改善稳定且未发生压力转移。',
     next: '下一页：复盘沉淀为长期经验',
   },
   {
@@ -149,8 +150,8 @@ const stages: Array<{
     label: '持续优化',
     en: 'CONTINUOUS LEARNING',
     statement: '每次处置形成可追溯记录，有效策略持续回流知识库',
-    cue: '讲解收口：从单路口治理回到全市常态扫描，形成“发现—处置—验证—学习”的持续进化闭环。',
-    next: '演示完成 · 可返回首页继续扫描',
+    cue: '运行要点：有效处置过程沉淀为长期经验，形成“发现—处置—验证—学习”的持续进化闭环。',
+    next: '闭环完成 · 可返回首页继续扫描',
   },
 ]
 
@@ -339,6 +340,9 @@ const selectedPlanImpact = computed(() =>
   plan.value?.impacts.find((item) => item.optionId === selectedPlan.value?.id)
   ?? recommendedImpact.value,
 )
+const selectedCase = computed(() =>
+  cases.value.find((item) => item.id === selectedCaseId.value) ?? cases.value[0],
+)
 const selectedExperience = computed(() => {
   const content: Record<ExperienceTab, { title: string; description: string; sample: string }> = {
     cognition: {
@@ -433,6 +437,7 @@ onMounted(async () => {
   diagnosis.value = diagnosisData
   knowledgeBase.value = knowledgeData
   cases.value = caseData
+  selectedCaseId.value = caseData[0]?.id ?? ''
   plan.value = planData
   selectedPlanId.value = planData.options.find((item) => item.recommended)?.id
     ?? planData.options[0]?.id
@@ -556,10 +561,10 @@ onMounted(async () => {
         <template v-else>
           <div class="v2-task-list-heading">
             <span>已完成闭环任务</span>
-            <small>点击代表案例进入演示</small>
+            <small>点击代表任务查看完整闭环</small>
           </div>
           <button class="v2-completed-task v2-completed-entry" @click="emit('start')">
-            <span class="v2-task-status">本次演示案例</span>
+            <span class="v2-task-status">重点闭环任务</span>
             <small>18:21 · 晚高峰溢流治理</small>
             <strong>解放东路 × 奥体西路</strong>
             <p>自主完成感知、研判、方案生成、执行与效果评估。</p>
@@ -568,7 +573,7 @@ onMounted(async () => {
               <i>→</i>
               <strong>78m</strong>
             </div>
-            <footer><span>已验证 3 个周期 · 未触发回退</span><b>回放完整过程 →</b></footer>
+            <footer><span>已验证 3 个周期 · 未触发回退</span><b>查看处置详情 →</b></footer>
           </button>
           <div class="v2-completed-summary">
             <span><strong>180</strong>今日已闭环</span>
@@ -686,7 +691,7 @@ onMounted(async () => {
         <button :disabled="!prompt.trim() || submitting" @click="submitPrompt">发起研判</button>
       </div>
       <div class="v2-command-guide">
-        <span>演示建议：讲完知识库数据后，切换左侧“已完成”，点击代表案例进入全流程回放</span>
+        <span>操作提示：切换左侧“已完成”，点击重点任务查看全流程处置记录</span>
         <b>支持键盘输入主动任务</b>
       </div>
     </div>
@@ -720,7 +725,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="v2-target-card">
-          <small>本次演示对象</small>
+          <small>当前治理对象</small>
           <strong>{{ target?.name ?? '解放东路与奥体西路交叉口' }}</strong>
           <p>晚高峰 · 北进口向南直行 · 溢流风险</p>
         </div>
@@ -789,19 +794,40 @@ onMounted(async () => {
           <strong>{{ knowledgeBase?.matchLatencySeconds ?? 1.8 }}<small>秒</small></strong>
           <p>命中 {{ knowledgeBase?.matchedCaseCount ?? 37 }} 个高相似案例与适用专家规则</p>
         </div>
-        <div class="v2-case-evidence-stack">
-          <article v-for="item in cases.slice(0, 2)" :key="item.id">
-            <header>
-              <span>{{ item.matchScore }}<small>% 匹配</small></span>
-              <div><small>{{ item.location }}</small><strong>{{ item.title }}</strong></div>
-            </header>
-            <div class="v2-case-tags">
-              <b v-for="tag in item.tags.slice(0, 3)" :key="tag">{{ tag }}</b>
-            </div>
-            <p><span>治理动作</span>{{ item.treatment }}</p>
-            <footer><span>历史效果</span><strong>{{ item.effect }}</strong></footer>
-          </article>
+        <div class="v2-case-selector">
+          <button
+            v-for="item in cases"
+            :key="item.id"
+            :class="{ active: item.id === selectedCase?.id }"
+            @click="selectedCaseId = item.id"
+          >
+            <span>{{ item.matchScore }}<small>%</small></span>
+            <div><small>{{ item.location }}</small><strong>{{ item.title }}</strong></div>
+          </button>
         </div>
+        <article v-if="selectedCase" class="v2-case-dossier">
+          <header>
+            <div><small>案例 {{ selectedCase.caseId }} · 完整处置链</small><strong>{{ selectedCase.title }}</strong></div>
+            <span>{{ selectedCase.matchScore }}%<small>综合匹配</small></span>
+          </header>
+          <div class="v2-case-match-groups">
+            <section>
+              <b>标签命中</b>
+              <div><span v-for="item in selectedCase.hitTags.slice(0, 4)" :key="`${item.dimension}-${item.value}`">{{ item.value }}</span></div>
+            </section>
+            <section>
+              <b>语义命中</b>
+              <div><span v-for="item in selectedCase.hitSemantics.slice(0, 3)" :key="`${item.dimension}-${item.value}`">{{ item.value }}</span></div>
+            </section>
+          </div>
+          <dl>
+            <div><dt>场景</dt><dd>{{ selectedCase.scenario }}</dd></div>
+            <div><dt>诊断</dt><dd>{{ selectedCase.diagnosis }}</dd></div>
+            <div><dt>治理</dt><dd>{{ selectedCase.treatment }}</dd></div>
+            <div class="result"><dt>效果</dt><dd>{{ selectedCase.effect }}</dd></div>
+          </dl>
+          <footer><span>来源：{{ selectedCase.source.account }}</span><b>已通过知识质量校验</b></footer>
+        </article>
       </template>
 
       <template v-else-if="activeStage === 4">
@@ -830,6 +856,12 @@ onMounted(async () => {
           </article>
         </div>
         <div class="v2-safety-badge"><i>✓</i><span><b>安全边界全部通过</b>未把压力转移给相邻方向</span></div>
+        <div class="v2-readiness-grid">
+          <article><span>参数完整性</span><strong>100%</strong><small>周期 / 绿信比 / 相位差</small></article>
+          <article><span>影响校核</span><strong>4 / 4</strong><small>目标、冲突、上游、下游</small></article>
+          <article><span>控制器链路</span><strong>在线</strong><small>SC-011WWE28FMC00001</small></article>
+          <article><span>回退策略</span><strong>3 条</strong><small>阈值触发 · 自动恢复</small></article>
+        </div>
       </template>
 
       <template v-else-if="activeStage === 5">
@@ -853,6 +885,14 @@ onMounted(async () => {
             <em>{{ item.direction === 'down' ? '↓' : '↑' }} {{ item.improvementPct }}%</em>
           </article>
         </div>
+        <div class="v2-verification-window">
+          <header><strong>连续周期效果确认</strong><span>未触发回退</span></header>
+          <div>
+            <span><small>周期 01</small><b>86m</b><em>稳定</em></span>
+            <span><small>周期 02</small><b>81m</b><em>稳定</em></span>
+            <span><small>周期 03</small><b>78m</b><em>稳定</em></span>
+          </div>
+        </div>
       </template>
 
       <template v-else>
@@ -873,7 +913,7 @@ onMounted(async () => {
       <div class="v2-panel-cap">
         <span><i></i> EXECUTIVE CONCLUSION</span>
         <b>本页结论</b>
-        <small>LEADER VIEW</small>
+        <small>DECISION VIEW</small>
       </div>
 
       <template v-if="activeStage === 1">
@@ -1002,6 +1042,11 @@ onMounted(async () => {
             <span><small>下游协调</small><b>8s</b></span>
           </div>
         </div>
+        <div class="v2-command-receipt">
+          <header><span><i></i> 控制指令回执</span><strong>签名校验通过</strong></header>
+          <div><span>策略版本<b>V2026.07.29-03</b></span><span>任务编号<b>OPT-3701-0186</b></span></div>
+          <footer><span>生效窗口</span><strong>17:00—19:10</strong><b>状态同步正常</b></footer>
+        </div>
         <div class="v2-guardrails">
           <strong>自动回退护栏</strong>
           <span v-for="item in plan?.deployment.rollbackConditions" :key="item"><i>!</i>{{ item }}</span>
@@ -1062,7 +1107,7 @@ onMounted(async () => {
     <footer class="v2-presentation-control">
       <button class="previous" @click="goPrevious">← {{ activeStage === 1 ? '返回扫描首页' : '上一阶段' }}</button>
       <div>
-        <span>讲解提示</span>
+        <span>运行摘要</span>
         <strong>{{ activeStageMeta.cue }}</strong>
         <small>{{ activeStageMeta.next }}</small>
       </div>

@@ -1,14 +1,14 @@
 {
   "source": {
     "roadNetwork": "road6 · version 20260501 真实路网快照",
-    "operationalEvidence": "演示诊断数据（基于目标路口场景构造）",
-    "strategyProjection": "演示反事实推演（用于呈现专家分析逻辑）"
+    "operationalEvidence": "路口多源融合诊断数据",
+    "strategyProjection": "信控模型反事实推演结果"
   },
   "question": "北进口溢流风险控制策略研判",
   "staticPortrait": {
     "title": "附近交通吸引画像",
     "radiusM": 600,
-    "source": "演示静态画像 · 路口周边 600m",
+    "source": "路口静态画像 · 周边 600m",
     "items": [
       {
         "id": "office",

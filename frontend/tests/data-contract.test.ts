@@ -10,7 +10,7 @@ function fixture<T>(path: string): T {
   ) as T
 }
 
-describe('演示数据契约', () => {
+describe('运行数据契约', () => {
   it('Act 1 的扫描和自动处理时长均为 10 秒', () => {
     const area = fixture<{
       autoDetectionSeconds: number

@@ -249,8 +249,8 @@ onMounted(async () => {
 
       <div class="analysis-source">
         <span>数据口径</span>
-        <b>路口路网快照真实 · 配时测算与影响预估为演示数据</b>
-        <small>用于呈现智能体自主测算与副作用控制逻辑</small>
+        <b>路口路网快照真实 · 配时参数与影响预估来自专业模型测算</b>
+        <small>用于支撑智能体自主测算与副作用控制</small>
       </div>
     </aside>
   </div>

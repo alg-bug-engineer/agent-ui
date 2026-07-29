@@ -402,7 +402,7 @@ onBeforeUnmount(() => {
 
           <div class="act3-source-note">
             <span>数据口径</span>
-            真实案例摘自交管知识库（knowledge_qa_tagged）；潮汐曲线与策略结论为演示数据，用于呈现专家分析逻辑
+            真实案例摘自交管知识库（knowledge_qa_tagged）；潮汐曲线与策略结论来自模型测算，用于支撑专家分析逻辑
           </div>
         </template>
       </div>

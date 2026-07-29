@@ -3058,6 +3058,200 @@
   font-weight: 600;
 }
 
+.v2-case-selector {
+  display: grid;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.v2-case-selector button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 9px;
+  color: inherit;
+  text-align: left;
+  background: rgba(255, 255, 255, .026);
+  border: 1px solid rgba(111, 184, 212, .14);
+  cursor: pointer;
+}
+
+.v2-case-selector button:hover,
+.v2-case-selector button.active {
+  background: rgba(26, 127, 255, .12);
+  border-color: rgba(57, 220, 244, .44);
+  box-shadow: inset 3px 0 var(--v2-cyan);
+}
+
+.v2-case-selector button > span {
+  color: var(--v2-green);
+  font: 850 20px "DIN Alternate", sans-serif;
+}
+
+.v2-case-selector button > span small {
+  margin-left: 1px;
+  font-size: 8px;
+}
+
+.v2-case-selector button > div {
+  min-width: 0;
+}
+
+.v2-case-selector button small,
+.v2-case-selector button strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2-case-selector button > div small {
+  color: var(--v2-muted);
+  font-size: 8px;
+}
+
+.v2-case-selector button > div strong {
+  margin-top: 3px;
+  color: #fff;
+  font-size: 11px;
+}
+
+.v2-case-dossier {
+  margin-top: 9px !important;
+  padding: 11px;
+  background: linear-gradient(145deg, rgba(13, 52, 74, .72), rgba(3, 16, 28, .8));
+  border: 1px solid rgba(57, 220, 244, .22);
+  border-top: 2px solid var(--v2-cyan);
+}
+
+.v2-case-dossier > header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.v2-case-dossier > header div {
+  min-width: 0;
+}
+
+.v2-case-dossier > header div small,
+.v2-case-dossier > header div strong,
+.v2-case-dossier > header > span small {
+  display: block;
+}
+
+.v2-case-dossier > header div small {
+  color: #75e5f6;
+  font-size: 8px;
+}
+
+.v2-case-dossier > header div strong {
+  margin-top: 4px;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.v2-case-dossier > header > span {
+  color: var(--v2-green);
+  text-align: right;
+  font: 850 22px "DIN Alternate", sans-serif;
+}
+
+.v2-case-dossier > header > span small {
+  color: var(--v2-muted);
+  font: 650 7px sans-serif;
+}
+
+.v2-case-match-groups {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.v2-case-match-groups section {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 7px;
+  align-items: start;
+}
+
+.v2-case-match-groups section > b {
+  padding-top: 3px;
+  color: #bceffa;
+  font-size: 8px;
+}
+
+.v2-case-match-groups section > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.v2-case-match-groups span {
+  padding: 3px 5px;
+  color: rgba(216, 244, 249, .78);
+  background: rgba(57, 220, 244, .06);
+  border: 1px solid rgba(57, 220, 244, .15);
+  font-size: 7px;
+}
+
+.v2-case-dossier dl {
+  display: grid;
+  gap: 5px;
+  margin: 9px 0 0;
+}
+
+.v2-case-dossier dl > div {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 7px;
+  padding: 7px;
+  background: rgba(255, 255, 255, .025);
+}
+
+.v2-case-dossier dt {
+  color: var(--v2-cyan);
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.v2-case-dossier dd {
+  margin: 0;
+  color: rgba(222, 241, 248, .68);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.v2-case-dossier dl > div.result {
+  background: rgba(78, 224, 170, .055);
+  border-left: 2px solid var(--v2-green);
+}
+
+.v2-case-dossier dl > div.result dt,
+.v2-case-dossier dl > div.result dd {
+  color: #a5f0d4;
+}
+
+.v2-case-dossier > footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  color: var(--v2-muted);
+  border-top: 1px solid rgba(112, 184, 211, .12);
+  font-size: 7px;
+}
+
+.v2-case-dossier > footer b {
+  color: var(--v2-green);
+  font-weight: 700;
+}
+
 .v2-timing-parameters {
   margin-top: 10px;
   padding: 10px;
@@ -3182,6 +3376,186 @@
   color: var(--v2-green);
 }
 
+.v2-readiness-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.v2-readiness-grid article {
+  min-width: 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, .028);
+  border: 1px solid rgba(112, 184, 212, .14);
+}
+
+.v2-readiness-grid span,
+.v2-readiness-grid strong,
+.v2-readiness-grid small {
+  display: block;
+}
+
+.v2-readiness-grid span {
+  color: var(--v2-muted);
+  font-size: 8px;
+}
+
+.v2-readiness-grid strong {
+  overflow: hidden;
+  margin-top: 4px;
+  color: var(--v2-green);
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2-readiness-grid small {
+  overflow: hidden;
+  margin-top: 3px;
+  color: rgba(199, 229, 239, .48);
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2-command-receipt {
+  margin-top: 10px;
+  padding: 11px;
+  background: rgba(26, 127, 255, .065);
+  border: 1px solid rgba(57, 220, 244, .2);
+}
+
+.v2-command-receipt > header,
+.v2-command-receipt > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.v2-command-receipt > header span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.v2-command-receipt > header i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--v2-green);
+  box-shadow: 0 0 8px var(--v2-green);
+}
+
+.v2-command-receipt > header strong {
+  color: var(--v2-green);
+  font-size: 8px;
+}
+
+.v2-command-receipt > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.v2-command-receipt > div span {
+  padding: 8px;
+  color: var(--v2-muted);
+  background: rgba(2, 13, 23, .35);
+  font-size: 7px;
+}
+
+.v2-command-receipt > div b {
+  display: block;
+  overflow: hidden;
+  margin-top: 3px;
+  color: #fff;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2-command-receipt > footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  color: var(--v2-muted);
+  border-top: 1px solid rgba(112, 184, 212, .12);
+  font-size: 8px;
+}
+
+.v2-command-receipt > footer strong {
+  color: #fff;
+}
+
+.v2-command-receipt > footer b {
+  color: var(--v2-green);
+}
+
+.v2-verification-window {
+  margin-top: 10px;
+  padding: 11px;
+  background: rgba(78, 224, 170, .045);
+  border: 1px solid rgba(78, 224, 170, .18);
+}
+
+.v2-verification-window > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.v2-verification-window > header strong {
+  color: #fff;
+  font-size: 10px;
+}
+
+.v2-verification-window > header span {
+  color: var(--v2-green);
+  font-size: 8px;
+}
+
+.v2-verification-window > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.v2-verification-window > div span {
+  padding: 8px 5px;
+  text-align: center;
+  background: rgba(2, 13, 23, .36);
+}
+
+.v2-verification-window small,
+.v2-verification-window b,
+.v2-verification-window em {
+  display: block;
+}
+
+.v2-verification-window small {
+  color: var(--v2-muted);
+  font-size: 7px;
+}
+
+.v2-verification-window b {
+  margin-top: 4px;
+  color: #fff;
+  font: 800 16px "DIN Alternate", sans-serif;
+}
+
+.v2-verification-window em {
+  margin-top: 3px;
+  color: var(--v2-green);
+  font-size: 7px;
+  font-style: normal;
+}
+
 .v2-review-experience .act6-experience {
   padding-top: 94px;
 }
@@ -3287,6 +3661,353 @@
 
 .v2-app .map-load-failure strong {
   color: #dffaff;
+}
+
+/* Production readability: denser information, larger type, less unused map margin. */
+@media (min-width: 1501px) {
+  .v2-stage-left,
+  .v2-stage-right {
+    width: 410px;
+  }
+
+  .v2-flow-mode .map-executive-verdict {
+    left: 442px;
+    right: 442px;
+  }
+}
+
+.v2-panel-cap > span {
+  font-size: 10px;
+}
+
+.v2-panel-cap > b {
+  font-size: 14px;
+}
+
+.v2-panel-cap > small {
+  font-size: 10px;
+}
+
+.v2-stage-context span {
+  font-size: 10px;
+}
+
+.v2-stage-context strong {
+  font-size: 26px;
+}
+
+.v2-stage-context p {
+  font-size: 12px;
+}
+
+.v2-dimension-banner > small {
+  font-size: 11px;
+}
+
+.v2-dimension-banner strong {
+  font-size: 14px;
+}
+
+.v2-dimension-banner b {
+  font-size: 9px;
+}
+
+.v2-target-card small,
+.v2-recommended-plan small,
+.v2-daily-verdict small,
+.v2-conclusion-block small {
+  font-size: 10px;
+}
+
+.v2-target-card strong,
+.v2-recommended-plan strong,
+.v2-daily-verdict strong {
+  font-size: 18px;
+}
+
+.v2-target-card p,
+.v2-recommended-plan p,
+.v2-daily-verdict p,
+.v2-conclusion-block p {
+  font-size: 11px;
+}
+
+.v2-cognition-grid span,
+.v2-cognition-grid p,
+.v2-metric-stack span,
+.v2-metric-stack p {
+  font-size: 9px;
+}
+
+.v2-cognition-grid strong,
+.v2-metric-stack strong {
+  font-size: 20px;
+}
+
+.v2-section-title span {
+  font-size: 13px;
+}
+
+.v2-section-title b {
+  font-size: 10px;
+}
+
+.v2-conclusion-block strong {
+  font-size: 17px;
+}
+
+.v2-threshold-visual div span,
+.v2-threshold-visual p {
+  font-size: 10px;
+}
+
+.v2-threshold-visual div b,
+.v2-threshold-visual div strong {
+  font-size: 20px;
+}
+
+.v2-source-list span,
+.v2-source-list span b,
+.v2-model-badges span {
+  font-size: 10px;
+}
+
+.v2-analysis-chain strong {
+  font-size: 13px;
+}
+
+.v2-analysis-chain p,
+.v2-analysis-chain li > b {
+  font-size: 10px;
+}
+
+.v2-direction-facts small,
+.v2-direction-facts p {
+  font-size: 9px;
+}
+
+.v2-direction-facts strong {
+  font-size: 12px;
+}
+
+.v2-trace-summary header div small,
+.v2-trace-summary > p,
+.v2-hypothesis-grid p {
+  font-size: 10px;
+}
+
+.v2-trace-summary header div strong,
+.v2-hypothesis-grid strong {
+  font-size: 12px;
+}
+
+.v2-hypothesis-grid article > span {
+  font-size: 9px;
+}
+
+.v2-recall-summary > span,
+.v2-recall-summary p {
+  font-size: 10px;
+}
+
+.v2-recall-summary > strong {
+  font-size: 30px;
+}
+
+.v2-case-selector button > div small,
+.v2-case-dossier > header div small,
+.v2-case-match-groups section > b,
+.v2-case-dossier dt,
+.v2-case-dossier > footer {
+  font-size: 9px;
+}
+
+.v2-case-selector button > div strong,
+.v2-case-dossier > header div strong {
+  font-size: 13px;
+}
+
+.v2-case-match-groups span,
+.v2-case-dossier dd {
+  font-size: 9px;
+}
+
+.v2-generation-time span {
+  font-size: 10px;
+}
+
+.v2-generation-time b,
+.v2-generation-time strong {
+  font-size: 25px;
+}
+
+.v2-timing-parameters header strong,
+.v2-plan-impact-preview header strong,
+.v2-cycle-verification header strong,
+.v2-verification-window > header strong {
+  font-size: 12px;
+}
+
+.v2-parameter-head,
+.v2-parameter-row,
+.v2-timing-parameters > footer {
+  font-size: 10px;
+}
+
+.v2-plan-options header span {
+  font-size: 12px;
+}
+
+.v2-plan-options header b,
+.v2-plan-options p,
+.v2-plan-options footer span {
+  font-size: 10px;
+}
+
+.v2-impact-list span,
+.v2-impact-list b {
+  font-size: 11px;
+}
+
+.v2-impact-list strong {
+  font-size: 16px;
+}
+
+.v2-readiness-grid span,
+.v2-readiness-grid small,
+.v2-deployment-card > p,
+.v2-guardrails > span,
+.v2-execution-timeline b,
+.v2-execution-timeline small {
+  font-size: 9px;
+}
+
+.v2-deployment-card > strong {
+  font-size: 17px;
+}
+
+.v2-deployment-card div small,
+.v2-command-receipt > div span,
+.v2-command-receipt > footer {
+  font-size: 9px;
+}
+
+.v2-deployment-card div b {
+  font-size: 18px;
+}
+
+.v2-guardrails > strong,
+.v2-command-receipt > header span {
+  font-size: 12px;
+}
+
+.v2-outcome-hero > small,
+.v2-outcome-hero > span,
+.v2-outcome-metrics span,
+.v2-outcome-metrics em,
+.v2-safe-results small,
+.v2-safe-results b {
+  font-size: 9px;
+}
+
+.v2-outcome-metrics b {
+  font-size: 13px;
+}
+
+.v2-outcome-metrics strong {
+  font-size: 16px;
+}
+
+.v2-peak-chart header strong {
+  font-size: 12px;
+}
+
+.v2-peak-chart header span {
+  font-size: 9px;
+}
+
+.v2-safe-results strong {
+  font-size: 18px;
+}
+
+.v2-presentation-control button,
+.v2-presentation-control div > strong {
+  font-size: 11px;
+}
+
+.v2-presentation-control div > span,
+.v2-presentation-control div > small {
+  font-size: 9px;
+}
+
+.v2-task-tabs button,
+.v2-task-list-heading,
+.v2-anomaly-item p,
+.v2-anomaly-item small,
+.v2-optimizing-item p,
+.v2-optimizing-item footer {
+  font-size: 10px;
+}
+
+.v2-anomaly-item header > strong,
+.v2-optimizing-item header > strong {
+  font-size: 12px;
+}
+
+.v2-anomaly-item header > b,
+.v2-anomaly-item > time,
+.v2-optimizing-item header > span,
+.v2-optimizing-item header > b {
+  font-size: 9px;
+}
+
+.v2-knowledge-intro small,
+.v2-knowledge-assets span,
+.v2-asset-detail small,
+.v2-asset-detail p,
+.v2-library-subtabs button,
+.v2-knowledge-library article > small,
+.v2-knowledge-library article > span {
+  font-size: 9px;
+}
+
+.v2-knowledge-intro strong,
+.v2-knowledge-library article > strong {
+  font-size: 13px;
+}
+
+.v2-knowledge-library article > p {
+  font-size: 11px;
+}
+
+.v2-flow-mode .verdict-copy strong {
+  font-size: 17px;
+}
+
+.v2-flow-mode .verdict-copy p,
+.v2-flow-mode .verdict-metrics span {
+  font-size: 10px;
+}
+
+.v2-flow-mode .verdict-metrics b {
+  font-size: 18px;
+}
+
+.v2-review-experience .report-kpis span,
+.v2-review-experience .report-kpis small,
+.v2-review-experience .executive-copy small,
+.v2-review-experience .executive-copy p,
+.v2-review-experience .executive-findings span,
+.v2-review-experience .report-card header > span {
+  font-size: 11px;
+}
+
+.v2-review-experience .report-kpis strong {
+  font-size: 24px;
+}
+
+.v2-review-experience .report-card header h3 {
+  font-size: 16px;
 }
 
 @keyframes v2-spin {

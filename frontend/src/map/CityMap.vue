@@ -878,26 +878,9 @@ function renderQueueRuler() {
     zIndex: 138,
   })
 
-  ;[
-    { meters: 108, label: '周期 -2' },
-    { meters: 118, label: '周期 -1' },
-    { meters: 129, label: '当前' },
-  ].forEach((item, index) => {
-    const position = metersToGeo(stop, 0, item.meters)
-    addPolyline([
-      metersToGeo(position, -7 - index * 2, 0),
-      metersToGeo(position, 7 + index * 2, 0),
-    ], {
-      strokeColor: index === 2 ? '#ff5a57' : '#ff9b82',
-      strokeWeight: index === 2 ? 5 : 2,
-      strokeOpacity: index === 2 ? 0.95 : 0.52,
-      zIndex: 139,
-    })
-  })
-
   addOverlay(new AMapApi.Marker({
-    position: metersToGeo(center, 36, 109),
-    anchor: 'middle-left',
+    position: metersToGeo(center, -50, 109),
+    anchor: 'middle-right',
     content: htmlElement(
       'geo-queue-road-stats',
       `<span class="queue-road-stat current">

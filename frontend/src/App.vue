@@ -108,7 +108,7 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
         <strong>感知 · 研判 · 生成 · 执行 · 评估 · 进化</strong>
       </div>
 
-      <nav v-else class="v2-stage-navigation" aria-label="全流程信号优化演示">
+      <nav v-else class="v2-stage-navigation" aria-label="全流程信号优化">
         <button
           v-for="stage in stages"
           :key="stage.id"

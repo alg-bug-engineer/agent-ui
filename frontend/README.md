@@ -9,7 +9,7 @@ act1/                  Act 1 业务组件
 act2/                  Act 2 业务组件
 act6/                  Act 6 业务组件
 src/                   通用壳层、地图内核、状态和数据访问
-public/data/           JSON/GeoJSON 演示数据
+public/data/           JSON/GeoJSON 运行数据
 tests/                 数据契约测试
 ```
 

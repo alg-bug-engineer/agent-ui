@@ -308,7 +308,7 @@ onBeforeUnmount(() => {
       <div class="analysis-source">
         <span>数据口径</span>
         <b>目标路口真实路网快照</b>
-        <small>前后对比与多日趋势为演示数据，用于呈现执行效果闭环验证逻辑</small>
+        <small>前后对比与多日趋势来自持续监测数据，用于支撑执行效果闭环验证</small>
       </div>
     </aside>
   </div>
