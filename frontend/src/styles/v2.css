@@ -5322,3 +5322,291 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Knowledge base: one-line assets, scrollable case browser and readable detail view. */
+.v2-home-mode .v2-knowledge-panel {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: rgba(57, 220, 244, .34) transparent;
+  scrollbar-width: thin;
+}
+
+.v2-home-mode .v2-knowledge-panel > .v2-panel-cap {
+  position: sticky;
+  z-index: 4;
+  top: 0;
+  flex: 0 0 auto;
+  background: rgba(5, 23, 38, .98);
+}
+
+.v2-home-mode .v2-knowledge-assets {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.v2-home-mode .v2-knowledge-assets button {
+  min-height: 64px;
+  padding-inline: 3px;
+}
+
+.v2-home-mode .v2-knowledge-assets strong {
+  font-size: 16px;
+}
+
+.v2-home-mode .v2-case-library {
+  min-height: auto;
+  flex: 0 0 auto;
+}
+
+.v2-home-case-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.v2-home-case-list > button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  color: inherit;
+  text-align: left;
+  background: rgba(255, 255, 255, .025);
+  border: 1px solid transparent;
+  border-left: 3px solid rgba(78, 224, 170, .45);
+  cursor: pointer;
+}
+
+.v2-home-case-list > button:hover,
+.v2-home-case-list > button.active {
+  background: linear-gradient(90deg, rgba(78, 224, 170, .1), rgba(26, 127, 255, .05));
+  border-color: rgba(78, 224, 170, .32);
+}
+
+.v2-home-case-list > button > span {
+  color: var(--v2-green);
+  font: 800 16px "DIN Alternate", sans-serif;
+}
+
+.v2-home-case-list > button > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.v2-home-case-list small {
+  overflow: hidden;
+  color: var(--v2-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2-home-case-list strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v2-home-case-list b {
+  color: rgba(124, 236, 191, .82);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.v2-case-library .v2-home-case-detail {
+  min-height: 0;
+  display: block;
+  flex: none;
+  margin-top: 10px;
+  padding: 14px;
+  background: rgba(5, 24, 40, .76);
+  border: 1px solid rgba(69, 180, 215, .22);
+  border-left: 3px solid var(--v2-cyan);
+}
+
+.v2-home-case-detail > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.v2-home-case-detail > header > div {
+  min-width: 0;
+}
+
+.v2-home-case-detail > header small {
+  display: block;
+  color: #78dcef;
+  font-size: 10px;
+}
+
+.v2-home-case-detail > header strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.v2-home-case-detail > header > span {
+  flex: 0 0 auto;
+  color: var(--v2-green);
+  font: 800 12px "DIN Alternate", sans-serif;
+}
+
+.v2-home-case-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 11px;
+}
+
+.v2-home-mode .v2-home-case-tags > span {
+  padding: 4px 6px;
+  color: #9beafa;
+  background: rgba(0, 212, 240, .07);
+  border: 1px solid rgba(0, 212, 240, .18);
+  font-size: 9px;
+}
+
+.v2-home-case-detail dl {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.v2-home-case-detail dl > div {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 9px;
+}
+
+.v2-home-case-detail dt {
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.v2-home-case-detail dd {
+  margin: 0;
+  color: rgba(214, 236, 245, .69);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.v2-home-case-detail > footer {
+  margin-top: 12px;
+  padding-top: 9px;
+  color: var(--v2-muted);
+  border-top: 1px solid rgba(112, 184, 212, .14);
+  font-size: 9px;
+}
+
+/* Stage 3 map cards are the single source of candidate-plan impact metrics. */
+.v2-app .geo-narrative-marker.plan-impact {
+  min-width: 168px;
+  border-color: rgba(57, 220, 244, .34);
+  box-shadow: 0 14px 36px rgba(1, 13, 24, .32);
+}
+
+.v2-app .geo-narrative-marker.plan-impact strong {
+  font-size: 19px;
+}
+
+/* Continuous optimization always owns a visible panel, including loading and retry states. */
+.v2-report-loading,
+.report-loading-state {
+  min-height: calc(100vh - 130px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 32px;
+  text-align: center;
+}
+
+.v2-report-loading {
+  position: absolute;
+  z-index: 36;
+  inset: 94px 22px 20px;
+  color: #e9f8ff;
+  background: linear-gradient(145deg, rgba(5, 25, 42, .96), rgba(8, 38, 58, .92));
+  border: 1px solid rgba(57, 220, 244, .22);
+}
+
+.v2-report-loading i,
+.report-loading-state > i {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(0, 181, 163, .18);
+  border-top-color: #00b5a3;
+  border-radius: 50%;
+  animation: v2-spin .8s linear infinite;
+}
+
+.v2-report-loading strong,
+.report-loading-state > strong {
+  font-size: 24px;
+}
+
+.v2-report-loading span,
+.report-loading-state > p {
+  margin: 0;
+  color: #6d829b;
+  font-size: 14px;
+}
+
+.report-loading-state {
+  color: #0d1b2e;
+  background: rgba(246, 250, 255, .96);
+}
+
+.report-loading-state > small {
+  color: #159986;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+.report-loading-state > button {
+  padding: 10px 18px;
+  color: #fff;
+  background: #087b70;
+  border: 0;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+@media (max-width: 1500px) {
+  .v2-home-mode .v2-knowledge-assets {
+    gap: 4px;
+    padding-inline: 10px;
+  }
+
+  .v2-home-mode .v2-knowledge-assets button {
+    min-height: 52px;
+  }
+
+  .v2-home-mode .v2-knowledge-assets strong {
+    font-size: 13px;
+  }
+
+  .v2-home-mode .v2-knowledge-assets strong small,
+  .v2-home-mode .v2-knowledge-assets span {
+    font-size: 8px;
+  }
+
+  .v2-home-case-list > button {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .v2-home-case-list > button > b {
+    display: none;
+  }
+
+  .v2-home-case-detail dl > div {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+}

@@ -9,6 +9,7 @@ type PresentationView = 'home' | 'flow'
 
 const view = ref<PresentationView>('home')
 const activeStage = ref<ActId>(1)
+const selectedPlanOptionId = ref('combined')
 const now = ref(new Date())
 let clockTimer = 0
 
@@ -70,6 +71,10 @@ function setStage(stage: ActId) {
   requestResize()
 }
 
+function setPlanOption(optionId: string) {
+  selectedPlanOptionId.value = optionId
+}
+
 function requestResize() {
   window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
 }
@@ -90,7 +95,11 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
       view === 'home' ? 'v2-home-mode act-1' : `v2-flow-mode act-${activeStage}`,
     ]"
   >
-    <CityMap :active-act="mapState.activeAct" :beat="mapState.beat" />
+    <CityMap
+      :active-act="mapState.activeAct"
+      :beat="mapState.beat"
+      :plan-option-id="selectedPlanOptionId"
+    />
 
     <header class="command-header v2-command-header">
       <div class="brand-block">
@@ -145,6 +154,7 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
       @start="openFlow"
       @home="openHome"
       @stage="setStage"
+      @plan-option="setPlanOption"
     />
   </main>
 </template>

@@ -33,6 +33,8 @@ const summary = ref<DailySummary | null>(null)
 const collaboration = ref<HumanCollaboration | null>(null)
 const effectiveness = ref<EffectivenessData | null>(null)
 const experiences = ref<ExperienceData | null>(null)
+const reportLoading = ref(true)
+const reportLoadError = ref(false)
 const activeReportView = ref<'overview' | 'collaboration'>('overview')
 const reportRoot = ref<HTMLDivElement | null>(null)
 const reportMapSpace = ref<HTMLDivElement | null>(null)
@@ -173,21 +175,34 @@ function appendHumanRecord(record: HumanCollaboration['timeline'][number]) {
   }
 }
 
+async function loadReportData() {
+  reportLoading.value = true
+  reportLoadError.value = false
+  try {
+    const [summaryData, collaborationData, effectivenessData, experienceData] = await Promise.all([
+      dataRepository.dailySummary(),
+      dataRepository.humanCollaboration(),
+      dataRepository.effectiveness(),
+      dataRepository.experiences(),
+    ])
+    summary.value = summaryData
+    collaboration.value = collaborationData
+    effectiveness.value = effectivenessData as unknown as EffectivenessData
+    experiences.value = experienceData as unknown as ExperienceData
+    await mountCharts()
+  } catch (error) {
+    console.error('[Act6Report] 运行复盘数据加载失败。', error)
+    reportLoadError.value = true
+  } finally {
+    reportLoading.value = false
+  }
+}
+
 onMounted(async () => {
   emit('beat', 'report')
   window.addEventListener('wheel', scrollReportOutsideMap, { capture: true, passive: false })
-  const [summaryData, collaborationData, effectivenessData, experienceData] = await Promise.all([
-    dataRepository.dailySummary(),
-    dataRepository.humanCollaboration(),
-    dataRepository.effectiveness(),
-    dataRepository.experiences(),
-  ])
-  summary.value = summaryData
-  collaboration.value = collaborationData
-  effectiveness.value = effectivenessData as unknown as EffectivenessData
-  experiences.value = experienceData as unknown as ExperienceData
-  await mountCharts()
   window.addEventListener('resize', resizeCharts)
+  await loadReportData()
 })
 
 onBeforeUnmount(() => {
@@ -200,10 +215,28 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    v-if="summary && collaboration && effectiveness && experiences"
     ref="reportRoot"
     class="act-experience act6-experience"
   >
+    <section
+      v-if="!summary || !collaboration || !effectiveness || !experiences"
+      class="report-loading-state"
+      :class="{ failed: reportLoadError }"
+    >
+      <i v-if="reportLoading"></i>
+      <small>CONTINUOUS LEARNING · DAILY REVIEW</small>
+      <strong>{{ reportLoadError ? '运行复盘暂未加载完整' : '正在汇总城市信号控制运行复盘' }}</strong>
+      <p>
+        {{
+          reportLoadError
+            ? '治理结果地图保持可用，可重新加载日报、协同记录与经验沉淀面板。'
+            : '治理结果、运行指标与经验沉淀正在形成完整复盘。'
+        }}
+      </p>
+      <button v-if="reportLoadError" @click="loadReportData">重新加载面板</button>
+    </section>
+
+    <template v-else>
     <section class="report-heading">
       <div>
         <span>CITY SIGNAL CONTROL · DAILY BRIEF</span>
@@ -363,5 +396,6 @@ onBeforeUnmount(() => {
       :collaboration="collaboration"
       @record="appendHumanRecord"
     />
+    </template>
   </div>
 </template>

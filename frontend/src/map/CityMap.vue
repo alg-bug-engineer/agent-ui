@@ -12,11 +12,15 @@ import type {
   ExpertDiagnosis,
   FlowTraceScene,
   MonitoredIntersection,
-  SimilarCase,
   TargetIntersection,
+  TimingPlanScene,
 } from '../types'
 
-const props = defineProps<{ activeAct: ActId; beat: string }>()
+const props = defineProps<{
+  activeAct: ActId
+  beat: string
+  planOptionId?: string
+}>()
 
 const mapHost = ref<HTMLDivElement | null>(null)
 const mapReady = ref(false)
@@ -28,7 +32,7 @@ const channelization = ref<ChannelizationScene | null>(null)
 const topology = ref<any>(null)
 const flowTrace = ref<FlowTraceScene | null>(null)
 const diagnosis = ref<ExpertDiagnosis | null>(null)
-const similarCases = ref<SimilarCase[]>([])
+const timingPlan = ref<TimingPlanScene | null>(null)
 type SimulationScenarioId = 'baseline' | 'green-only' | 'combined'
 const simulationScenario = ref<SimulationScenarioId>('baseline')
 const showStaticAoiCards = false
@@ -427,6 +431,25 @@ const beatNarratives: Record<string, MapNarrative> = {
 const mapNarrative = computed<MapNarrative | null>(() => {
   if (props.activeAct === 6) return null
   if (props.beat === 'simulation') return simulationNarratives[simulationScenario.value]
+  if (props.beat === 'similar-cases') {
+    const option = timingPlan.value?.options.find((item) => item.id === props.planOptionId)
+      ?? timingPlan.value?.options.find((item) => item.recommended)
+    const impact = timingPlan.value?.impacts.find((item) => item.optionId === option?.id)
+    if (option && impact) {
+      return {
+        chapter: '方案空间影响',
+        eyebrow: '候选方案 × 路网角色联动',
+        headline: `${option.name}已映射到目标、冲突、上游和下游`,
+        summary: option.summary,
+        tone: option.recommended ? 'success' : 'action',
+        metrics: [
+          { label: impact.target.label, value: `${impact.target.before} → ${impact.target.after}` },
+          { label: impact.conflict.label, value: `${impact.conflict.before} → ${impact.conflict.after}` },
+          { label: impact.downstream.label, value: `${impact.downstream.before} → ${impact.downstream.after}` },
+        ],
+      }
+    }
+  }
   return beatNarratives[props.beat] ?? null
 })
 
@@ -1366,32 +1389,49 @@ function renderFlowTrace(showLabels = true) {
   }, 40))
 }
 
-function renderSimilarCasesMap() {
-  if (!target.value) return
-  const center = target.value.center
-  const compact = window.innerWidth < 1600
-  const placements: Array<[number, number]> = [
-    metersToGeo(center, -235, 150),
-    metersToGeo(center, 235, 120),
-    metersToGeo(center, -185, -175),
-  ]
-  const tones = ['success', 'action', 'warning'] as const
-  const relationLabels = ['相似路口结构', '相似到达特征', '相似治理动作']
+function renderSelectedPlanImpactMap() {
+  const option = timingPlan.value?.options.find((item) => item.id === props.planOptionId)
+    ?? timingPlan.value?.options.find((item) => item.recommended)
+  const impact = timingPlan.value?.impacts.find((item) => item.optionId === option?.id)
+  if (!option || !impact) {
+    addTargetAnchor('候选方案空间影响')
+    return
+  }
 
-  similarCases.value.slice(0, compact ? 2 : 3).forEach((item, index) => {
-    const position = placements[index]
-    addActionLink([position, center], index === 0 ? '#22c55e' : '#00d4f0', 3.5)
+  renderTopology(false)
+  const points = topologyPoints()
+  const targetPoint = points.get('target')?.[0]
+  const conflictPoint = points.get('branch')?.[0]
+  const upstreamPoints = [...(points.get('upstream') ?? [])].sort((left, right) => left[1] - right[1])
+  const upstreamPoint = upstreamPoints[0]
+  const downstreamPoint = points.get('downstream')?.[0]
+  const linkColor = option.recommended ? '#22c55e' : option.id === 'green-only' ? '#f5a623' : '#1a7fff'
+
+  if (upstreamPoints.length && targetPoint) addActionLink([...upstreamPoints, targetPoint], linkColor, 5)
+  if (targetPoint && conflictPoint) addActionLink([targetPoint, conflictPoint], linkColor, 4)
+  if (targetPoint && downstreamPoint) addActionLink([targetPoint, downstreamPoint], linkColor, 5)
+
+  const mapMetric = (
+    position: [number, number] | undefined,
+    metric: TimingPlanScene['impacts'][number]['target'],
+    offsetX: number,
+    detail: string,
+  ) => {
+    if (!position) return
     addNarrativeMarker(
       position,
-      `${tones[index]} compact`,
-      `知识关联 · 案例 ${item.caseId}`,
-      relationLabels[index],
-      item.location,
-      { offsetX: 0, offsetY: -8, zIndex: 158 },
+      `${metric.tone} compact plan-impact`,
+      metric.label,
+      `${metric.before} → ${metric.after}`,
+      detail,
+      { offsetX, offsetY: -10, zIndex: 162 },
     )
-  })
+  }
 
-  addTargetAnchor('案例检索目标')
+  mapMetric(targetPoint, impact.target, -126, '目标方向 · 北进口')
+  mapMetric(conflictPoint, impact.conflict, 126, '冲突方向 · 东西向')
+  mapMetric(upstreamPoint, impact.upstream, -126, '上游到达强度')
+  mapMetric(downstreamPoint, impact.downstream, 126, '下游承接空间')
 }
 
 function suppressOverlappingMapCards() {
@@ -1473,7 +1513,7 @@ function applyCamera() {
     decision: { zoom: 16.3, center: [117.1113, 36.6647] },
     trace: { zoom: 14.45, center: [117.1112, 36.6717] },
     'knowledge-recall': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
-    'similar-cases': { zoom: 16.7, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'similar-cases': { zoom: 16.3, center: [117.1113, 36.6647] },
     'tidal-pattern': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
     'strategy-brief': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
     'plan-generation': { zoom: 16.5, center: targetCenter },
@@ -1559,7 +1599,7 @@ function renderScene() {
   } else if (props.beat === 'knowledge-recall') {
     addTargetAnchor('相似案例匹配')
   } else if (props.beat === 'similar-cases') {
-    renderSimilarCasesMap()
+    renderSelectedPlanImpactMap()
   } else if (props.beat === 'tidal-pattern') {
     addTargetAnchor('潮汐特征研判')
   } else if (props.beat === 'strategy-brief') {
@@ -1610,7 +1650,7 @@ async function loadMap() {
   }
 }
 
-watch([() => props.activeAct, () => props.beat], renderScene)
+watch([() => props.activeAct, () => props.beat, () => props.planOptionId], renderScene)
 
 onMounted(async () => {
   const [
@@ -1621,7 +1661,7 @@ onMounted(async () => {
     topologyData,
     traceData,
     diagnosisData,
-    caseData,
+    timingPlanData,
   ] = await Promise.all([
     dataRepository.intersections(),
     dataRepository.devices(),
@@ -1630,7 +1670,7 @@ onMounted(async () => {
     dataRepository.topology(),
     dataRepository.flowTrace(),
     dataRepository.expertDiagnosis(),
-    dataRepository.similarCases(),
+    dataRepository.timingPlan(),
   ])
   intersections.value = intersectionData
   devices.value = deviceData
@@ -1639,7 +1679,7 @@ onMounted(async () => {
   topology.value = topologyData
   flowTrace.value = traceData
   diagnosis.value = diagnosisData
-  similarCases.value = caseData
+  timingPlan.value = timingPlanData
   await nextTick()
   await loadMap()
   window.addEventListener('resize', handleMapViewportResize)

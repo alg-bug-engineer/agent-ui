@@ -19,6 +19,7 @@ import type {
 type PresentationView = 'home' | 'flow'
 type KnowledgeTab = 'experience' | 'case'
 type ExperienceTab = 'cognition' | 'governance' | 'plan'
+type CaseLibraryTab = 'industry' | 'intersection'
 type TaskBoardTab = 'anomaly' | 'optimizing' | 'completed'
 type Severity = 'critical' | 'major' | 'warning' | 'watch'
 
@@ -75,6 +76,7 @@ const emit = defineEmits<{
   start: []
   home: []
   stage: [value: ActId]
+  planOption: [value: string]
 }>()
 
 const target = ref<TargetIntersection | null>(null)
@@ -93,6 +95,7 @@ const prompt = ref('')
 const submitting = ref(false)
 const knowledgeTab = ref<KnowledgeTab>('experience')
 const experienceTab = ref<ExperienceTab>('cognition')
+const caseLibraryTab = ref<CaseLibraryTab>('industry')
 const selectedAssetId = ref('timing')
 const taskBoardTab = ref<TaskBoardTab>('anomaly')
 const selectedPlanId = ref('')
@@ -182,14 +185,6 @@ const stageDimensions: Partial<Record<ActId, Array<{ name: string; detail: strin
 }
 
 const knowledgeAssets: KnowledgeAsset[] = [
-  {
-    id: 'experts',
-    label: '资深专家',
-    value: '20',
-    unit: '名',
-    detail: '覆盖信号配时、交通组织与走廊协调等专业方向',
-    progress: 88,
-  },
   {
     id: 'timing',
     label: '配时方案',
@@ -337,13 +332,29 @@ const selectedPlan = computed(() =>
 const recommendedImpact = computed(() =>
   plan.value?.impacts.find((item) => item.optionId === recommendedPlan.value?.id),
 )
-const selectedPlanImpact = computed(() =>
-  plan.value?.impacts.find((item) => item.optionId === selectedPlan.value?.id)
-  ?? recommendedImpact.value,
-)
 const selectedCase = computed(() =>
   cases.value.find((item) => item.id === selectedCaseId.value) ?? cases.value[0],
 )
+const homeCases = computed(() => {
+  const items = [...cases.value]
+  return caseLibraryTab.value === 'industry'
+    ? items.sort((left, right) => right.matchScore - left.matchScore)
+    : items.sort((left, right) => left.location.localeCompare(right.location, 'zh-CN'))
+})
+const completedTasks = [
+  {
+    id: 'completed-jiefang-aoti',
+    completedAt: '18:21',
+    scene: '晚高峰溢流治理',
+    intersection: '解放东路 × 奥体西路',
+    summary: '自主完成感知、研判、方案生成、执行与效果评估。',
+    metric: '北进口排队',
+    before: '129m',
+    after: '78m',
+    verification: '已验证 3 个周期 · 未触发回退',
+  },
+]
+const completedTaskCount = completedTasks.length
 const selectedExperience = computed(() => {
   const content: Record<ExperienceTab, { title: string; description: string; sample: string }> = {
     cognition: {
@@ -372,6 +383,11 @@ function planOptionVerdict(optionId: string) {
   if (optionId === 'green-only') return '目标改善快，但东西向升至 101m，突破 92m 警戒线'
   if (optionId === 'meter-only') return '网络副作用较小，但北进口仍有 106m，改善幅度不足'
   return '目标降至 78m，冲突方向与下游均在安全边界内'
+}
+
+function selectPlanOption(optionId: string) {
+  selectedPlanId.value = optionId
+  emit('planOption', optionId)
 }
 
 watch(
@@ -448,6 +464,7 @@ onMounted(async () => {
   selectedPlanId.value = planData.options.find((item) => item.recommended)?.id
     ?? planData.options[0]?.id
     ?? ''
+  emit('planOption', selectedPlanId.value)
   effect.value = effectData
   daily.value = dailyData
   experiences.value = experienceData as unknown as ExperienceData
@@ -502,19 +519,19 @@ onMounted(async () => {
           :class="{ active: taskBoardTab === 'anomaly' }"
           @click="taskBoardTab = 'anomaly'"
         >
-          <span>⚡</span>动态异常<b>{{ anomalyTasks.length }}</b>
+          动态异常<b>{{ anomalyTasks.length }}</b>
         </button>
         <button
           :class="{ active: taskBoardTab === 'optimizing' }"
           @click="taskBoardTab = 'optimizing'"
         >
-          <span>↻</span>优化中<b>{{ optimizingTasks.length }}</b>
+          优化中<b>{{ optimizingTasks.length }}</b>
         </button>
         <button
           :class="{ active: taskBoardTab === 'completed' }"
           @click="taskBoardTab = 'completed'"
         >
-          <span>✓</span>已完成<b>180</b>
+          已完成<b>{{ completedTaskCount }}</b>
         </button>
       </nav>
 
@@ -569,17 +586,22 @@ onMounted(async () => {
             <span>已完成闭环任务</span>
             <small>点击代表任务查看完整闭环</small>
           </div>
-          <button class="v2-completed-task v2-completed-entry" @click="emit('start')">
+          <button
+            v-for="item in completedTasks"
+            :key="item.id"
+            class="v2-completed-task v2-completed-entry"
+            @click="emit('start')"
+          >
             <span class="v2-task-status">重点闭环任务</span>
-            <small>18:21 · 晚高峰溢流治理</small>
-            <strong>解放东路 × 奥体西路</strong>
-            <p>自主完成感知、研判、方案生成、执行与效果评估。</p>
+            <small>{{ item.completedAt }} · {{ item.scene }}</small>
+            <strong>{{ item.intersection }}</strong>
+            <p>{{ item.summary }}</p>
             <div class="v2-task-result">
-              <span><small>北进口排队</small><b>129m</b></span>
+              <span><small>{{ item.metric }}</small><b>{{ item.before }}</b></span>
               <i>→</i>
-              <strong>78m</strong>
+              <strong>{{ item.after }}</strong>
             </div>
-            <footer><span>已验证 3 个周期 · 未触发回退</span><b>查看处置详情 →</b></footer>
+            <footer><span>{{ item.verification }}</span><b>查看处置详情 →</b></footer>
           </button>
         </template>
       </div>
@@ -667,15 +689,53 @@ onMounted(async () => {
 
       <div v-else class="v2-knowledge-library v2-case-library">
         <div class="v2-library-subtabs">
-          <button class="active">行业案例</button>
-          <button>路口治理案例</button>
+          <button
+            :class="{ active: caseLibraryTab === 'industry' }"
+            @click="caseLibraryTab = 'industry'"
+          >
+            行业案例
+          </button>
+          <button
+            :class="{ active: caseLibraryTab === 'intersection' }"
+            @click="caseLibraryTab = 'intersection'"
+          >
+            路口治理案例
+          </button>
         </div>
-        <article v-for="item in cases.slice(0, 2)" :key="item.id">
-          <span>{{ item.matchScore }}%</span>
-          <div>
-            <small>{{ item.location }}</small>
-            <strong>{{ item.title }}</strong>
+        <div class="v2-home-case-list" aria-label="案例列表">
+          <button
+            v-for="item in homeCases"
+            :key="item.id"
+            :class="{ active: selectedCase?.id === item.id }"
+            :aria-expanded="selectedCase?.id === item.id"
+            @click="selectedCaseId = item.id"
+          >
+            <span>{{ item.matchScore }}%</span>
+            <div>
+              <small>{{ item.location }}</small>
+              <strong>{{ item.title }}</strong>
+            </div>
+            <b>查看详情</b>
+          </button>
+        </div>
+        <article v-if="selectedCase" class="v2-home-case-detail">
+          <header>
+            <div>
+              <small>案例 {{ selectedCase.caseId }} · {{ selectedCase.location }}</small>
+              <strong>{{ selectedCase.title }}</strong>
+            </div>
+            <span>{{ selectedCase.matchScore }}% 匹配</span>
+          </header>
+          <div class="v2-home-case-tags">
+            <span v-for="tag in selectedCase.tags.slice(0, 4)" :key="tag">{{ tag }}</span>
           </div>
+          <dl>
+            <div><dt>场景特征</dt><dd>{{ selectedCase.scenario }}</dd></div>
+            <div><dt>问题诊断</dt><dd>{{ selectedCase.diagnosis }}</dd></div>
+            <div><dt>治理动作</dt><dd>{{ selectedCase.treatment }}</dd></div>
+            <div><dt>治理效果</dt><dd>{{ selectedCase.effect }}</dd></div>
+          </dl>
+          <footer>来源：{{ selectedCase.source.account }} · 已结构化入库</footer>
         </article>
       </div>
     </aside>
@@ -700,7 +760,16 @@ onMounted(async () => {
   </section>
 
   <section v-else-if="activeStage === 6" class="v2-review-experience">
-    <Act6Report />
+    <Suspense>
+      <Act6Report />
+      <template #fallback>
+        <div class="v2-report-loading">
+          <i></i>
+          <strong>正在汇总城市信号控制运行复盘</strong>
+          <span>治理结果、运行指标与经验沉淀正在加载</span>
+        </div>
+      </template>
+    </Suspense>
   </section>
 
   <section v-else class="v2-flow-experience">
@@ -1016,7 +1085,12 @@ onMounted(async () => {
             v-for="item in plan?.options"
             :key="item.id"
             :class="{ recommended: item.recommended, active: item.id === selectedPlan?.id }"
-            @click="selectedPlanId = item.id"
+            role="button"
+            tabindex="0"
+            :aria-pressed="item.id === selectedPlan?.id"
+            @click="selectPlanOption(item.id)"
+            @keydown.enter="selectPlanOption(item.id)"
+            @keydown.space.prevent="selectPlanOption(item.id)"
           >
             <header><span>{{ item.name }}</span><b>{{ item.recommended ? '推荐' : '对照' }}</b></header>
             <p>{{ item.summary }}</p>
@@ -1033,16 +1107,6 @@ onMounted(async () => {
             </div>
             <footer :class="{ safe: item.recommended }">{{ planOptionVerdict(item.id) }}</footer>
           </article>
-        </div>
-        <div v-if="selectedPlanImpact" class="v2-plan-impact-preview">
-          <header><strong>{{ selectedPlan?.name }} · 四维影响</strong><span>选择候选方案查看</span></header>
-          <div>
-            <span><small>北进口</small><b>{{ selectedPlanImpact.target.before }}</b><i>→</i><strong>{{ selectedPlanImpact.target.after }}</strong></span>
-            <span><small>东西向</small><b>{{ selectedPlanImpact.conflict.before }}</b><i>→</i><strong>{{ selectedPlanImpact.conflict.after }}</strong></span>
-            <span><small>上游强度</small><b>{{ selectedPlanImpact.upstream.before }}</b><i>→</i><strong>{{ selectedPlanImpact.upstream.after }}</strong></span>
-            <span><small>下游</small><b>{{ selectedPlanImpact.downstream.before }}</b><i>→</i><strong>{{ selectedPlanImpact.downstream.after }}</strong></span>
-          </div>
-          <p>{{ planOptionVerdict(selectedPlan?.id ?? '') }}</p>
         </div>
         <div class="v2-conclusion-block action">
           <small>生成结论</small>
