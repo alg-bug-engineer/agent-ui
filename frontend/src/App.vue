@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Act1Experience from '../act1/Act1Experience.vue'
 import Act2Experience from '../act2/Act2Experience.vue'
 import CityMap from './map/CityMap.vue'
@@ -11,7 +11,9 @@ const Act6Report = defineAsyncComponent(() => import('../act6/Act6Report.vue'))
 
 const { state, actLabel, goToAct, setBeat } = useNarrative()
 const now = ref(new Date())
-const presentationMode = ref<'map' | 'detail'>('map')
+type PresentationMode = 'map' | 'detail'
+const defaultPresentationMode = (act: ActId): PresentationMode => act === 2 ? 'map' : 'detail'
+const presentationMode = ref<PresentationMode>(defaultPresentationMode(state.activeAct))
 let clockTimer = 0
 
 const currentTime = computed(() =>
@@ -34,13 +36,20 @@ const currentDate = computed(() =>
 
 function switchAct(act: ActId) {
   goToAct(act)
-  presentationMode.value = 'map'
 }
 
 function togglePresentationMode() {
   presentationMode.value = presentationMode.value === 'map' ? 'detail' : 'map'
   window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
 }
+
+watch(
+  () => state.activeAct,
+  (act) => {
+    presentationMode.value = defaultPresentationMode(act)
+    window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
+  },
+)
 
 onMounted(() => {
   clockTimer = window.setInterval(() => {
@@ -89,7 +98,7 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
           @click="togglePresentationMode"
         >
           <i></i>
-          <span>{{ presentationMode === 'map' ? '展开研判' : '地图主视图' }}</span>
+          <span>{{ presentationMode === 'map' ? '展开研判' : '收起研判' }}</span>
         </button>
         <div class="status-copy">
           <span class="live-dot"></span>

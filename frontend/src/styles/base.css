@@ -5044,14 +5044,14 @@ button:focus-visible {
 
 .map-focus-mode.act-1 .map-executive-verdict,
 .map-focus-mode.act-2 .map-executive-verdict {
-  top: auto;
-  left: 50%;
-  right: auto;
-  bottom: 24px;
-  width: min(920px, calc(100vw - 140px));
+  top: 96px;
+  left: 96px;
+  right: 96px;
+  bottom: auto;
+  width: auto;
   min-height: 92px;
   grid-template-columns: 88px minmax(0, 1fr) auto;
-  transform: translateX(-50%);
+  transform: none;
   border: 1px solid rgba(126, 190, 211, .25);
   border-top-width: 1px;
   border-radius: 10px;
@@ -5060,8 +5060,8 @@ button:focus-visible {
   backdrop-filter: blur(16px) saturate(1.15);
 }
 
-.map-focus-mode.act-1 .map-executive-verdict {
-  bottom: 112px;
+.map-focus-mode .city-map.beat-simulation .map-executive-verdict {
+  right: 438px;
 }
 
 .map-focus-mode .map-executive-verdict::after {
@@ -5126,7 +5126,22 @@ button:focus-visible {
 .map-focus-mode .map-verdict-enter-from,
 .map-focus-mode .map-verdict-leave-to {
   opacity: 0;
-  transform: translate(-50%, 12px);
+  transform: translateY(-10px);
+}
+
+.command-input-wrap {
+  transition: opacity .25s ease, visibility .25s ease, transform .32s ease;
+}
+
+.map-focus-mode.act-1 .command-input-wrap {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(120%);
+}
+
+.act-2 .command-input-wrap {
+  display: none !important;
 }
 
 .geo-narrative-marker {
@@ -5136,6 +5151,157 @@ button:focus-visible {
 @keyframes narrative-marker-in {
   from { opacity: 0; transform: translateY(8px) scale(.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Map-native scenario glyphs: actions stay on the roads instead of becoming more cards. */
+.geo-scenario-action {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  pointer-events: none;
+  transition: opacity .28s ease, transform .28s ease;
+}
+
+.geo-scenario-action i {
+  position: absolute;
+  display: block;
+  transition: .28s ease;
+}
+
+.geo-scenario-action.scenario-baseline:not(.role-target) {
+  opacity: .16;
+}
+
+.geo-scenario-action.scenario-baseline.role-target {
+  border: 2px solid rgba(255,90,87,.82);
+  border-radius: 50%;
+  background: rgba(62, 13, 20, .7);
+  box-shadow: 0 0 0 8px rgba(255,90,87,.1), 0 0 26px rgba(255,90,87,.4);
+  animation: strategy-risk-pulse 1.15s ease-in-out infinite;
+}
+
+.geo-scenario-action.scenario-baseline.role-target i {
+  left: 11px;
+  width: 16px;
+  height: 4px;
+  border-radius: 3px;
+  background: #ff5a57;
+}
+.geo-scenario-action.scenario-baseline.role-target i:nth-child(1) { top: 8px; }
+.geo-scenario-action.scenario-baseline.role-target i:nth-child(2) { top: 15px; }
+.geo-scenario-action.scenario-baseline.role-target i:nth-child(3) { top: 22px; }
+.geo-scenario-action.scenario-baseline.role-target i:nth-child(4) { top: 29px; }
+
+.geo-scenario-action.scenario-green-only:not(.role-target):not(.role-branch) {
+  opacity: .22;
+}
+
+.geo-scenario-action.scenario-green-only.role-target {
+  border: 3px solid #22c55e;
+  border-radius: 50%;
+  background: rgba(8, 45, 36, .76);
+  box-shadow: 0 0 0 7px rgba(34,197,94,.1), 0 0 24px rgba(34,197,94,.38);
+}
+
+.geo-scenario-action.scenario-green-only.role-target i {
+  top: 9px;
+  width: 5px;
+  height: 18px;
+  border-radius: 3px;
+  background: #1c4a40;
+}
+.geo-scenario-action.scenario-green-only.role-target i:nth-child(1) {
+  left: 7px;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+}
+.geo-scenario-action.scenario-green-only.role-target i:nth-child(2) { left: 15px; }
+.geo-scenario-action.scenario-green-only.role-target i:nth-child(3) { left: 23px; }
+.geo-scenario-action.scenario-green-only.role-target i:nth-child(4) { display: none; }
+
+.geo-scenario-action.scenario-green-only.role-branch {
+  border: 2px solid #ff5a57;
+  border-radius: 50%;
+  background: rgba(70, 18, 20, .72);
+  box-shadow: 0 0 0 7px rgba(255,90,87,.12), 0 0 24px rgba(255,90,87,.42);
+  animation: strategy-risk-pulse 1.05s ease-in-out infinite;
+}
+.geo-scenario-action.scenario-green-only.role-branch i {
+  top: 18px;
+  left: 7px;
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+  background: #ff5a57;
+}
+.geo-scenario-action.scenario-green-only.role-branch i:nth-child(2) { transform: rotate(45deg); }
+.geo-scenario-action.scenario-green-only.role-branch i:nth-child(3) { transform: rotate(-45deg); }
+.geo-scenario-action.scenario-green-only.role-branch i:nth-child(4) { transform: rotate(90deg); }
+
+.geo-scenario-action.scenario-combined {
+  border: 2px solid #22c55e;
+  border-radius: 50%;
+  background: rgba(6, 43, 35, .76);
+  box-shadow: 0 0 0 6px rgba(34,197,94,.1), 0 0 22px rgba(34,197,94,.35);
+}
+
+.geo-scenario-action.scenario-combined.role-upstream {
+  border-color: #f5a623;
+  border-radius: 7px;
+  background: rgba(58, 39, 7, .78);
+  box-shadow: 0 0 0 6px rgba(245,166,35,.1), 0 0 22px rgba(245,166,35,.34);
+}
+.geo-scenario-action.scenario-combined.role-upstream i {
+  top: 7px;
+  width: 4px;
+  height: 24px;
+  border-radius: 2px;
+  background: #f5a623;
+}
+.geo-scenario-action.scenario-combined.role-upstream i:nth-child(1) { left: 10px; }
+.geo-scenario-action.scenario-combined.role-upstream i:nth-child(2) { left: 24px; }
+.geo-scenario-action.scenario-combined.role-upstream i:nth-child(n+3) { display: none; }
+
+.geo-scenario-action.scenario-combined.role-target i {
+  top: 9px;
+  width: 5px;
+  height: 18px;
+  border-radius: 3px;
+  background: #18493a;
+}
+.geo-scenario-action.scenario-combined.role-target i:nth-child(1) {
+  left: 7px;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+}
+.geo-scenario-action.scenario-combined.role-target i:nth-child(2) { left: 15px; }
+.geo-scenario-action.scenario-combined.role-target i:nth-child(3) { left: 23px; }
+.geo-scenario-action.scenario-combined.role-target i:nth-child(4) { display: none; }
+
+.geo-scenario-action.scenario-combined.role-downstream i {
+  left: 8px;
+  width: 22px;
+  height: 3px;
+  border-radius: 3px;
+  background: #22c55e;
+  box-shadow: 0 0 7px rgba(34,197,94,.7);
+  animation: strategy-wave 1.2s ease-in-out infinite;
+}
+.geo-scenario-action.scenario-combined.role-downstream i:nth-child(1) { top: 10px; }
+.geo-scenario-action.scenario-combined.role-downstream i:nth-child(2) { top: 18px; animation-delay: -.25s; }
+.geo-scenario-action.scenario-combined.role-downstream i:nth-child(3) { top: 26px; animation-delay: -.5s; }
+.geo-scenario-action.scenario-combined.role-downstream i:nth-child(4) { display: none; }
+
+.geo-scenario-action.scenario-combined.role-branch i {
+  inset: 11px;
+  border: 2px solid #22c55e;
+  border-radius: 50%;
+  background: transparent;
+}
+.geo-scenario-action.scenario-combined.role-branch i:nth-child(n+2) { display: none; }
+
+@keyframes strategy-wave {
+  50% { transform: translateX(5px); opacity: .45; }
 }
 
 /* Counterfactual strategy drawer: map state and decision story advance together. */
@@ -5265,6 +5431,227 @@ button:focus-visible {
   font-size: 15px;
   font-weight: 650;
 }
+
+.strategy-action-visual {
+  --scenario-color: #ff5a57;
+  position: relative;
+  height: 126px;
+  margin: 0 0 9px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 44% 53%, color-mix(in srgb, var(--scenario-color) 16%, transparent), transparent 31%),
+    linear-gradient(150deg, rgba(4, 16, 29, .88), rgba(9, 31, 45, .62));
+  border: 1px solid rgba(126, 190, 211, .13);
+}
+
+.strategy-action-visual.scenario-green-only { --scenario-color: #f5a623; }
+.strategy-action-visual.scenario-combined { --scenario-color: #22c55e; }
+
+.strategy-action-visual::after {
+  content: "动作未触发 · 排队持续累积";
+  position: absolute;
+  right: 9px;
+  bottom: 7px;
+  color: #ff8c87;
+  font-size: 7px;
+  letter-spacing: .4px;
+}
+
+.strategy-action-visual.scenario-green-only::after {
+  content: "只放目标 · 压力横向转移";
+  color: #ffd080;
+}
+
+.strategy-action-visual.scenario-combined::after {
+  content: "三点协同 · 流量连续通过";
+  color: #70e6a0;
+}
+
+.strategy-road {
+  position: absolute;
+  background: #182c3a;
+  border: 1px solid rgba(139, 183, 199, .16);
+  box-shadow: inset 0 0 0 5px rgba(255,255,255,.018);
+}
+
+.strategy-road::after {
+  content: "";
+  position: absolute;
+  opacity: .38;
+}
+
+.strategy-road.vertical {
+  top: -6px;
+  bottom: -6px;
+  left: 43%;
+  width: 34px;
+}
+
+.strategy-road.vertical::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left: 1px dashed #9ab4bf;
+}
+
+.strategy-road.horizontal {
+  left: 14%;
+  right: 8%;
+  top: 51%;
+  height: 28px;
+}
+
+.strategy-road.horizontal::after {
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px dashed #9ab4bf;
+}
+
+.strategy-action-node {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #587687;
+  border-radius: 50%;
+  background: #0b1f2c;
+  box-shadow: 0 0 0 4px rgba(88,118,135,.1);
+  transition: border-color .28s ease, box-shadow .28s ease, transform .28s ease;
+}
+
+.strategy-action-node.upstream { left: calc(43% + 6px); top: 13px; }
+.strategy-action-node.target { left: calc(43% + 6px); top: calc(51% + 3px); }
+.strategy-action-node.branch { right: 14%; top: calc(51% + 3px); }
+.strategy-action-node.downstream { left: calc(43% + 6px); bottom: 9px; }
+
+.strategy-action-node i {
+  position: absolute;
+  display: block;
+  background: #7893a0;
+  transition: .28s ease;
+}
+
+.strategy-action-node.target i {
+  width: 3px;
+  height: 7px;
+  border-radius: 2px;
+}
+.strategy-action-node.target i:nth-child(1) { transform: translate(-5px, 0); }
+.strategy-action-node.target i:nth-child(3) { transform: translate(5px, 0); }
+
+.strategy-action-visual > small {
+  position: absolute;
+  z-index: 4;
+  color: #6d8996;
+  font-size: 7px;
+  transition: color .28s ease, opacity .28s ease;
+}
+.strategy-action-visual .label-upstream { left: calc(43% + 34px); top: 17px; }
+.strategy-action-visual .label-target { left: calc(43% + 35px); top: calc(51% + 6px); }
+.strategy-action-visual .label-branch { right: 6px; top: calc(51% - 14px); }
+.strategy-action-visual .label-downstream { left: calc(43% + 35px); bottom: 13px; }
+
+.strategy-flow i {
+  position: absolute;
+  z-index: 2;
+  left: calc(43% + 14px);
+  width: 5px;
+  height: 9px;
+  border-radius: 4px;
+  background: var(--scenario-color);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--scenario-color) 70%, transparent);
+}
+.strategy-flow i:nth-child(1) { top: 4px; }
+.strategy-flow i:nth-child(2) { top: 23px; }
+.strategy-flow i:nth-child(3) { top: 42px; }
+.strategy-flow i:nth-child(4) { top: 61px; }
+.strategy-flow i:nth-child(5) { top: 80px; }
+
+.scenario-baseline .strategy-action-node.target {
+  border-color: #ff5a57;
+  box-shadow: 0 0 0 5px rgba(255,90,87,.12), 0 0 18px rgba(255,90,87,.28);
+  animation: strategy-risk-pulse 1.2s ease-in-out infinite;
+}
+.scenario-baseline .strategy-action-node.target i { background: #ff5a57; }
+.scenario-baseline .strategy-flow i:nth-child(n+4) { animation: strategy-queue-jam .9s ease-in-out infinite alternate; }
+
+.scenario-green-only .strategy-action-node.target {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 5px rgba(34,197,94,.11);
+}
+.scenario-green-only .strategy-action-node.target i:nth-child(1) { background: #22c55e; }
+.scenario-green-only .strategy-action-node.target i:nth-child(2),
+.scenario-green-only .strategy-action-node.target i:nth-child(3) { background: #284553; }
+.scenario-green-only .strategy-action-node.branch {
+  border-color: #ff5a57;
+  box-shadow: 0 0 0 5px rgba(255,90,87,.14), 0 0 20px rgba(255,90,87,.3);
+  animation: strategy-risk-pulse 1.05s ease-in-out infinite;
+}
+.scenario-green-only .strategy-action-node.branch i {
+  width: 16px;
+  height: 2px;
+  background: #ff5a57;
+}
+.scenario-green-only .strategy-action-node.branch i:nth-child(2) { transform: rotate(90deg); }
+.scenario-green-only .strategy-action-node.branch i:nth-child(3) { transform: rotate(45deg); }
+.scenario-green-only .label-target { color: #66dfa0; }
+.scenario-green-only .label-branch { color: #ff8c87; }
+.scenario-green-only .strategy-flow i { animation: strategy-flow-through 1.25s linear infinite; }
+
+.scenario-combined .strategy-action-node.upstream {
+  border-color: #f5a623;
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px rgba(245,166,35,.1);
+}
+.scenario-combined .strategy-action-node.upstream i {
+  width: 3px;
+  height: 17px;
+  background: #f5a623;
+}
+.scenario-combined .strategy-action-node.upstream i:first-child { transform: translateX(-4px); }
+.scenario-combined .strategy-action-node.upstream i:last-child { transform: translateX(4px); }
+.scenario-combined .strategy-action-node.target,
+.scenario-combined .strategy-action-node.branch,
+.scenario-combined .strategy-action-node.downstream {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34,197,94,.1);
+}
+.scenario-combined .strategy-action-node.target i { background: #22c55e; }
+.scenario-combined .strategy-action-node.branch i,
+.scenario-combined .strategy-action-node.downstream i {
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: #22c55e;
+}
+.scenario-combined .strategy-action-node.downstream i:nth-child(1) { transform: translateY(-5px); }
+.scenario-combined .strategy-action-node.downstream i:nth-child(3) { transform: translateY(5px); }
+.scenario-combined .label-upstream { color: #ffd080; }
+.scenario-combined .label-target,
+.scenario-combined .label-downstream { color: #68dfa0; }
+.scenario-combined .strategy-flow i { animation: strategy-flow-through 1.1s linear infinite; }
+.scenario-combined .strategy-flow i:nth-child(2) { animation-delay: -.22s; }
+.scenario-combined .strategy-flow i:nth-child(3) { animation-delay: -.44s; }
+.scenario-combined .strategy-flow i:nth-child(4) { animation-delay: -.66s; }
+.scenario-combined .strategy-flow i:nth-child(5) { animation-delay: -.88s; }
+
+@keyframes strategy-risk-pulse {
+  50% { transform: scale(1.12); }
+}
+
+@keyframes strategy-queue-jam {
+  to { transform: translateY(4px); opacity: .62; }
+}
+
+@keyframes strategy-flow-through {
+  from { transform: translateY(-13px); opacity: 0; }
+  25% { opacity: 1; }
+  to { transform: translateY(42px); opacity: 0; }
+}
+
 .strategy-impact-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -5320,22 +5707,34 @@ button:focus-visible {
 }
 
 .detail-focus-mode .strategy-comparison-drawer {
-  display: none;
+  top: auto;
+  right: auto;
+  bottom: 24px;
+  left: calc(50% - 195px);
 }
 
 @media (max-width: 1500px) {
   .map-focus-mode.act-1 .map-executive-verdict,
   .map-focus-mode.act-2 .map-executive-verdict {
-    width: min(820px, calc(100vw - 110px));
+    left: 82px;
+    right: 82px;
+    width: auto;
   }
   .strategy-comparison-drawer {
     width: 350px;
+  }
+  .detail-focus-mode .strategy-comparison-drawer {
+    left: calc(50% - 175px);
+  }
+  .map-focus-mode .city-map.beat-simulation .map-executive-verdict {
+    right: 398px;
   }
 }
 
 @media (max-height: 820px) {
   .map-focus-mode.act-2 .map-executive-verdict {
-    bottom: 14px;
+    top: 90px;
+    bottom: auto;
     min-height: 76px;
   }
   .map-focus-mode .verdict-next { display: none; }

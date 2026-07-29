@@ -869,11 +869,25 @@ function renderSimulationMap() {
   const targetPoint = points.get('target')?.[0]
   const downstream = points.get('downstream')?.[0]
   const branch = points.get('branch')?.[0]
+  const upstream = points.get('upstream')?.[0]
   if (!targetPoint || !downstream || !branch) return
 
   const targetMarker = addNarrativeMarker(targetPoint, 'critical scenario', '方案结果', '北进口 129m', '高风险', { offsetX: 82 })
   const branchMarker = addNarrativeMarker(branch, 'neutral scenario', '垂直方向', '东西向 63m', '安全', { offsetX: -84 })
   const downstreamMarker = addNarrativeMarker(downstream, 'success scenario', '下游承接', '占有率 42%', '安全', { offsetX: 84 })
+  const createActionMarker = (position: [number, number], role: string) => addOverlay(new AMapApi.Marker({
+    position,
+    anchor: 'center',
+    content: htmlElement(`geo-scenario-action scenario-baseline role-${role}`, '<i></i><i></i><i></i><i></i>'),
+    zIndex: 146,
+    title: '策略动作空间位置',
+  }))
+  const actionMarkers = {
+    target: createActionMarker(targetPoint, 'target'),
+    branch: createActionMarker(branch, 'branch'),
+    downstream: createActionMarker(downstream, 'downstream'),
+    upstream: upstream ? createActionMarker(upstream, 'upstream') : null,
+  }
   const scenarios = [
     { id: 'baseline' as const, target: '129m', conflict: '63m', downstream: '42%', targetTone: 'critical', conflictTone: 'neutral', downstreamTone: 'success', risk: '高风险', conflictState: '安全' },
     { id: 'green-only' as const, target: '88m', conflict: '101m', downstream: '61%', targetTone: 'success', conflictTone: 'critical', downstreamTone: 'warning', risk: '目标缓解', conflictState: '突破 92m 警戒' },
@@ -882,6 +896,12 @@ function renderSimulationMap() {
   const applyScenario = (id: SimulationScenarioId) => {
     const scenario = scenarios.find((item) => item.id === id) ?? scenarios[0]
     simulationScenario.value = scenario.id
+    Object.entries(actionMarkers).forEach(([role, marker]) => {
+      marker?.setContent(htmlElement(
+        `geo-scenario-action scenario-${scenario.id} role-${role}`,
+        '<i></i><i></i><i></i><i></i>',
+      ))
+    })
     targetMarker.setContent(htmlElement(
       `geo-narrative-marker ${scenario.targetTone} scenario`,
       `<small>北进口结果</small><strong>${scenario.target}</strong><span>${scenario.risk}</span>`,
@@ -904,6 +924,7 @@ function renderSimulationMap() {
 
 function chooseSimulationScenario(id: SimulationScenarioId) {
   deferredTimers.splice(0).forEach((timer) => window.clearTimeout(timer))
+  simulationScenario.value = id
   simulationApplyScenario?.(id)
 }
 
@@ -1351,6 +1372,24 @@ onBeforeUnmount(() => {
             <b>{{ activeStrategyCard.status }}</b>
           </div>
           <h3>{{ activeStrategyCard.action }}</h3>
+          <div
+            :class="['strategy-action-visual', `scenario-${activeStrategyCard.id}`]"
+            :aria-label="`${activeStrategyCard.name}动作示意`"
+          >
+            <div class="strategy-road vertical"></div>
+            <div class="strategy-road horizontal"></div>
+            <div class="strategy-flow">
+              <i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <span class="strategy-action-node upstream"><i></i><i></i></span>
+            <span class="strategy-action-node target"><i></i><i></i><i></i></span>
+            <span class="strategy-action-node branch"><i></i><i></i><i></i></span>
+            <span class="strategy-action-node downstream"><i></i><i></i><i></i></span>
+            <small class="label-upstream">上游削峰</small>
+            <small class="label-target">目标放行</small>
+            <small class="label-branch">东西向</small>
+            <small class="label-downstream">下游绿波</small>
+          </div>
           <div class="strategy-impact-grid">
             <span><small>北进口</small><strong>{{ activeStrategyCard.target }}</strong></span>
             <span><small>东西向</small><strong>{{ activeStrategyCard.conflict }}</strong></span>
