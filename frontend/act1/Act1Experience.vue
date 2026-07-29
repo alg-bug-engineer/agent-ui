@@ -184,7 +184,6 @@ onBeforeUnmount(() => window.clearInterval(timer))
         正在解析主动任务并匹配目标路口…
       </div>
       <div class="command-input">
-        <span class="agent-glyph">AI</span>
         <input
           v-model="prompt"
           :disabled="phase === 'submitting'"

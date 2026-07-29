@@ -70,6 +70,13 @@ describe('演示数据契约', () => {
 
   it('Act 2 专家诊断同时校验目标、垂直、下游和上游方向', () => {
     const diagnosis = fixture<{
+      staticPortrait: {
+        radiusM: number
+        items: Array<{ id: string; positionOffsetM: number[] }>
+      }
+      operatingPortrait: {
+        dimensions: Array<{ id: string; metrics: unknown[] }>
+      }
       directions: Array<{ id: string }>
       hypotheses: Array<{ id: string; supported: boolean }>
       options: Array<{ id: string; recommended: boolean }>
@@ -78,6 +85,14 @@ describe('演示数据契约', () => {
 
     expect(diagnosis.directions.map((item) => item.id))
       .toEqual(['target', 'conflict', 'downstream', 'upstream'])
+    expect(diagnosis.staticPortrait.radiusM).toBe(600)
+    expect(diagnosis.staticPortrait.items).toHaveLength(6)
+    expect(diagnosis.staticPortrait.items.every((item) => item.positionOffsetM.length === 2))
+      .toBe(true)
+    expect(diagnosis.operatingPortrait.dimensions.map((item) => item.id))
+      .toEqual(['supply', 'demand', 'status'])
+    expect(diagnosis.operatingPortrait.dimensions.every((item) => item.metrics.length >= 3))
+      .toBe(true)
     expect(diagnosis.hypotheses.find((item) => item.id === 'downstream-block')?.supported)
       .toBe(false)
     expect(diagnosis.options.find((item) => item.id === 'green-only')?.recommended)

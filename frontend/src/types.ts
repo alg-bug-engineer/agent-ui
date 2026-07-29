@@ -163,6 +163,35 @@ export interface ScenarioProjection {
   conclusion: string
 }
 
+export interface StaticAttractionProfile {
+  title: string
+  radiusM: number
+  source: string
+  items: Array<{
+    id: string
+    icon: string
+    label: string
+    sharePct: number
+    caption: string
+    tone: 'cyan' | 'blue' | 'amber' | 'green'
+    positionOffsetM: [number, number]
+  }>
+}
+
+export interface OperatingPortraitDimension {
+  id: 'supply' | 'demand' | 'status'
+  title: string
+  subtitle: string
+  tone: 'blue' | 'amber' | 'critical'
+  levelPct: number
+  metrics: Array<{
+    label: string
+    value: string
+    tone?: 'normal' | 'warning' | 'critical'
+  }>
+  summary: string
+}
+
 export interface ExpertDiagnosis {
   source: {
     roadNetwork: string
@@ -170,6 +199,11 @@ export interface ExpertDiagnosis {
     strategyProjection: string
   }
   question: string
+  staticPortrait: StaticAttractionProfile
+  operatingPortrait: {
+    title: string
+    dimensions: OperatingPortraitDimension[]
+  }
   directions: DiagnosticDirection[]
   hypotheses: DiagnosticHypothesis[]
   constraints: Array<{
