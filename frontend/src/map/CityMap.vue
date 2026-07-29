@@ -8,6 +8,7 @@ import type {
   ActId,
   ChannelizationScene,
   DevicePoint,
+  ExpertDiagnosis,
   FlowTraceScene,
   MonitoredIntersection,
   TargetIntersection,
@@ -24,6 +25,7 @@ const target = ref<TargetIntersection | null>(null)
 const channelization = ref<ChannelizationScene | null>(null)
 const topology = ref<any>(null)
 const flowTrace = ref<FlowTraceScene | null>(null)
+const diagnosis = ref<ExpertDiagnosis | null>(null)
 type SimulationScenarioId = 'baseline' | 'green-only' | 'combined'
 const simulationScenario = ref<SimulationScenarioId>('baseline')
 
@@ -93,6 +95,8 @@ const activeStrategyCard = computed(() =>
   ?? strategyComparisonCards[0],
 )
 
+const operatingPortrait = computed(() => diagnosis.value?.operatingPortrait ?? null)
+
 const narrativeBeatOrder = [
   'cognition',
   'evidence',
@@ -115,8 +119,8 @@ const narrativeProgress = computed(() => {
 const nextNarrative = computed(() => {
   const messages: Record<string, string> = {
     cognition: '下一步：把排队长度与动态阈值放到道路上核验',
-    evidence: '下一步：镜头拉远，把目标、冲突、上下游放进同一网络',
-    direction: '下一步：沿上游、目标、下游逐项排除成因',
+    evidence: '下一步：镜头拉远，建立目标、冲突方向与上下游拓扑关系',
+    direction: '下一步：沿拓扑关系逐项排除成因',
     cause: '下一步：先划定安全边界，再生成控制动作',
     constraints: '下一步：把三个治理动作放到地图具体位置',
     options: '下一步：对比不干预、单点加绿与协同组合',
@@ -129,7 +133,7 @@ const nextNarrative = computed(() => {
 
 const simulationNarratives: Record<typeof simulationScenario.value, MapNarrative> = {
   baseline: {
-    chapter: '验证',
+    chapter: '反事实推演',
     eyebrow: '方案 01 · 不干预',
     headline: '北进口排队继续增长，溢流风险维持高位',
     summary: '仅观察、不采取动作，无法阻断连续到达波与放行不足的叠加。',
@@ -141,7 +145,7 @@ const simulationNarratives: Record<typeof simulationScenario.value, MapNarrative
     ],
   },
   'green-only': {
-    chapter: '验证',
+    chapter: '反事实推演',
     eyebrow: '方案 02 · 单点 +8s',
     headline: '北进口得到缓解，但压力被转移到东西向',
     summary: '东西向排队升至 101m，突破 92m 警戒线，单点加绿不采用。',
@@ -153,7 +157,7 @@ const simulationNarratives: Record<typeof simulationScenario.value, MapNarrative
     ],
   },
   combined: {
-    chapter: '验证',
+    chapter: '反事实推演',
     eyebrow: '方案 03 · 协同组合',
     headline: '三处均在安全边界内，组合方案通过推演',
     summary: '目标排队下降，冲突方向和下游承接保持安全，推荐执行。',
@@ -192,7 +196,7 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   cognition: {
-    chapter: '发现',
+    chapter: '路口认知',
     eyebrow: '真实渠化 · 方向锁定',
     headline: '诊断对象锁定为北进口向南直行',
     summary: '分析同步覆盖垂直冲突、下游承接和上游来车三个空间角色。',
@@ -204,8 +208,8 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   direction: {
-    chapter: '发现',
-    eyebrow: '四向拆解 · 空间对照',
+    chapter: '路口拓扑分析',
+    eyebrow: '路口拓扑 · 空间关系',
     headline: '问题集中在北进口，其他方向尚未失稳',
     summary: '上游连续来车可能放大排队，垂直方向与下游仍有安全余量。',
     tone: 'warning',
@@ -216,7 +220,7 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   evidence: {
-    chapter: '发现',
+    chapter: '异常核验',
     eyebrow: '道路实体证据 · 异常成立',
     headline: '排队长度越过 114.8m 动态阈值，并持续增长',
     summary: '道路长度尺、三个周期队尾和现场影像相互印证。',
@@ -228,7 +232,7 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   cause: {
-    chapter: '判因',
+    chapter: '溢流判因',
     eyebrow: '因果链 · 逐项排除',
     headline: '上游来车放大排队，目标方向有效放行不足',
     summary: '下游仍有 168m 储车空间，排除下游阻塞型溢流。',
@@ -240,7 +244,7 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   constraints: {
-    chapter: '判因',
+    chapter: '约束检查',
     eyebrow: '安全边界 · 先约束后调控',
     headline: '具备调控条件，但必须同时守住三条安全边界',
     summary: '东西向、下游与上游截流均设置自动回退条件。',
@@ -252,7 +256,7 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   options: {
-    chapter: '决策',
+    chapter: '方案生成',
     eyebrow: '组合治理 · 动作落位',
     headline: '适度加放 + 上游削峰 + 下游协调',
     summary: '三个动作分别落在目标、上游和下游，避免单点调控转移风险。',
@@ -264,7 +268,7 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   decision: {
-    chapter: '决策',
+    chapter: '专家决策',
     eyebrow: '专家决策 · 带护栏执行',
     headline: '组合策略通过决策，三个周期内完成效果验证',
     summary: '动作、空间位置与自动回退条件已同时绑定。',
@@ -276,7 +280,7 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   trace: {
-    chapter: '进化',
+    chapter: '源头治理',
     eyebrow: '源头治理 · 六跳溯源',
     headline: '奥体西路北侧连续来车波是主要源头',
     summary: '主走廊六跳累计解释 92.0% 到达流量，治理动作落到具体上游节点。',
@@ -306,6 +310,7 @@ let scanTimer = 0
 let renderGeneration = 0
 const deferredTimers: number[] = []
 const animationTimers: number[] = []
+const retirementFrames = new Set<number>()
 let flowParticles: Array<{
   marker: any
   path: Array<[number, number]>
@@ -327,7 +332,54 @@ function addOverlay<T>(overlay: T): T {
   return overlay
 }
 
-function clearStageScene() {
+function retireOverlays(overlays: any[], immediate = false) {
+  if (!map || overlays.length === 0) return
+  if (immediate) {
+    map.remove(overlays)
+    return
+  }
+
+  const duration = 420
+  const startedAt = performance.now()
+  const requestFadeFrame = (callback: FrameRequestCallback) => {
+    const frame = window.requestAnimationFrame((now) => {
+      retirementFrames.delete(frame)
+      callback(now)
+    })
+    retirementFrames.add(frame)
+  }
+  const vectorStates = overlays.map((overlay) => {
+    const content = overlay.getContent?.()
+    if (content instanceof HTMLElement) content.classList.add('geo-overlay-leaving')
+    const options = overlay.getOptions?.() ?? {}
+    return {
+      overlay,
+      strokeOpacity: typeof options.strokeOpacity === 'number' ? options.strokeOpacity : null,
+      fillOpacity: typeof options.fillOpacity === 'number' ? options.fillOpacity : null,
+      opacity: typeof options.opacity === 'number' ? options.opacity : null,
+    }
+  })
+
+  const fade = (now: number) => {
+    const progress = Math.min(1, (now - startedAt) / duration)
+    const eased = 1 - (1 - progress) ** 3
+    vectorStates.forEach((state) => {
+      const options: Record<string, number> = {}
+      if (state.strokeOpacity !== null) options.strokeOpacity = state.strokeOpacity * (1 - eased)
+      if (state.fillOpacity !== null) options.fillOpacity = state.fillOpacity * (1 - eased)
+      if (state.opacity !== null) options.opacity = state.opacity * (1 - eased)
+      if (Object.keys(options).length > 0) state.overlay.setOptions?.(options)
+    })
+    if (progress < 1) {
+      requestFadeFrame(fade)
+    } else {
+      map?.remove?.(overlays)
+    }
+  }
+  requestFadeFrame(fade)
+}
+
+function clearStageScene(immediate = false) {
   renderGeneration += 1
   window.clearInterval(scanTimer)
   scanTimer = 0
@@ -336,13 +388,13 @@ function clearStageScene() {
   flowParticles = []
   simulationScenario.value = 'baseline'
   simulationApplyScenario = null
-  if (map && stageOverlays.length) map.remove(stageOverlays)
+  retireOverlays(stageOverlays, immediate)
   stageOverlays = []
 }
 
-function clearScene() {
-  clearStageScene()
-  if (map && baseOverlays.length) map.remove(baseOverlays)
+function clearScene(immediate = false) {
+  clearStageScene(immediate)
+  retireOverlays(baseOverlays, immediate)
   baseOverlays = []
   overlayScope = 'base'
 }
@@ -400,7 +452,7 @@ function addTargetAnchor(label = '诊断路口') {
     position: target.value.center,
     anchor: 'bottom-left',
     offset: new AMapApi.Pixel(16, -10),
-    content: htmlElement('geo-anchor-label', `<strong>${label}</strong><span>${target.value.name}</span>`),
+    content: htmlElement('geo-map-info-card geo-anchor-label', `<strong>${label}</strong><span>${target.value.name}</span>`),
     zIndex: 112,
   }))
 }
@@ -491,11 +543,43 @@ function renderDevices() {
       anchor: 'center',
       content: htmlElement(
         `geo-device-marker ${device.type} ${device.status}`,
-        `<i></i><span><strong>${device.name}</strong><small>${device.lane} · ${device.status === 'online' ? '在线' : '离线'}</small></span>`,
+        `<i></i><span class="geo-map-info-card"><strong>${device.name}</strong><small>${device.lane} · ${device.status === 'online' ? '在线' : '离线'}</small></span>`,
       ),
       zIndex: 120,
       title: `${device.name} · ${device.lane}`,
     }))
+  })
+}
+
+function renderStaticPortrait() {
+  const portrait = diagnosis.value?.staticPortrait
+  if (!target.value || !portrait) return
+
+  portrait.items.forEach((item, index) => {
+    defer(() => {
+      const position = metersToGeo(
+        target.value!.center,
+        item.positionOffsetM[0],
+        item.positionOffsetM[1],
+      )
+      addOverlay(new AMapApi.Marker({
+        position,
+        anchor: 'bottom-center',
+        content: htmlElement(
+          `geo-map-info-card geo-operating-portrait geo-static-portrait ${item.tone}`,
+          `<header>
+             <div><strong>${item.label}</strong><small>${portrait.title} · ${portrait.radiusM}m</small></div>
+             <span>${String(index + 1).padStart(2, '0')}</span>
+           </header>
+           <div class="operating-portrait-metrics">
+             <span><small>吸引占比</small><strong>${item.sharePct}%</strong></span>
+           </div>
+           <footer>${item.caption}</footer>`,
+        ),
+        zIndex: 148 + index,
+        title: `${item.label} · ${item.sharePct}% · ${portrait.source}`,
+      }))
+    }, 960 + index * 130)
   })
 }
 
@@ -626,7 +710,7 @@ function addNarrativeMarker(
     anchor: options.anchor ?? 'bottom-center',
     offset: new AMapApi.Pixel(options.offsetX ?? 0, options.offsetY ?? -14),
     content: htmlElement(
-      `geo-narrative-marker ${className}`,
+      `geo-map-info-card geo-narrative-marker ${className}`,
       `<small>${eyebrow}</small><strong>${value}</strong><span>${detail}</span>`,
     ),
     zIndex: options.zIndex ?? 156,
@@ -681,22 +765,23 @@ function renderQueueRuler() {
     })
   })
 
-  addNarrativeMarker(
-    queueEnd,
-    'critical queue-value',
-    '北进口当前排队',
-    '129m',
-    '连续 3 个周期增长',
-    { offsetX: 66, offsetY: 0 },
-  )
-  addNarrativeMarker(
-    threshold,
-    'warning threshold-value',
-    '动态阈值',
-    '114.8m',
-    '红色区间已越界',
-    { offsetX: -72, offsetY: 4 },
-  )
+  addOverlay(new AMapApi.Marker({
+    position: metersToGeo(center, 36, 109),
+    anchor: 'middle-left',
+    content: htmlElement(
+      'geo-queue-road-stats',
+      `<span class="queue-road-stat current">
+         <strong>129<small>m</small></strong>
+         <em>当前排队</em>
+       </span>
+       <span class="queue-road-stat threshold">
+         <strong>114.8<small>m</small></strong>
+         <em>动态阈值</em>
+       </span>`,
+    ),
+    zIndex: 160,
+    title: '北进口当前排队 129m，动态阈值 114.8m',
+  }))
 }
 
 function topologyPoints() {
@@ -743,7 +828,7 @@ function renderCauseMap() {
       index === 0 ? '上游连续到达波' : '上游汇入',
       index === 0 ? '57.9%' : '34.8%',
       index === 0 ? '前两跳贡献' : '单点贡献',
-      { offsetX: index % 2 ? 82 : -82, offsetY: -5 },
+      { offsetX: index % 2 ? 126 : -126, offsetY: -8 },
     ))
   }
   if (targetPoint) {
@@ -763,7 +848,7 @@ function renderCauseMap() {
       '直接原因',
       '有效放行不足',
       '饱和度 0.89 · 绿灯利用率 54.2%',
-      { offsetX: 82, offsetY: -18 },
+      { offsetX: 132, offsetY: -20 },
     )
   }
   if (downstream) {
@@ -773,7 +858,7 @@ function renderCauseMap() {
       '排除下游阻塞',
       '占有率 42%',
       '仍有约 168m 储车空间',
-      { offsetX: 86, offsetY: -4 },
+      { offsetX: 132, offsetY: -8 },
     )
   }
   branches.forEach((position, index) => {
@@ -784,7 +869,7 @@ function renderCauseMap() {
       '垂直方向',
       '当前稳定',
       '排队 63m < 警戒 92m',
-      { offsetX: -90, offsetY: -5 },
+      { offsetX: -132, offsetY: -8 },
     )
   })
 }
@@ -795,10 +880,10 @@ function renderConstraintMap() {
   const downstream = points.get('downstream')?.[0]
   const upstream = points.get('upstream')?.[0]
   const branch = points.get('branch')?.[0]
-  if (targetPoint) addNarrativeMarker(targetPoint, 'critical boundary', '目标边界', '排队 ≤ 85m', '首轮只增加 4 秒', { offsetX: 80 })
-  if (branch) addNarrativeMarker(branch, 'warning boundary', '垂直护栏', '警戒 92m', '超过即回退 2 秒', { offsetX: -84 })
-  if (downstream) addNarrativeMarker(downstream, 'success boundary', '下游护栏', '占有率 < 65%', '超过即停止加放', { offsetX: 84 })
-  if (upstream) addNarrativeMarker(upstream, 'neutral boundary', '上游护栏', '削峰 ≤ 12%', '排队超过 30m 即降级', { offsetX: 86 })
+  if (targetPoint) addNarrativeMarker(targetPoint, 'critical boundary', '目标边界', '排队 ≤ 85m', '首轮只增加 4 秒', { offsetX: 132 })
+  if (branch) addNarrativeMarker(branch, 'warning boundary', '垂直护栏', '警戒 92m', '超过即回退 2 秒', { offsetX: -132 })
+  if (downstream) addNarrativeMarker(downstream, 'success boundary', '下游护栏', '占有率 < 65%', '超过即停止加放', { offsetX: 132 })
+  if (upstream) addNarrativeMarker(upstream, 'neutral boundary', '上游护栏', '削峰 ≤ 12%', '排队超过 30m 即降级', { offsetX: 132 })
 }
 
 function renderStrategyMap(decided = false) {
@@ -818,7 +903,7 @@ function renderStrategyMap(decided = false) {
       decided ? '已绑定执行' : '动作 01 · 上游',
       '削峰 12%',
       '打散连续到达波',
-      { offsetX: 86 },
+      { offsetX: 132 },
     )
   }
   if (targetPoint) {
@@ -838,7 +923,7 @@ function renderStrategyMap(decided = false) {
       decided ? '已绑定执行' : '动作 02 · 目标',
       '北进口 +4s',
       '不采用激进 +8s',
-      { offsetX: 88, offsetY: -20 },
+      { offsetX: 136, offsetY: -20 },
     )
   }
   if (targetPoint && downstream) {
@@ -849,7 +934,7 @@ function renderStrategyMap(decided = false) {
       decided ? '已绑定执行' : '动作 03 · 下游',
       '绿波协调',
       '承接新增放行',
-      { offsetX: 88 },
+      { offsetX: 132 },
     )
   }
   if (branch) {
@@ -859,7 +944,7 @@ function renderStrategyMap(decided = false) {
       '持续监测',
       '东西向 < 92m',
       '触线自动回退',
-      { offsetX: -94 },
+      { offsetX: -136 },
     )
   }
 }
@@ -872,9 +957,9 @@ function renderSimulationMap() {
   const upstream = points.get('upstream')?.[0]
   if (!targetPoint || !downstream || !branch) return
 
-  const targetMarker = addNarrativeMarker(targetPoint, 'critical scenario', '方案结果', '北进口 129m', '高风险', { offsetX: 82 })
-  const branchMarker = addNarrativeMarker(branch, 'neutral scenario', '垂直方向', '东西向 63m', '安全', { offsetX: -84 })
-  const downstreamMarker = addNarrativeMarker(downstream, 'success scenario', '下游承接', '占有率 42%', '安全', { offsetX: 84 })
+  const targetMarker = addNarrativeMarker(targetPoint, 'critical scenario', '方案结果', '北进口 129m', '高风险', { offsetX: 132 })
+  const branchMarker = addNarrativeMarker(branch, 'neutral scenario', '垂直方向', '东西向 63m', '安全', { offsetX: -132 })
+  const downstreamMarker = addNarrativeMarker(downstream, 'success scenario', '下游承接', '占有率 42%', '安全', { offsetX: 132 })
   const createActionMarker = (position: [number, number], role: string) => addOverlay(new AMapApi.Marker({
     position,
     anchor: 'center',
@@ -903,15 +988,15 @@ function renderSimulationMap() {
       ))
     })
     targetMarker.setContent(htmlElement(
-      `geo-narrative-marker ${scenario.targetTone} scenario`,
+      `geo-map-info-card geo-narrative-marker ${scenario.targetTone} scenario`,
       `<small>北进口结果</small><strong>${scenario.target}</strong><span>${scenario.risk}</span>`,
     ))
     branchMarker.setContent(htmlElement(
-      `geo-narrative-marker ${scenario.conflictTone} scenario`,
+      `geo-map-info-card geo-narrative-marker ${scenario.conflictTone} scenario`,
       `<small>东西向结果</small><strong>${scenario.conflict}</strong><span>${scenario.conflictState}</span>`,
     ))
     downstreamMarker.setContent(htmlElement(
-      `geo-narrative-marker ${scenario.downstreamTone} scenario`,
+      `geo-map-info-card geo-narrative-marker ${scenario.downstreamTone} scenario`,
       `<small>下游结果</small><strong>${scenario.downstream}</strong><span>上限 65%</span>`,
     ))
   }
@@ -986,7 +1071,7 @@ function renderTopology() {
       anchor: 'center',
       content: htmlElement(
         `geo-topology-node ${role}`,
-        `<i></i><span><strong>${feature.properties?.name ?? ''}</strong><small>${meta}</small></span>`,
+        `<i></i><span class="geo-map-info-card"><strong>${feature.properties?.name ?? ''}</strong><small>${meta}</small></span>`,
       ),
       zIndex: 105,
     }))
@@ -1120,7 +1205,7 @@ function renderFlowTrace() {
         anchor: 'bottom-center',
         offset: new AMapApi.Pixel(0, -18),
         content: htmlElement(
-          'geo-trace-label target',
+          'geo-map-info-card geo-trace-label target',
           `<strong>${stripIntersectionSuffix(node.name)}</strong><span>目标 · 100%</span>`,
         ),
         zIndex: 145,
@@ -1141,9 +1226,9 @@ function renderFlowTrace() {
       addOverlay(new AMapApi.Marker({
         position: upstreamNode.position,
         anchor: 'bottom-center',
-        offset: new AMapApi.Pixel(placeLeft ? -24 : 24, -18),
+        offset: new AMapApi.Pixel(placeLeft ? -72 : 72, -22),
         content: htmlElement(
-          'geo-trace-label main',
+          'geo-map-info-card geo-trace-label main',
           `<strong>${stripIntersectionSuffix(upstreamNode.name)}</strong><span>主走廊 · 第 ${item.hop} 跳 · ${item.sharePct.toFixed(1)}%</span>`,
         ),
         zIndex: 140,
@@ -1168,9 +1253,9 @@ function applyCamera() {
     scan: { zoom: runtimeConfig.map.overviewZoom, center: overviewCenter },
     issue: { zoom: 16.5, center: targetCenter },
     pending: { zoom: 16.5, center: targetCenter },
-    cognition: { zoom: 18.65, center: [targetCenter[0], targetCenter[1] + 0.0002] },
-    direction: { zoom: 16.3, center: [117.1113, 36.6647] },
-    evidence: { zoom: 18.75, center: [targetCenter[0], targetCenter[1] + 0.00035] },
+    cognition: { zoom: 17.75, center: [targetCenter[0], targetCenter[1] + 0.00028] },
+    direction: { zoom: 16.3, center: [117.1113, 36.6642] },
+    evidence: { zoom: 18.1, center: [targetCenter[0], targetCenter[1] + 0.00048] },
     cause: { zoom: 16.3, center: [117.1113, 36.6647] },
     constraints: { zoom: 16.3, center: [117.1113, 36.6647] },
     options: { zoom: 16.3, center: [117.1113, 36.6647] },
@@ -1240,6 +1325,7 @@ function renderScene() {
   if (props.beat === 'cognition') {
     renderChannelization()
     renderDevices()
+    renderStaticPortrait()
   } else if (props.beat === 'evidence') {
     renderChannelization()
     renderQueueRuler()
@@ -1304,13 +1390,22 @@ async function loadMap() {
 watch([() => props.activeAct, () => props.beat], renderScene)
 
 onMounted(async () => {
-  const [intersectionData, deviceData, targetData, channelData, topologyData, traceData] = await Promise.all([
+  const [
+    intersectionData,
+    deviceData,
+    targetData,
+    channelData,
+    topologyData,
+    traceData,
+    diagnosisData,
+  ] = await Promise.all([
     dataRepository.intersections(),
     dataRepository.devices(),
     dataRepository.targetIntersection(),
     dataRepository.channelization(),
     dataRepository.topology(),
     dataRepository.flowTrace(),
+    dataRepository.expertDiagnosis(),
   ])
   intersections.value = intersectionData
   devices.value = deviceData
@@ -1318,12 +1413,15 @@ onMounted(async () => {
   channelization.value = channelData
   topology.value = topologyData
   flowTrace.value = traceData
+  diagnosis.value = diagnosisData
   await nextTick()
   await loadMap()
 })
 
 onBeforeUnmount(() => {
-  clearScene()
+  retirementFrames.forEach((frame) => window.cancelAnimationFrame(frame))
+  retirementFrames.clear()
+  clearScene(true)
   map?.destroy?.()
   map = null
   AMapApi = null
@@ -1338,6 +1436,42 @@ onBeforeUnmount(() => {
       <span>请检查 VITE_AMAP_KEY 与 VITE_AMAP_SECURITY_CODE</span>
     </div>
     <div class="map-vignette"></div>
+    <transition name="portrait-row">
+      <section
+        v-if="activeAct === 2 && beat === 'direction' && operatingPortrait"
+        class="operating-portrait-row"
+        :aria-label="operatingPortrait.title"
+      >
+        <article
+          v-for="(dimension, index) in operatingPortrait.dimensions"
+          :key="dimension.id"
+          :class="['geo-map-info-card', 'geo-operating-portrait', dimension.tone]"
+          :style="{ animationDelay: `${index * 90}ms` }"
+        >
+          <header>
+            <div>
+              <strong>{{ dimension.title }}</strong>
+              <small>{{ dimension.subtitle }}</small>
+            </div>
+            <span>{{ String(index + 1).padStart(2, '0') }}</span>
+          </header>
+          <div class="operating-portrait-metrics">
+            <span
+              v-for="metric in dimension.metrics"
+              :key="metric.label"
+              :class="metric.tone"
+            >
+              <small>{{ metric.label }}</small>
+              <strong>{{ metric.value }}</strong>
+            </span>
+          </div>
+          <div class="operating-portrait-level">
+            <i :style="{ width: `${Math.max(0, Math.min(100, dimension.levelPct))}%` }"></i>
+          </div>
+          <footer>{{ dimension.summary }}</footer>
+        </article>
+      </section>
+    </transition>
     <transition name="map-verdict">
       <section
         v-if="mapNarrative"

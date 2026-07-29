@@ -5,6 +5,111 @@
     "strategyProjection": "演示反事实推演（用于呈现专家分析逻辑）"
   },
   "question": "北进口溢流风险控制策略研判",
+  "staticPortrait": {
+    "title": "附近交通吸引画像",
+    "radiusM": 600,
+    "source": "演示静态画像 · 路口周边 600m",
+    "items": [
+      {
+        "id": "office",
+        "icon": "办",
+        "label": "通勤办公",
+        "sharePct": 0,
+        "caption": "工作日早晚高峰主导",
+        "tone": "blue",
+        "positionOffsetM": [-98, 92]
+      },
+      {
+        "id": "school",
+        "icon": "校",
+        "label": "学校接送",
+        "sharePct": 18,
+        "caption": "周一至周五 7–8 时",
+        "tone": "cyan",
+        "positionOffsetM": [98, 96]
+      },
+      {
+        "id": "hospital",
+        "icon": "医",
+        "label": "医院就诊",
+        "sharePct": 12,
+        "caption": "上午 9–11 时到达高峰",
+        "tone": "green",
+        "positionOffsetM": [-105, -38]
+      },
+      {
+        "id": "retail",
+        "icon": "商",
+        "label": "商业购物",
+        "sharePct": 15,
+        "caption": "周末 14–21 时活跃",
+        "tone": "amber",
+        "positionOffsetM": [105, -42]
+      },
+      {
+        "id": "residential",
+        "icon": "居",
+        "label": "居住出行",
+        "sharePct": 28,
+        "caption": "分散型日常出行",
+        "tone": "cyan",
+        "positionOffsetM": [-100, -132]
+      },
+      {
+        "id": "transit",
+        "icon": "枢",
+        "label": "交通枢纽",
+        "sharePct": 7,
+        "caption": "班次集中时段冲击",
+        "tone": "blue",
+        "positionOffsetM": [100, -132]
+      }
+    ]
+  },
+  "operatingPortrait": {
+    "title": "供给 · 需求 · 状态三维画像",
+    "dimensions": [
+      {
+        "id": "supply",
+        "title": "供给",
+        "subtitle": "路口可提供多少有效通行能力",
+        "tone": "blue",
+        "levelPct": 54.2,
+        "metrics": [
+          { "label": "路口通行能力", "value": "4,000 pcu/h", "tone": "normal" },
+          { "label": "渠化与相位", "value": "16 进口车道 · 4 相位" },
+          { "label": "信号配时", "value": "120s 周期", "tone": "warning" }
+        ],
+        "summary": "北进口直行绿信比偏紧，有效供给未充分释放。"
+      },
+      {
+        "id": "demand",
+        "title": "需求",
+        "subtitle": "当前时窗有多少交通流希望通过",
+        "tone": "amber",
+        "levelPct": 83,
+        "metrics": [
+          { "label": "北进口直行", "value": "1,268 pcu/h", "tone": "warning" },
+          { "label": "高峰机动车流", "value": "约 3,320 pcu/h" },
+          { "label": "转向结构", "value": "直 64% · 左 22% · 右 14%" }
+        ],
+        "summary": "南北向需求集中，上游连续到达波仍在增强。"
+      },
+      {
+        "id": "status",
+        "title": "状态",
+        "subtitle": "供需作用后的实时运行结果",
+        "tone": "critical",
+        "levelPct": 89,
+        "metrics": [
+          { "label": "饱和度", "value": "0.89", "tone": "warning" },
+          { "label": "排队长度", "value": "129m", "tone": "critical" },
+          { "label": "绿灯利用率", "value": "54.2%", "tone": "warning" }
+        ],
+        "summary": "排队连续 3 周期增长，已越过 114.8m 动态阈值。"
+      }
+    ]
+  },
   "directions": [
     {
       "id": "target",

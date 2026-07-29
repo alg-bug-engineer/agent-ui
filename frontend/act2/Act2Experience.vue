@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { dataRepository } from '../src/services/dataRepository'
 import type {
   ChannelizationScene,
@@ -31,8 +31,8 @@ const beats = [
   },
   {
     id: 'direction',
-    title: '方向拆解',
-    subtitle: '再把目标、垂直、下游、上游放进同一网络',
+    title: '路口拓扑分析',
+    subtitle: '把目标、冲突方向与上下游放进同一张路网',
     duration: 6.2,
   },
   {
@@ -82,9 +82,15 @@ const flowTrace = ref<FlowTraceScene | null>(null)
 const channelization = ref<ChannelizationScene | null>(null)
 const diagnosis = ref<ExpertDiagnosis | null>(null)
 const expandedEvidence = ref(false)
+const evidencePanel = ref<HTMLElement | null>(null)
+const transitionDirection = ref<'forward' | 'backward'>('forward')
 let timer = 0
 
 const current = computed(() => beats[currentIndex.value])
+const stepTransitionName = computed(() => `step-flow-${transitionDirection.value}`)
+const stepTrackProgress = computed(() =>
+  beats.length <= 1 ? 1 : currentIndex.value / (beats.length - 1),
+)
 const completed = computed(() =>
   currentIndex.value === beats.length - 1 && elapsed.value >= current.value.duration,
 )
@@ -108,10 +114,20 @@ const channelStats = computed(() => {
 const onlineDeviceCount = computed(() =>
   devices.value.filter((item) => item.status === 'online').length,
 )
-function selectBeat(index: number) {
+
+function moveToBeat(index: number) {
+  if (index < 0 || index >= beats.length) return
+  transitionDirection.value = index >= currentIndex.value ? 'forward' : 'backward'
   currentIndex.value = index
   elapsed.value = 0
   emit('beat', beats[index].id)
+  void nextTick(() => {
+    evidencePanel.value?.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+}
+
+function selectBeat(index: number) {
+  moveToBeat(index)
 }
 
 onMounted(async () => {
@@ -135,9 +151,7 @@ onMounted(async () => {
     if (props.paused || completed.value) return
     elapsed.value += 0.1
     if (elapsed.value >= current.value.duration && currentIndex.value < beats.length - 1) {
-      currentIndex.value += 1
-      elapsed.value = 0
-      emit('beat', current.value.id)
+      moveToBeat(currentIndex.value + 1)
     }
   }, 100)
 })
@@ -166,12 +180,20 @@ onBeforeUnmount(() => window.clearInterval(timer))
         <span :style="{ width: `${overallProgress}%` }"></span>
       </div>
 
-      <ol class="reasoning-steps">
+      <ol
+        class="reasoning-steps"
+        :style="{ '--step-track-progress': stepTrackProgress }"
+      >
         <li
           v-for="(item, index) in beats"
           :key="item.id"
           :class="{ active: index === currentIndex, done: index < currentIndex }"
+          :aria-current="index === currentIndex ? 'step' : undefined"
+          role="button"
+          tabindex="0"
           @click="selectBeat(index)"
+          @keydown.enter="selectBeat(index)"
+          @keydown.space.prevent="selectBeat(index)"
         >
           <span class="step-index">{{ index < currentIndex ? '✓' : String(index + 1).padStart(2, '0') }}</span>
           <div>
@@ -188,13 +210,18 @@ onBeforeUnmount(() => window.clearInterval(timer))
       </div>
     </aside>
 
-    <aside class="glass-panel agent-dock evidence-panel">
+    <aside ref="evidencePanel" class="glass-panel agent-dock evidence-panel">
       <div class="dock-cap evidence-cap">
         <span class="dock-live"><i></i> ANALYSIS WORKBENCH</span>
-        <b>{{ current.title }}</b>
+        <Transition name="step-label">
+          <b :key="current.id">{{ current.title }}</b>
+        </Transition>
         <small>LIVE</small>
       </div>
 
+      <div class="evidence-stage-viewport">
+        <Transition :name="stepTransitionName">
+          <div :key="current.id" class="evidence-stage-frame">
       <template v-if="current.id === 'cognition'">
         <div class="evidence-heading"><span>先认知，再诊断</span><b>01</b></div>
         <div class="target-card">
@@ -237,7 +264,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
       </template>
 
       <template v-else-if="current.id === 'direction'">
-        <div class="evidence-heading"><span>四向运行拆解</span><b>02</b></div>
+        <div class="evidence-heading"><span>路口拓扑与运行关系</span><b>03</b></div>
         <div class="direction-list">
           <article
             v-for="item in diagnosis?.directions"
@@ -257,7 +284,7 @@ onBeforeUnmount(() => window.clearInterval(timer))
       </template>
 
       <template v-else-if="current.id === 'evidence'">
-        <div class="evidence-heading"><span>异常成立性核验</span><b>03</b></div>
+        <div class="evidence-heading"><span>异常成立性核验</span><b>02</b></div>
         <div class="metric-list compact">
           <div
             v-for="metric in metrics"
@@ -428,6 +455,9 @@ onBeforeUnmount(() => window.clearInterval(timer))
           <span>进入知识匹配与策略生成</span><b>→</b>
         </button>
       </template>
+          </div>
+        </Transition>
+      </div>
 
       <div class="analysis-source">
         <span>数据口径</span>
