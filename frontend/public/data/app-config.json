@@ -1,0 +1,8 @@
+{
+  "projectName": "济南城市信控智能体",
+  "city": "济南市",
+  "dataMode": "demo",
+  "coordinateSystem": "GCJ-02",
+  "targetResolution": "1920x1080",
+  "acts": [1, 2, 6]
+}

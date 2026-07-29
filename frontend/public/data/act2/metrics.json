@@ -1,0 +1,36 @@
+[
+  {
+    "id": "flow",
+    "label": "北进口直行流量",
+    "value": 1268,
+    "unit": "pcu/h",
+    "status": "warning",
+    "trend": "较同期上升 18.6%"
+  },
+  {
+    "id": "saturation",
+    "label": "进口道饱和度",
+    "value": 0.89,
+    "unit": "",
+    "status": "warning",
+    "trend": "接近高负荷状态"
+  },
+  {
+    "id": "queue",
+    "label": "排队长度",
+    "value": 129,
+    "unit": "m",
+    "status": "critical",
+    "trend": "连续 3 个周期增长",
+    "threshold": 114.8,
+    "emphasis": true
+  },
+  {
+    "id": "greenUtilization",
+    "label": "绿灯利用率",
+    "value": 54.2,
+    "unit": "%",
+    "status": "warning",
+    "trend": "有效放行不足"
+  }
+]

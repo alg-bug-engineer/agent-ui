@@ -28,3 +28,8 @@ references/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# Frontend build output and dependencies
+node_modules/
+dist/
+*.tsbuildinfo

@@ -1,0 +1,47 @@
+{
+  "available": true,
+  "traceDirection": "upstream",
+  "targetId": "T0",
+  "nodes": [
+    { "id": "T0", "name": "解放东路与奥体西路", "position": [117.111368, 36.663092], "role": "target", "corridor": "奥体西路", "hop": 0, "coverage": 100 },
+    { "id": "N1", "name": "轻风路与奥体西路", "position": [117.111020, 36.666300], "role": "upstream", "corridor": "奥体西路", "hop": 1, "coverage": 34.8 },
+    { "id": "N2", "name": "工业南路与奥体西路", "position": [117.110932, 36.669220], "role": "upstream", "corridor": "奥体西路", "hop": 2, "coverage": 23.1 },
+    { "id": "N3", "name": "康虹路与奥体西路", "position": [117.110680, 36.672150], "role": "upstream", "corridor": "奥体西路", "hop": 3, "coverage": 14.5 },
+    { "id": "N4", "name": "会展路与奥体西路", "position": [117.110510, 36.675100], "role": "upstream", "corridor": "奥体西路", "hop": 4, "coverage": 9.2 },
+    { "id": "N5", "name": "新泺大街与奥体西路", "position": [117.110360, 36.678000], "role": "upstream", "corridor": "奥体西路", "hop": 5, "coverage": 6.4 },
+    { "id": "N6", "name": "花园东路与奥体西路", "position": [117.110100, 36.681000], "role": "upstream", "corridor": "奥体西路", "hop": 6, "coverage": 4.0 },
+    { "id": "B1", "name": "轻风路东口", "position": [117.115200, 36.666100], "role": "branch", "corridor": "轻风路", "hop": 2, "coverage": 18.6 },
+    { "id": "B2", "name": "轻风路西口", "position": [117.107600, 36.666420], "role": "branch", "corridor": "轻风路", "hop": 2, "coverage": 12.1 },
+    { "id": "B3", "name": "工业南路东口", "position": [117.115410, 36.669100], "role": "branch", "corridor": "工业南路", "hop": 3, "coverage": 17.8 },
+    { "id": "B4", "name": "工业南路西口", "position": [117.106950, 36.669360], "role": "branch", "corridor": "工业南路", "hop": 3, "coverage": 11.7 },
+    { "id": "B5", "name": "会展片区出口", "position": [117.114250, 36.675000], "role": "branch", "corridor": "会展路", "hop": 5, "coverage": 15.4 },
+    { "id": "D1", "name": "坤顺路与奥体西路", "position": [117.111480, 36.659820], "role": "downstream", "corridor": "奥体西路", "hop": null, "coverage": null }
+  ],
+  "links": [
+    { "id": "L01", "from": "N1", "to": "T0", "path": [[117.111020, 36.666300], [117.111170, 36.664700], [117.111368, 36.663092]], "role": "main", "hop": 1, "sharePct": 34.8, "correlation": 0.94 },
+    { "id": "L02", "from": "N2", "to": "N1", "path": [[117.110932, 36.669220], [117.110980, 36.667800], [117.111020, 36.666300]], "role": "main", "hop": 2, "sharePct": 23.1, "correlation": 0.88 },
+    { "id": "L03", "from": "N3", "to": "N2", "path": [[117.110680, 36.672150], [117.110820, 36.670650], [117.110932, 36.669220]], "role": "main", "hop": 3, "sharePct": 14.5, "correlation": 0.81 },
+    { "id": "L04", "from": "N4", "to": "N3", "path": [[117.110510, 36.675100], [117.110600, 36.673600], [117.110680, 36.672150]], "role": "main", "hop": 4, "sharePct": 9.2, "correlation": 0.76 },
+    { "id": "L05", "from": "N5", "to": "N4", "path": [[117.110360, 36.678000], [117.110430, 36.676550], [117.110510, 36.675100]], "role": "main", "hop": 5, "sharePct": 6.4, "correlation": 0.69 },
+    { "id": "L06", "from": "N6", "to": "N5", "path": [[117.110100, 36.681000], [117.110240, 36.679500], [117.110360, 36.678000]], "role": "main", "hop": 6, "sharePct": 4.0, "correlation": 0.63 },
+    { "id": "LB1", "from": "B1", "to": "N1", "path": [[117.115200, 36.666100], [117.113100, 36.666190], [117.111020, 36.666300]], "role": "branch", "hop": 2, "sharePct": 8.6, "correlation": 0.78 },
+    { "id": "LB2", "from": "B2", "to": "N1", "path": [[117.107600, 36.666420], [117.109300, 36.666360], [117.111020, 36.666300]], "role": "branch", "hop": 2, "sharePct": 5.1, "correlation": 0.68 },
+    { "id": "LB3", "from": "B3", "to": "N2", "path": [[117.115410, 36.669100], [117.113180, 36.669160], [117.110932, 36.669220]], "role": "branch", "hop": 3, "sharePct": 7.8, "correlation": 0.74 },
+    { "id": "LB4", "from": "B4", "to": "N2", "path": [[117.106950, 36.669360], [117.108920, 36.669290], [117.110932, 36.669220]], "role": "branch", "hop": 3, "sharePct": 4.7, "correlation": 0.64 },
+    { "id": "LB5", "from": "B5", "to": "N4", "path": [[117.114250, 36.675000], [117.112380, 36.675050], [117.110510, 36.675100]], "role": "branch", "hop": 5, "sharePct": 5.4, "correlation": 0.66 },
+    { "id": "LC1", "from": "T0", "to": "D1", "path": [[117.111368, 36.663092], [117.111420, 36.661480], [117.111480, 36.659820]], "role": "context", "hop": null, "sharePct": 0, "correlation": 0.52 }
+  ],
+  "mainCorridorChain": [
+    { "nodeId": "N1", "hop": 1, "sharePct": 34.8, "cumulativePct": 34.8 },
+    { "nodeId": "N2", "hop": 2, "sharePct": 23.1, "cumulativePct": 57.9 },
+    { "nodeId": "N3", "hop": 3, "sharePct": 14.5, "cumulativePct": 72.4 },
+    { "nodeId": "N4", "hop": 4, "sharePct": 9.2, "cumulativePct": 81.6 },
+    { "nodeId": "N5", "hop": 5, "sharePct": 6.4, "cumulativePct": 88.0 },
+    { "nodeId": "N6", "hop": 6, "sharePct": 4.0, "cumulativePct": 92.0 }
+  ],
+  "summary": {
+    "dominantSource": "奥体西路北侧连续来车波",
+    "coveredSharePct": 92.0,
+    "conclusion": "主走廊六跳累计解释 92.0% 的到达流量；轻风路、工业南路与会展片区支路在第二至第五跳汇入，形成连续到达波。"
+  }
+}

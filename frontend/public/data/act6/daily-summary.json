@@ -1,0 +1,21 @@
+{
+  "reportDate": "2026年07月28日",
+  "scope": "济南市重点监测路网",
+  "headline": "自主处置效率稳定提升，重点路口风险得到及时控制",
+  "narrative": "今日智能体持续完成多源感知、问题诊断、方案生成和效果复盘。重点异常均在安全约束内完成处置；需人工确认的中高风险动作全部留痕，已验证有效的处置过程同步转化为可复用经验。",
+  "kpis": [
+    { "label": "自主扫描", "value": "1,842次", "delta": "覆盖 986 个路口", "tone": "teal" },
+    { "label": "发现异常", "value": "45项", "delta": "较昨日减少 7.2%", "tone": "amber" },
+    { "label": "智能体动作", "value": "186次", "delta": "自动执行率 88.7%", "tone": "teal" },
+    { "label": "平均响应", "value": "12.6秒", "delta": "较人工缩短 98.9%", "tone": "teal" },
+    { "label": "闭环完成率", "value": "96.8%", "delta": "180 项已完成", "tone": "teal" },
+    { "label": "新增经验", "value": "14条", "delta": "4 条晋级长期记忆", "tone": "teal" }
+  ],
+  "actions": [
+    { "name": "自动执行", "value": 165, "color": "#00b5a3" },
+    { "name": "审批通过", "value": 8, "color": "#1a7fff" },
+    { "name": "参数微调", "value": 7, "color": "#e68a00" },
+    { "name": "人工接管", "value": 2, "color": "#e53935" },
+    { "name": "驳回/恢复", "value": 4, "color": "#6c3acb" }
+  ]
+}

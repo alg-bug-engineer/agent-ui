@@ -1,0 +1,14 @@
+[
+  { "id": "I-001", "name": "奥体西路与解放东路", "position": [117.111368, 36.663092], "screen": [52, 51], "status": "attention" },
+  { "id": "I-002", "name": "奥体中路与解放东路", "position": [117.115561, 36.663141], "screen": [68, 50], "status": "normal" },
+  { "id": "I-003", "name": "齐川路与解放东路", "position": [117.108428, 36.662959], "screen": [42, 52], "status": "normal" },
+  { "id": "I-004", "name": "奥体西路与工业南路", "position": [117.110932, 36.66922], "screen": [52, 28], "status": "normal" },
+  { "id": "I-005", "name": "奥体西路与坤顺路", "position": [117.11148, 36.65982], "screen": [54, 68], "status": "normal" },
+  { "id": "I-006", "name": "山左路与解放东路", "position": [117.10617, 36.66289], "screen": [32, 52], "status": "normal" },
+  { "id": "I-007", "name": "奥体中路与工业南路", "position": [117.11541, 36.6691], "screen": [69, 29], "status": "normal" },
+  { "id": "I-008", "name": "奥体中路与坤顺路", "position": [117.11552, 36.6597], "screen": [70, 68], "status": "normal" },
+  { "id": "I-009", "name": "茂岭山路与解放东路", "position": [117.104881, 36.66284], "screen": [25, 53], "status": "normal" },
+  { "id": "I-010", "name": "奥体西路与轻风路", "position": [117.11102, 36.6663], "screen": [51, 39], "status": "normal" },
+  { "id": "I-011", "name": "奥体中路与轻风路", "position": [117.1152, 36.6661], "screen": [68, 39], "status": "normal" },
+  { "id": "I-012", "name": "齐川路与坤顺路", "position": [117.1084, 36.6597], "screen": [42, 69], "status": "normal" }
+]

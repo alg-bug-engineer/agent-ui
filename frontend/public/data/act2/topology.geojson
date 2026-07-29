@@ -1,0 +1,14 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "axis": "primary", "name": "奥体西路主轴" }, "geometry": { "type": "LineString", "coordinates": [[117.110932,36.669220],[117.111020,36.666300],[117.111368,36.663092],[117.111480,36.659820]] } },
+    { "type": "Feature", "properties": { "axis": "primary", "name": "解放东路主轴" }, "geometry": { "type": "LineString", "coordinates": [[117.104881,36.662840],[117.108428,36.662959],[117.111368,36.663092],[117.115561,36.663141]] } },
+    { "type": "Feature", "properties": { "axis": "secondary", "name": "轻风路支路" }, "geometry": { "type": "LineString", "coordinates": [[117.107600,36.666420],[117.111020,36.666300],[117.115200,36.666100]] } },
+    { "type": "Feature", "properties": { "role": "upstream", "name": "工业南路与奥体西路", "meta": "上游第 2 跳" }, "geometry": { "type": "Point", "coordinates": [117.110932,36.669220] } },
+    { "type": "Feature", "properties": { "role": "upstream", "name": "轻风路与奥体西路", "meta": "上游第 1 跳" }, "geometry": { "type": "Point", "coordinates": [117.111020,36.666300] } },
+    { "type": "Feature", "properties": { "role": "target", "name": "解放东路与奥体西路", "meta": "诊断目标" }, "geometry": { "type": "Point", "coordinates": [117.111368,36.663092] } },
+    { "type": "Feature", "properties": { "role": "downstream", "name": "坤顺路与奥体西路", "meta": "下游承接" }, "geometry": { "type": "Point", "coordinates": [117.111480,36.659820] } },
+    { "type": "Feature", "properties": { "role": "branch", "name": "齐川路与解放东路", "meta": "西侧关联口" }, "geometry": { "type": "Point", "coordinates": [117.108428,36.662959] } },
+    { "type": "Feature", "properties": { "role": "branch", "name": "奥体中路与解放东路", "meta": "东侧关联口" }, "geometry": { "type": "Point", "coordinates": [117.115561,36.663141] } }
+  ]
+}

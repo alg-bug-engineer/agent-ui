@@ -1,0 +1,9 @@
+{
+  "id": "011wwe28fmc00001",
+  "name": "解放东路与奥体西路交叉口",
+  "center": [117.111368, 36.663092],
+  "roadEastWest": "解放东路",
+  "roadNorthSouth": "奥体西路",
+  "problemApproach": "北进口",
+  "problemMovement": "直行方向"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "ISSUE-20260728-001",
+  "intersectionId": "011wwe28fmc00001",
+  "intersectionName": "解放东路与奥体西路交叉口",
+  "title": "进口道排队异常",
+  "description": "系统检测到北进口直行排队持续增长，连续三个信号周期超过动态阈值。",
+  "severity": "重点关注",
+  "triggerMetric": "排队长度 129m / 动态阈值 114.8m",
+  "detectedAt": "18:06:32"
+}

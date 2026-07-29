@@ -1,0 +1,21 @@
+{
+  "summary": [
+    { "label": "情景日志", "value": 186, "unit": "条" },
+    { "label": "有效案例", "value": 14, "unit": "条" },
+    { "label": "长期经验", "value": 4, "unit": "条" }
+  ],
+  "pipeline": [
+    { "name": "过程留痕", "count": 186, "status": "已归档" },
+    { "name": "效果验证", "count": 180, "status": "已复盘" },
+    { "name": "经验萃取", "count": 14, "status": "已结构化" },
+    { "name": "长期记忆", "count": 4, "status": "已晋级" }
+  ],
+  "featured": [
+    {
+      "title": "集中到达场景下的小步放行策略",
+      "scene": "工作日晚高峰·重点路口",
+      "result": "在不显著增加对向延误的前提下，排队长度下降 22.4%。",
+      "tags": ["排队溢流", "动态阈值", "人工安全保护"]
+    }
+  ]
+}

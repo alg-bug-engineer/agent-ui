@@ -1,0 +1,119 @@
+<script setup lang="ts">
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
+import Act1Experience from '../act1/Act1Experience.vue'
+import Act2Experience from '../act2/Act2Experience.vue'
+import CityMap from './map/CityMap.vue'
+import { runtimeConfig } from './config/runtime'
+import { useNarrative } from './state/narrative'
+import type { ActId } from './types'
+
+const Act6Report = defineAsyncComponent(() => import('../act6/Act6Report.vue'))
+
+const { state, actLabel, goToAct, setBeat, togglePaused, replay } = useNarrative()
+const now = ref(new Date())
+let clockTimer = 0
+
+const currentTime = computed(() =>
+  now.value.toLocaleTimeString('zh-CN', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }),
+)
+
+const currentDate = computed(() =>
+  now.value.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+  }),
+)
+
+function switchAct(act: ActId) {
+  goToAct(act)
+}
+
+onMounted(() => {
+  clockTimer = window.setInterval(() => {
+    now.value = new Date()
+  }, 1000)
+})
+
+onBeforeUnmount(() => window.clearInterval(clockTimer))
+</script>
+
+<template>
+  <main class="app-shell" :class="`act-${state.activeAct}`">
+    <CityMap :active-act="state.activeAct" :beat="state.beat" />
+
+    <header class="command-header">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <div>
+          <p>JINAN TRAFFIC INTELLIGENCE</p>
+          <h1>{{ runtimeConfig.app.title }}</h1>
+        </div>
+      </div>
+
+      <nav class="act-navigation" aria-label="演示幕次">
+        <button
+          v-for="act in ([1, 2, 6] as ActId[])"
+          :key="act"
+          :class="{ active: state.activeAct === act }"
+          @click="switchAct(act)"
+        >
+          <small>ACT 0{{ act }}</small>
+          <span>{{ act === 1 ? '全域感知' : act === 2 ? '问题诊断' : '复盘进化' }}</span>
+        </button>
+      </nav>
+
+      <div class="system-status">
+        <div class="status-copy">
+          <span class="live-dot"></span>
+          <div>
+            <strong>智能体在线</strong>
+            <small>{{ actLabel }} · 实时运行</small>
+          </div>
+        </div>
+        <div class="clock">
+          <strong>{{ currentTime }}</strong>
+          <small>{{ currentDate }}</small>
+        </div>
+      </div>
+    </header>
+
+    <section class="act-stage">
+      <Act1Experience
+        v-if="state.activeAct === 1"
+        :key="`act1-${state.replayToken}`"
+        :paused="state.paused"
+        @beat="setBeat"
+        @enter-diagnosis="goToAct(2)"
+      />
+      <Act2Experience
+        v-else-if="state.activeAct === 2"
+        :key="`act2-${state.replayToken}`"
+        :paused="state.paused"
+        @beat="setBeat"
+        @open-report="goToAct(6)"
+      />
+      <Act6Report
+        v-else
+        :key="`act6-${state.replayToken}`"
+        @beat="setBeat"
+      />
+    </section>
+
+    <div class="presentation-controls">
+      <button :aria-label="state.paused ? '继续播放' : '暂停播放'" @click="togglePaused">
+        {{ state.paused ? '继续' : '暂停' }}
+      </button>
+      <button aria-label="重新播放当前幕" @click="replay">重播本幕</button>
+      <span>{{ runtimeConfig.app.dataMode === 'demo' ? '演示数据' : '实时数据' }} · {{ state.taskSource }}</span>
+    </div>
+  </main>
+</template>

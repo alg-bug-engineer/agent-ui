@@ -1,0 +1,175 @@
+{
+  "source": {
+    "roadNetwork": "road6 · version 20260501 真实路网快照",
+    "operationalEvidence": "演示诊断数据（基于目标路口场景构造）",
+    "strategyProjection": "演示反事实推演（用于呈现专家分析逻辑）"
+  },
+  "question": "北进口排队接近溢流，应该单点加绿、协调下游，还是从上游截流？",
+  "directions": [
+    {
+      "id": "target",
+      "label": "北进口 → 向南直行",
+      "role": "本次分析方向",
+      "primaryMetric": "排队 129m / 阈值 114.8m",
+      "secondaryMetric": "饱和度 0.89 · 绿灯利用率 54.2%",
+      "assessment": "连续来车高于当前有效放行能力，排队仍在增长",
+      "tone": "critical"
+    },
+    {
+      "id": "conflict",
+      "label": "东西向通行",
+      "role": "垂直冲突方向",
+      "primaryMetric": "排队 63m / 警戒 92m",
+      "secondaryMetric": "饱和度 0.72 · 可让渡绿灯约 4s",
+      "assessment": "当前稳定但余量有限，不能为北进口无限压缩绿灯",
+      "tone": "warning"
+    },
+    {
+      "id": "downstream",
+      "label": "南侧坤顺路方向",
+      "role": "下游承接空间",
+      "primaryMetric": "路段占有率 42%",
+      "secondaryMetric": "剩余储车空间约 168m",
+      "assessment": "当前可承接增量，但占有率超过 65% 后需停止加放",
+      "tone": "normal"
+    },
+    {
+      "id": "upstream",
+      "label": "轻风路—工业南路",
+      "role": "上游来车来源",
+      "primaryMetric": "到达贡献 57.9%",
+      "secondaryMetric": "轻风路单点贡献 34.8%",
+      "assessment": "连续到达波是排队增长的重要原因，具备小比例截流条件",
+      "tone": "warning"
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "downstream-block",
+      "question": "是不是下游堵住，导致车辆放不出去？",
+      "evidence": "下游占有率 42%，仍有约 168m 储车空间，未形成回溢",
+      "verdict": "排除：不是下游阻塞型溢流",
+      "supported": false
+    },
+    {
+      "id": "release-shortage",
+      "question": "是不是当前方向绿灯不足或放行效率偏低？",
+      "evidence": "北进口饱和度 0.89，绿灯利用率仅 54.2%，连续 3 周期排队增长",
+      "verdict": "成立：有效放行不足是直接原因",
+      "supported": true
+    },
+    {
+      "id": "arrival-wave",
+      "question": "是不是上游连续来车，把排队不断推高？",
+      "evidence": "上游六跳解释 92.0% 到达流量，前两跳贡献 57.9%",
+      "verdict": "成立：连续到达波是放大因素",
+      "supported": true
+    }
+  ],
+  "constraints": [
+    {
+      "label": "北进口",
+      "value": "129m",
+      "boundary": "目标 ≤ 85m",
+      "conclusion": "需要增加有效放行",
+      "tone": "critical"
+    },
+    {
+      "label": "东西向",
+      "value": "63m",
+      "boundary": "上限 92m",
+      "conclusion": "最多可让渡约 4s",
+      "tone": "warning"
+    },
+    {
+      "label": "南侧下游",
+      "value": "42%",
+      "boundary": "占有率上限 65%",
+      "conclusion": "可承接，但需联动监测",
+      "tone": "normal"
+    },
+    {
+      "label": "上游截流",
+      "value": "12%",
+      "boundary": "上游排队 ≤ 30m",
+      "conclusion": "可小比例削峰",
+      "tone": "normal"
+    }
+  ],
+  "options": [
+    {
+      "id": "green-only",
+      "name": "方案 A · 单点加绿",
+      "action": "北进口直行相位 +8s",
+      "targetEffect": "排队预计降至 88m",
+      "conflictEffect": "东西向排队升至 101m",
+      "downstreamEffect": "下游占有率升至 61%",
+      "verdict": "目标见效快，但把压力转移给垂直方向，否决单独采用",
+      "recommended": false
+    },
+    {
+      "id": "meter-only",
+      "name": "方案 B · 上游截流",
+      "action": "轻风路与工业南路到达量削峰 12%",
+      "targetEffect": "排队预计降至 106m",
+      "conflictEffect": "东西向基本不变",
+      "downstreamEffect": "下游占有率约 47%",
+      "verdict": "安全但消散较慢，可作为组合措施",
+      "recommended": false
+    },
+    {
+      "id": "combined",
+      "name": "方案 C · 协同组合",
+      "action": "目标方向 +4s、上游截流 12%、下游绿波协调",
+      "targetEffect": "排队预计降至 78m",
+      "conflictEffect": "东西向排队升至 71m",
+      "downstreamEffect": "下游占有率约 55%",
+      "verdict": "三处都在安全边界内，兼顾消散速度与网络风险",
+      "recommended": true
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "baseline",
+      "name": "不干预",
+      "targetQueueM": 129,
+      "conflictQueueM": 63,
+      "downstreamOccupancyPct": 42,
+      "risk": "高",
+      "conclusion": "北进口继续增长，存在溢流风险"
+    },
+    {
+      "id": "green-only",
+      "name": "只加绿 +8s",
+      "targetQueueM": 88,
+      "conflictQueueM": 101,
+      "downstreamOccupancyPct": 61,
+      "risk": "中",
+      "conclusion": "北进口缓解，但东西向突破警戒线"
+    },
+    {
+      "id": "combined",
+      "name": "协同组合",
+      "targetQueueM": 78,
+      "conflictQueueM": 71,
+      "downstreamOccupancyPct": 55,
+      "risk": "低",
+      "conclusion": "目标排队下降，冲突方向与下游均保持安全"
+    }
+  ],
+  "recommendation": {
+    "title": "采用“适度加放 + 上游削峰 + 下游协调”的组合策略",
+    "actions": [
+      "北进口直行绿灯增加 4 秒，不采用激进的 8 秒方案",
+      "轻风路、工业南路上游信号削峰 12%，打散连续到达波",
+      "南侧下游同步绿波协调，避免新增放行形成二次回溢"
+    ],
+    "rationale": "单点加绿虽然直观，但会把排队转移到东西向；组合策略同时处理“放行不足”和“连续到达波”两个原因。",
+    "guardrails": [
+      "东西向排队超过 92m，立即回退 2 秒",
+      "下游占有率超过 65%，停止北进口加放",
+      "上游排队超过 30m，降低截流比例"
+    ],
+    "expectedOutcome": "3 个周期内北进口排队由 129m 降至约 78m，东西向约 71m，下游占有率约 55%。"
+  }
+}

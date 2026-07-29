@@ -1,0 +1,103 @@
+{
+  "source": {
+    "kind": "postgres-snapshot",
+    "schema": "road6",
+    "versionId": "20260501",
+    "capturedAt": "2026-07-28T22:48:00+08:00"
+  },
+  "intersection": {
+    "id": "011wwe28fmc00001",
+    "name": "奥体西路与解放东路路口",
+    "center": [117.111368, 36.663092]
+  },
+  "links": [
+    {
+      "linkId": "12wwe28ftwwe28fm01",
+      "role": "entrance",
+      "approachAngle": 354.401,
+      "direction": "北进口",
+      "roadName": "奥体西路",
+      "laneCount": 4,
+      "laneInfo": ["B", "C", "C", "DF"],
+      "laneIds": ["13wwe28ftwwe28fm0101", "13wwe28ftwwe28fm0102", "13wwe28ftwwe28fm0103", "13wwe28ftwwe28fm0104"],
+      "path": [[117.111168, 36.665132], [117.111264, 36.66319]]
+    },
+    {
+      "linkId": "12wwe28fmwwe28ft01",
+      "role": "exit",
+      "approachAngle": 359.803,
+      "direction": "北出口",
+      "roadName": "奥体西路",
+      "laneCount": 4,
+      "laneInfo": ["B", "C", "C", "D"],
+      "laneIds": ["13wwe28fmwwe28ft0101", "13wwe28fmwwe28ft0102", "13wwe28fmwwe28ft0103", "13wwe28fmwwe28ft0104"],
+      "path": [[117.111463, 36.66319], [117.111425, 36.664048], [117.111361, 36.665132]]
+    },
+    {
+      "linkId": "12wwe28frwwe28fm01",
+      "role": "entrance",
+      "approachAngle": 89.157,
+      "direction": "东进口",
+      "roadName": "解放东路",
+      "laneCount": 4,
+      "laneInfo": ["B", "C", "C", "CD"],
+      "laneIds": ["13wwe28frwwe28fm0101", "13wwe28frwwe28fm0102", "13wwe28frwwe28fm0103", "13wwe28frwwe28fm0104"],
+      "path": [[117.113678, 36.663126], [117.113174, 36.663126], [117.112364, 36.663136], [117.111468, 36.663136]]
+    },
+    {
+      "linkId": "12wwe28fmwwe294201",
+      "role": "exit",
+      "approachAngle": 90.523,
+      "direction": "东出口",
+      "roadName": "解放东路",
+      "laneCount": 3,
+      "laneInfo": ["C", "C", "CD"],
+      "laneIds": ["13wwe28fmwwe29420101", "13wwe28fmwwe29420102", "13wwe28fmwwe29420103"],
+      "path": [[117.111468, 36.663056], [117.112235, 36.663061], [117.112364, 36.663061], [117.113163, 36.663061], [117.113684, 36.663061], [117.114767, 36.663061]]
+    },
+    {
+      "linkId": "12wwe28ctwwe28fm01",
+      "role": "entrance",
+      "approachAngle": 178.225,
+      "direction": "南进口",
+      "roadName": "奥体西路",
+      "laneCount": 4,
+      "laneInfo": ["B", "C", "C", "D"],
+      "laneIds": ["13wwe28ctwwe28fm0101", "13wwe28ctwwe28fm0102", "13wwe28ctwwe28fm0103", "13wwe28ctwwe28fm0104"],
+      "path": [[117.111474, 36.659671], [117.111474, 36.660594], [117.111479, 36.661849], [117.111468, 36.662991]]
+    },
+    {
+      "linkId": "12wwe28fmwwe28ct01",
+      "role": "exit",
+      "approachAngle": 181.557,
+      "direction": "南出口",
+      "roadName": "奥体西路",
+      "laneCount": 5,
+      "laneInfo": ["B", "B", "C", "C", "D"],
+      "laneIds": ["13wwe28fmwwe28ct0101", "13wwe28fmwwe28ct0102", "13wwe28fmwwe28ct0103", "13wwe28fmwwe28ct0104", "13wwe28fmwwe28ct0105"],
+      "path": [[117.11127, 36.662986], [117.111281, 36.661865], [117.111286, 36.660594], [117.111275, 36.659671]]
+    },
+    {
+      "linkId": "12wwe28f7wwe28fm01",
+      "role": "entrance",
+      "approachAngle": 266.551,
+      "direction": "西进口",
+      "roadName": "解放东路",
+      "laneCount": 4,
+      "laneInfo": ["FZ", "B", "C", "CD"],
+      "laneIds": ["13wwe28f7wwe28fm0101", "13wwe28f7wwe28fm0102", "13wwe28f7wwe28fm0103", "13wwe28f7wwe28fm0104"],
+      "path": [[117.108448, 36.662916], [117.109124, 36.662975], [117.110009, 36.663029], [117.11127, 36.663051]]
+    },
+    {
+      "linkId": "12wwe28fmwwe28f701",
+      "role": "exit",
+      "approachAngle": 269.084,
+      "direction": "西出口",
+      "roadName": "解放东路",
+      "laneCount": 4,
+      "laneInfo": ["B", "FZ", "C", "CD"],
+      "laneIds": ["13wwe28fmwwe28f70101", "13wwe28fmwwe28f70102", "13wwe28fmwwe28f70103", "13wwe28fmwwe28f70104"],
+      "path": [[117.11127, 36.663131], [117.110041, 36.663115], [117.10943, 36.663067], [117.108427, 36.663045]]
+    }
+  ]
+}

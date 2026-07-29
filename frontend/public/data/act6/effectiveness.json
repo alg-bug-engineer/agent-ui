@@ -1,0 +1,18 @@
+{
+  "metrics": [
+    { "name": "平均排队长度", "unit": "m", "before": 92.4, "after": 68.7, "improvement": "↓25.6%", "direction": "down" },
+    { "name": "平均延误", "unit": "s", "before": 74.8, "after": 56.2, "improvement": "↓24.9%", "direction": "down" },
+    { "name": "通行效率", "unit": "%", "before": 71.2, "after": 84.6, "improvement": "↑18.8%", "direction": "up" },
+    { "name": "绿灯利用率", "unit": "%", "before": 63.5, "after": 78.9, "improvement": "↑24.3%", "direction": "up" }
+  ],
+  "hourly": [
+    { "hour": "06", "detected": 3, "closed": 2 },
+    { "hour": "08", "detected": 12, "closed": 10 },
+    { "hour": "10", "detected": 5, "closed": 5 },
+    { "hour": "12", "detected": 4, "closed": 4 },
+    { "hour": "14", "detected": 3, "closed": 3 },
+    { "hour": "16", "detected": 6, "closed": 5 },
+    { "hour": "18", "detected": 10, "closed": 9 },
+    { "hour": "20", "detected": 2, "closed": 2 }
+  ]
+}

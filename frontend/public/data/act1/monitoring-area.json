@@ -1,0 +1,7 @@
+{
+  "name": "奥体片区重点监测区域",
+  "center": [117.1098, 36.6632],
+  "zoom": 15.4,
+  "autoDetectionSeconds": 10,
+  "autoProcessSeconds": 10
+}

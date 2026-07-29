@@ -1,0 +1,97 @@
+{
+  "overview": [
+    { "label": "待审批", "value": 3, "tone": "amber" },
+    { "label": "参数微调", "value": 7, "tone": "blue" },
+    { "label": "人工接管", "value": 2, "tone": "red" }
+  ],
+  "timeline": [
+    {
+      "time": "18:21",
+      "actor": "王工程师",
+      "action": "参数微调",
+      "target": "奥体西路/解放东路",
+      "detail": "保留晚高峰行人过街安全时间",
+      "status": "已生效"
+    },
+    {
+      "time": "17:46",
+      "actor": "张主管",
+      "action": "审批通过",
+      "target": "解放东路协调方案",
+      "detail": "确认下游承接能力与回滚条件",
+      "status": "已留痕"
+    },
+    {
+      "time": "16:08",
+      "actor": "李工程师",
+      "action": "人工接管",
+      "target": "奥体中心北门",
+      "detail": "通信异常，切换固定保通方案",
+      "status": "监控中"
+    },
+    {
+      "time": "15:32",
+      "actor": "系统自动",
+      "action": "恢复自动控制",
+      "target": "工业南路走廊",
+      "detail": "设备恢复且连续三个周期稳定",
+      "status": "已恢复"
+    }
+  ],
+  "pending": [
+    {
+      "id": "APR-20260728-031",
+      "level": "intersection",
+      "target": "解放东路与奥体西路",
+      "strategy": "北进口直行绿灯延长并启用相邻路口小步协调",
+      "risk": "需保留行人最小过街时间，禁止连续两个周期扩大调整",
+      "expiresAt": "18:35",
+      "parameters": [
+        { "name": "北进口直行绿灯", "before": "42s", "suggested": "48s" },
+        { "name": "协调相位差", "before": "18s", "suggested": "22s" },
+        { "name": "回滚阈值", "before": "对向饱和度 0.82", "suggested": "对向饱和度 0.78" }
+      ]
+    },
+    {
+      "id": "APR-20260728-029",
+      "level": "corridor",
+      "target": "工业南路—解放东路走廊",
+      "strategy": "晚高峰东向协调带微调",
+      "risk": "公交优先请求到达时暂停协调偏移",
+      "expiresAt": "18:42",
+      "parameters": [
+        { "name": "协调周期", "before": "130s", "suggested": "136s" },
+        { "name": "带宽", "before": "31s", "suggested": "38s" }
+      ]
+    },
+    {
+      "id": "APR-20260728-027",
+      "level": "emergency",
+      "target": "奥体中心北门",
+      "strategy": "通信异常下固定保通方案",
+      "risk": "人工接管期间禁止自动下发参数",
+      "expiresAt": "19:00",
+      "parameters": [
+        { "name": "控制方式", "before": "自适应", "suggested": "固定配时" }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "id": "TPL-QUEUE-01",
+      "name": "集中到达排队处置",
+      "scene": "工作日晚高峰，主走廊连续来车波导致目标进口排队超动态阈值。",
+      "diagnosis": "下游承接正常，对向未过饱和，问题由上游集中到达与当前放行能力不匹配引起。",
+      "strategy": "采用小步增绿与相邻路口协调，设置对向饱和度和行人过街双重回滚条件。",
+      "regulation": "单次绿灯调整不超过 8 秒；连续两个周期恶化立即回滚；保留行人最小过街时间。"
+    },
+    {
+      "id": "TPL-DEVICE-02",
+      "name": "感知异常人工接管",
+      "scene": "关键检测设备或通信链路异常，自动控制证据不足。",
+      "diagnosis": "数据质量无法支撑自动策略持续运行。",
+      "strategy": "切换固定保通方案，由值班工程师接管并持续观察。",
+      "regulation": "设备连续三个周期恢复且数据一致性通过后，方可恢复自动控制。"
+    }
+  ]
+}

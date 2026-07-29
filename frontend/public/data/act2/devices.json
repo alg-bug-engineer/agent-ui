@@ -1,0 +1,14 @@
+[
+  { "id": "EP-01", "name": "北进口电警一", "type": "electricPolice", "status": "online", "position": [117.111245, 36.663650], "lane": "北进口直行1" },
+  { "id": "EP-02", "name": "北进口电警二", "type": "electricPolice", "status": "online", "position": [117.111405, 36.663565], "lane": "北进口直行2" },
+  { "id": "EP-03", "name": "南进口电警", "type": "electricPolice", "status": "online", "position": [117.111500, 36.662520], "lane": "南进口直行" },
+  { "id": "EP-04", "name": "东进口电警", "type": "electricPolice", "status": "online", "position": [117.112060, 36.663180], "lane": "东进口直行" },
+  { "id": "EP-05", "name": "西进口电警", "type": "electricPolice", "status": "online", "position": [117.110660, 36.663000], "lane": "西进口直行" },
+  { "id": "GM-01", "name": "北进口地磁一", "type": "geomagnetic", "status": "online", "position": [117.111295, 36.663400], "lane": "北进口直行1" },
+  { "id": "GM-02", "name": "北进口地磁二", "type": "geomagnetic", "status": "online", "position": [117.111390, 36.663360], "lane": "北进口直行2" },
+  { "id": "GM-03", "name": "南进口地磁", "type": "geomagnetic", "status": "online", "position": [117.111455, 36.662790], "lane": "南进口直行" },
+  { "id": "KK-01", "name": "东向卡口", "type": "checkpoint", "status": "online", "position": [117.111820, 36.663135], "lane": "东进口" },
+  { "id": "KK-02", "name": "西向卡口", "type": "checkpoint", "status": "online", "position": [117.110920, 36.663035], "lane": "西进口" },
+  { "id": "SG-01", "name": "中心信号机", "type": "signal", "status": "online", "position": [117.111520, 36.662970], "lane": "路口中心" },
+  { "id": "SG-02", "name": "备用信号检测单元", "type": "signal", "status": "offline", "position": [117.111220, 36.662950], "lane": "路口中心" }
+]
