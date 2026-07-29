@@ -24,16 +24,16 @@ const beats = [
     duration: 5.8,
   },
   {
-    id: 'direction',
-    title: '方向拆解',
-    subtitle: '主方向、垂直、下游、上游',
-    duration: 6.2,
-  },
-  {
     id: 'evidence',
     title: '异常核验',
-    subtitle: '指标、阈值与现场交叉验证',
+    subtitle: '先确认异常是否真实、是否持续',
     duration: 6.5,
+  },
+  {
+    id: 'direction',
+    title: '方向拆解',
+    subtitle: '再把目标、垂直、下游、上游放进同一网络',
+    duration: 6.2,
   },
   {
     id: 'cause',

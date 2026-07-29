@@ -24,7 +24,8 @@ const target = ref<TargetIntersection | null>(null)
 const channelization = ref<ChannelizationScene | null>(null)
 const topology = ref<any>(null)
 const flowTrace = ref<FlowTraceScene | null>(null)
-const simulationScenario = ref<'baseline' | 'green-only' | 'combined'>('baseline')
+type SimulationScenarioId = 'baseline' | 'green-only' | 'combined'
+const simulationScenario = ref<SimulationScenarioId>('baseline')
 
 interface MapNarrative {
   chapter: string
@@ -34,6 +35,97 @@ interface MapNarrative {
   tone: 'critical' | 'warning' | 'action' | 'success' | 'neutral'
   metrics: Array<{ label: string; value: string; status?: 'safe' | 'risk' }>
 }
+
+interface StrategyComparisonCard {
+  id: SimulationScenarioId
+  index: string
+  name: string
+  action: string
+  verdict: string
+  tone: 'critical' | 'warning' | 'success'
+  status: string
+  target: string
+  conflict: string
+  downstream: string
+}
+
+const strategyComparisonCards: StrategyComparisonCard[] = [
+  {
+    id: 'baseline',
+    index: '01',
+    name: '不干预',
+    action: '保持当前配时，继续观察',
+    verdict: '北进口排队继续增长，溢流风险无法解除。',
+    tone: 'critical',
+    status: '不采用',
+    target: '129m ↗',
+    conflict: '63m',
+    downstream: '42%',
+  },
+  {
+    id: 'green-only',
+    index: '02',
+    name: '单点加绿 +8s',
+    action: '只增加北进口直行绿灯',
+    verdict: '北进口缓解，但东西向升至 101m，压力发生转移。',
+    tone: 'warning',
+    status: '否决',
+    target: '88m',
+    conflict: '101m 越界',
+    downstream: '61%',
+  },
+  {
+    id: 'combined',
+    index: '03',
+    name: '协同组合',
+    action: '目标 +4s · 上游削峰 12% · 下游绿波',
+    verdict: '三个空间角色均在安全边界内，推荐执行。',
+    tone: 'success',
+    status: '推荐',
+    target: '78m',
+    conflict: '71m 安全',
+    downstream: '55% 安全',
+  },
+]
+
+const activeStrategyCard = computed(() =>
+  strategyComparisonCards.find((item) => item.id === simulationScenario.value)
+  ?? strategyComparisonCards[0],
+)
+
+const narrativeBeatOrder = [
+  'cognition',
+  'evidence',
+  'direction',
+  'cause',
+  'constraints',
+  'options',
+  'simulation',
+  'decision',
+  'trace',
+]
+
+const narrativeProgress = computed(() => {
+  if (props.activeAct === 1) return props.beat === 'scan' ? 8 : 14
+  if (props.activeAct === 6) return 100
+  const index = narrativeBeatOrder.indexOf(props.beat)
+  return index < 0 ? 0 : Math.round(((index + 1) / narrativeBeatOrder.length) * 100)
+})
+
+const nextNarrative = computed(() => {
+  const messages: Record<string, string> = {
+    cognition: '下一步：把排队长度与动态阈值放到道路上核验',
+    evidence: '下一步：镜头拉远，把目标、冲突、上下游放进同一网络',
+    direction: '下一步：沿上游、目标、下游逐项排除成因',
+    cause: '下一步：先划定安全边界，再生成控制动作',
+    constraints: '下一步：把三个治理动作放到地图具体位置',
+    options: '下一步：对比不干预、单点加绿与协同组合',
+    simulation: '三种方案逐项推演，地图与结果卡同步变化',
+    decision: '下一步：继续向上游追溯流量源头',
+    trace: '研判完成：进入执行审批与效果追踪',
+  }
+  return messages[props.beat] ?? ''
+})
 
 const simulationNarratives: Record<typeof simulationScenario.value, MapNarrative> = {
   baseline: {
@@ -205,7 +297,11 @@ const mapNarrative = computed<MapNarrative | null>(() => {
 
 let AMapApi: any = null
 let map: any = null
-let overlays: any[] = []
+let baseOverlays: any[] = []
+let stageOverlays: any[] = []
+let overlayScope: 'base' | 'stage' = 'base'
+let renderedSceneKind = ''
+let simulationApplyScenario: ((id: SimulationScenarioId) => void) | null = null
 let scanTimer = 0
 let renderGeneration = 0
 const deferredTimers: number[] = []
@@ -225,12 +321,13 @@ function htmlElement(className: string, innerHTML = '') {
 }
 
 function addOverlay<T>(overlay: T): T {
-  overlays.push(overlay)
+  if (overlayScope === 'stage') stageOverlays.push(overlay)
+  else baseOverlays.push(overlay)
   map?.add?.(overlay)
   return overlay
 }
 
-function clearScene() {
+function clearStageScene() {
   renderGeneration += 1
   window.clearInterval(scanTimer)
   scanTimer = 0
@@ -238,8 +335,16 @@ function clearScene() {
   animationTimers.splice(0).forEach((timer) => window.clearInterval(timer))
   flowParticles = []
   simulationScenario.value = 'baseline'
-  if (map && overlays.length) map.remove(overlays)
-  overlays = []
+  simulationApplyScenario = null
+  if (map && stageOverlays.length) map.remove(stageOverlays)
+  stageOverlays = []
+}
+
+function clearScene() {
+  clearStageScene()
+  if (map && baseOverlays.length) map.remove(baseOverlays)
+  baseOverlays = []
+  overlayScope = 'base'
 }
 
 function metersToGeo(center: [number, number], eastM: number, northM: number): [number, number] {
@@ -774,9 +879,8 @@ function renderSimulationMap() {
     { id: 'green-only' as const, target: '88m', conflict: '101m', downstream: '61%', targetTone: 'success', conflictTone: 'critical', downstreamTone: 'warning', risk: '目标缓解', conflictState: '突破 92m 警戒' },
     { id: 'combined' as const, target: '78m', conflict: '71m', downstream: '55%', targetTone: 'success', conflictTone: 'success', downstreamTone: 'success', risk: '安全', conflictState: '安全' },
   ]
-  let index = 0
-  const applyScenario = () => {
-    const scenario = scenarios[index]
+  const applyScenario = (id: SimulationScenarioId) => {
+    const scenario = scenarios.find((item) => item.id === id) ?? scenarios[0]
     simulationScenario.value = scenario.id
     targetMarker.setContent(htmlElement(
       `geo-narrative-marker ${scenario.targetTone} scenario`,
@@ -790,12 +894,17 @@ function renderSimulationMap() {
       `geo-narrative-marker ${scenario.downstreamTone} scenario`,
       `<small>下游结果</small><strong>${scenario.downstream}</strong><span>上限 65%</span>`,
     ))
-    index = Math.min(index + 1, scenarios.length - 1)
   }
-  applyScenario()
-  const first = window.setTimeout(applyScenario, 2100)
-  const second = window.setTimeout(applyScenario, 4300)
+  simulationApplyScenario = applyScenario
+  applyScenario('baseline')
+  const first = window.setTimeout(() => applyScenario('green-only'), 2400)
+  const second = window.setTimeout(() => applyScenario('combined'), 5000)
   deferredTimers.push(first, second)
+}
+
+function chooseSimulationScenario(id: SimulationScenarioId) {
+  deferredTimers.splice(0).forEach((timer) => window.clearTimeout(timer))
+  simulationApplyScenario?.(id)
 }
 
 function renderReportOutcome() {
@@ -844,45 +953,13 @@ function renderTopology() {
   })
   features.filter((feature: any) => feature.geometry.type === 'Point').forEach((feature: any) => {
     const role = feature.properties?.role ?? 'context'
-    const stageMeta: Record<string, Record<string, string>> = {
-      direction: {
-        upstream: '上游来车 · 前两跳贡献 57.9%',
-        target: '分析方向 · 北进口排队 129m',
-        downstream: '下游承接 · 占有率 42%',
-        branch: '垂直方向 · 东西向排队 63m',
-      },
-      cause: {
-        upstream: '连续到达波 · 放大因素',
-        target: '有效放行不足 · 直接原因',
-        downstream: '仍有空间 · 排除下游阻塞',
-        branch: '冲突方向当前稳定',
-      },
-      constraints: {
-        upstream: '截流上限 12%',
-        target: '目标排队 ≤ 85m',
-        downstream: '占有率必须 < 65%',
-        branch: '东西向排队必须 < 92m',
-      },
-      options: {
-        upstream: '候选动作 · 上游削峰',
-        target: '候选动作 · 适度加放',
-        downstream: '候选动作 · 绿波协调',
-        branch: '副作用检查 · 垂直等待',
-      },
-      simulation: {
-        upstream: '组合方案 · 削峰 12%',
-        target: '组合推演 · 129m → 78m',
-        downstream: '组合推演 · 42% → 55%',
-        branch: '组合推演 · 63m → 71m',
-      },
-      decision: {
-        upstream: '执行 · 上游削峰 12%',
-        target: '执行 · 北进口 +4s',
-        downstream: '执行 · 下游绿波协调',
-        branch: '护栏 · 东西向不超 92m',
-      },
+    const roleMeta: Record<string, string> = {
+      upstream: '上游来车',
+      target: '分析目标',
+      downstream: '下游承接',
+      branch: '垂直冲突方向',
     }
-    const meta = stageMeta[props.beat]?.[role] ?? feature.properties?.meta ?? ''
+    const meta = roleMeta[role] ?? feature.properties?.meta ?? ''
     addOverlay(new AMapApi.Marker({
       position: feature.geometry.coordinates,
       anchor: 'center',
@@ -1085,11 +1162,40 @@ function applyCamera() {
   map.setZoomAndCenter(shot.zoom, shot.center, true, 900)
 }
 
+const topologyBeats = new Set(['direction', 'cause', 'constraints', 'options', 'simulation', 'decision'])
+
+function renderTopologyStage() {
+  overlayScope = 'stage'
+  if (props.beat === 'cause') renderCauseMap()
+  if (props.beat === 'constraints') renderConstraintMap()
+  if (props.beat === 'options') renderStrategyMap()
+  if (props.beat === 'simulation') renderSimulationMap()
+  if (props.beat === 'decision') renderStrategyMap(true)
+  overlayScope = 'base'
+}
+
+function resolveSceneKind() {
+  if (props.activeAct === 1) return `act1-${props.beat}`
+  if (props.activeAct === 6) return 'report'
+  if (topologyBeats.has(props.beat)) return 'topology'
+  return `act2-${props.beat}`
+}
+
 function renderScene() {
   if (!mapReady.value || !AMapApi) return
+  const nextSceneKind = resolveSceneKind()
+  const preserveTopology = nextSceneKind === 'topology' && renderedSceneKind === 'topology'
+  if (preserveTopology) {
+    clearStageScene()
+    renderTopologyStage()
+    return
+  }
+
   clearScene()
   map.setMapStyle?.(runtimeConfig.amap.style)
   applyCamera()
+  renderedSceneKind = nextSceneKind
+  overlayScope = 'base'
   if (props.activeAct === 1) {
     renderAct1()
     return
@@ -1104,13 +1210,9 @@ function renderScene() {
   } else if (props.beat === 'evidence') {
     renderChannelization()
     renderQueueRuler()
-  } else if (['direction', 'cause', 'constraints', 'options', 'simulation', 'decision'].includes(props.beat)) {
+  } else if (topologyBeats.has(props.beat)) {
     renderTopology()
-    if (props.beat === 'cause') renderCauseMap()
-    if (props.beat === 'constraints') renderConstraintMap()
-    if (props.beat === 'options') renderStrategyMap()
-    if (props.beat === 'simulation') renderSimulationMap()
-    if (props.beat === 'decision') renderStrategyMap(true)
+    renderTopologyStage()
   } else if (props.beat === 'trace') {
     renderFlowTrace()
   } else {
@@ -1192,7 +1294,7 @@ onBeforeUnmount(() => {
     <transition name="map-verdict">
       <section
         v-if="mapNarrative"
-        :key="`${activeAct}-${beat}-${simulationScenario}`"
+        :key="`${activeAct}-${beat}`"
         :class="['map-executive-verdict', mapNarrative.tone]"
         aria-live="polite"
       >
@@ -1203,6 +1305,7 @@ onBeforeUnmount(() => {
         <div class="verdict-copy">
           <strong>{{ mapNarrative.headline }}</strong>
           <p>{{ mapNarrative.summary }}</p>
+          <small v-if="nextNarrative" class="verdict-next">{{ nextNarrative }}</small>
         </div>
         <div class="verdict-metrics">
           <div v-for="metric in mapNarrative.metrics" :key="metric.label" :class="metric.status">
@@ -1210,7 +1313,57 @@ onBeforeUnmount(() => {
             <b>{{ metric.value }}</b>
           </div>
         </div>
+        <div class="verdict-flow">
+          <span :style="{ width: `${narrativeProgress}%` }"></span>
+        </div>
       </section>
+    </transition>
+
+    <transition name="strategy-drawer">
+      <aside
+        v-if="activeAct === 2 && beat === 'simulation'"
+        :class="['strategy-comparison-drawer', activeStrategyCard.tone]"
+      >
+        <header>
+          <div>
+            <small>COUNTERFACTUAL SIMULATION</small>
+            <strong>如果这样调，路网会发生什么？</strong>
+          </div>
+          <b>{{ activeStrategyCard.index }} / 03</b>
+        </header>
+
+        <nav aria-label="三种策略推演">
+          <button
+            v-for="item in strategyComparisonCards"
+            :key="item.id"
+            :class="[item.tone, { active: item.id === simulationScenario }]"
+            @click="chooseSimulationScenario(item.id)"
+          >
+            <span>{{ item.index }}</span>
+            <strong>{{ item.name }}</strong>
+            <small>{{ item.status }}</small>
+          </button>
+        </nav>
+
+        <div class="strategy-active-card">
+          <div class="strategy-card-heading">
+            <span>{{ activeStrategyCard.name }}</span>
+            <b>{{ activeStrategyCard.status }}</b>
+          </div>
+          <h3>{{ activeStrategyCard.action }}</h3>
+          <div class="strategy-impact-grid">
+            <span><small>北进口</small><strong>{{ activeStrategyCard.target }}</strong></span>
+            <span><small>东西向</small><strong>{{ activeStrategyCard.conflict }}</strong></span>
+            <span><small>下游占有率</small><strong>{{ activeStrategyCard.downstream }}</strong></span>
+          </div>
+          <p>{{ activeStrategyCard.verdict }}</p>
+        </div>
+
+        <footer>
+          <i></i>
+          地图上的三个结果点会随当前方案同步变化
+        </footer>
+      </aside>
     </transition>
   </div>
 </template>
