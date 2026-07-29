@@ -176,6 +176,39 @@ onBeforeUnmount(() => {
       </button>
     </nav>
 
+    <section v-if="activeReportView === 'overview'" class="report-map-overview">
+      <div class="report-map-space">
+        <div class="report-map-caption">
+          <span><i></i> 城市治理结果地图</span>
+          <small>地图显示今日闭环监测路口，绿色高亮为本次代表性治理结果</small>
+        </div>
+        <div class="report-map-legend">
+          <span><i class="closed"></i>已闭环</span>
+          <span><i class="focus"></i>代表案例</span>
+          <span><i class="watch"></i>持续监测</span>
+        </div>
+      </div>
+      <aside class="report-map-result">
+        <small>REPRESENTATIVE OUTCOME · 18:21</small>
+        <h3>解放东路与奥体西路</h3>
+        <p>组合策略执行 3 个周期后，目标排队明显消散，周边方向均保持在安全边界内。</p>
+        <div class="report-result-primary">
+          <span>北进口排队</span>
+          <strong>129<small>m</small><i>→</i>78<small>m</small></strong>
+          <b>下降 39.5%</b>
+        </div>
+        <div class="report-result-guards">
+          <span><b>71m</b>东西向<br><small>低于 92m 警戒</small></span>
+          <span><b>55%</b>下游占有率<br><small>低于 65% 上限</small></span>
+          <span><b>3</b>验证周期<br><small>持续稳定</small></span>
+        </div>
+        <div class="report-result-verdict">
+          <i></i>
+          <span><b>治理结论</b>方案有效，未将压力转移至相邻方向</span>
+        </div>
+      </aside>
+    </section>
+
     <section v-if="activeReportView === 'overview'" class="report-kpis">
       <article v-for="item in summary.kpis" :key="item.label" :class="item.tone">
         <span>{{ item.label }}</span>
