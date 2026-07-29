@@ -83,7 +83,7 @@ function addPolyline(path: Array<[number, number]>, options: Record<string, unkn
   }))
 }
 
-function addTargetAnchor(label = '诊断路口') {
+function addTargetAnchor(label = '诊断路口', detail?: string) {
   if (!target.value) return
   addOverlay(new AMapApi.CircleMarker({
     center: target.value.center,
@@ -108,7 +108,10 @@ function addTargetAnchor(label = '诊断路口') {
     position: target.value.center,
     anchor: 'bottom-left',
     offset: new AMapApi.Pixel(16, -10),
-    content: htmlElement('geo-anchor-label', `<strong>${label}</strong><span>${target.value.name}</span>`),
+    content: htmlElement(
+      'geo-anchor-label',
+      `<strong>${label}</strong><span>${detail ?? target.value.name}</span>`,
+    ),
     zIndex: 112,
   }))
 }
@@ -571,10 +574,10 @@ function applyCamera() {
     simulation: { zoom: 16.3, center: [117.1113, 36.6647] },
     decision: { zoom: 16.3, center: [117.1113, 36.6647] },
     trace: { zoom: 14.45, center: [117.1112, 36.6717] },
-    'knowledge-recall': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
-    'similar-cases': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
-    'tidal-pattern': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
-    'strategy-brief': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'knowledge-recall': { zoom: 17.6, center: targetCenter },
+    'similar-cases': { zoom: 17.6, center: targetCenter },
+    'tidal-pattern': { zoom: 17.6, center: targetCenter },
+    'strategy-brief': { zoom: 17.6, center: targetCenter },
     'plan-generation': { zoom: 16.5, center: targetCenter },
     'plan-options': { zoom: 16.3, center: [117.1113, 36.6647] },
     'impact-preview': { zoom: 16.3, center: [117.1113, 36.6647] },
@@ -617,7 +620,7 @@ function renderScene() {
   } else if (props.beat === 'tidal-pattern') {
     addTargetAnchor('潮汐特征研判')
   } else if (props.beat === 'strategy-brief') {
-    addTargetAnchor('策略匹配完成')
+    addTargetAnchor('治理方向已确定')
   } else if (['plan-generation', 'deployment'].includes(props.beat)) {
     addTargetAnchor('配时方案锁定路口')
   } else if (['deployment-confirm', 'before-after', 'closing'].includes(props.beat)) {
