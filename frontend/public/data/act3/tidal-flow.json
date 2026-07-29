@@ -1,0 +1,37 @@
+{
+  "morningPeakWindow": { "start": "07:00", "end": "09:00" },
+  "eveningPeakWindow": { "start": "17:00", "end": "19:00" },
+  "hourly": [
+    { "hour": "00:00", "flow": 90,  "saturation": 0.12, "queueM": 6,   "period": "offpeak" },
+    { "hour": "01:00", "flow": 62,  "saturation": 0.08, "queueM": 4,   "period": "offpeak" },
+    { "hour": "02:00", "flow": 48,  "saturation": 0.06, "queueM": 3,   "period": "offpeak" },
+    { "hour": "03:00", "flow": 45,  "saturation": 0.06, "queueM": 3,   "period": "offpeak" },
+    { "hour": "04:00", "flow": 58,  "saturation": 0.08, "queueM": 4,   "period": "offpeak" },
+    { "hour": "05:00", "flow": 120, "saturation": 0.18, "queueM": 9,   "period": "offpeak" },
+    { "hour": "06:00", "flow": 380, "saturation": 0.42, "queueM": 28,  "period": "offpeak" },
+    { "hour": "07:00", "flow": 700, "saturation": 0.66, "queueM": 62,  "period": "morning-peak" },
+    { "hour": "08:00", "flow": 760, "saturation": 0.71, "queueM": 74,  "period": "morning-peak" },
+    { "hour": "09:00", "flow": 620, "saturation": 0.58, "queueM": 46,  "period": "morning-peak" },
+    { "hour": "10:00", "flow": 400, "saturation": 0.41, "queueM": 24,  "period": "offpeak" },
+    { "hour": "11:00", "flow": 420, "saturation": 0.43, "queueM": 25,  "period": "offpeak" },
+    { "hour": "12:00", "flow": 380, "saturation": 0.4,  "queueM": 23,  "period": "offpeak" },
+    { "hour": "13:00", "flow": 360, "saturation": 0.39, "queueM": 21,  "period": "offpeak" },
+    { "hour": "14:00", "flow": 390, "saturation": 0.4,  "queueM": 22,  "period": "offpeak" },
+    { "hour": "15:00", "flow": 430, "saturation": 0.44, "queueM": 26,  "period": "offpeak" },
+    { "hour": "16:00", "flow": 520, "saturation": 0.5,  "queueM": 32,  "period": "offpeak" },
+    { "hour": "17:00", "flow": 860, "saturation": 0.81, "queueM": 96,  "period": "evening-peak" },
+    { "hour": "18:00", "flow": 940, "saturation": 0.89, "queueM": 129, "period": "evening-peak" },
+    { "hour": "19:00", "flow": 780, "saturation": 0.76, "queueM": 84,  "period": "evening-peak" },
+    { "hour": "20:00", "flow": 410, "saturation": 0.42, "queueM": 25,  "period": "offpeak" },
+    { "hour": "21:00", "flow": 300, "saturation": 0.33, "queueM": 17,  "period": "offpeak" },
+    { "hour": "22:00", "flow": 210, "saturation": 0.25, "queueM": 12,  "period": "offpeak" },
+    { "hour": "23:00", "flow": 140, "saturation": 0.17, "queueM": 8,   "period": "offpeak" }
+  ],
+  "insight": {
+    "title": "潮汐特征：早晚双峰，晚高峰显著更重",
+    "offpeakSummary": "平峰时段饱和度普遍低于 0.50，排队长度不超过 32m，路口运行平稳",
+    "morningSummary": "07:00–09:00 饱和度升至 0.58～0.71，排队峰值约 74m，有抬升但仍可控，未触发溢出阈值",
+    "peakSummary": "17:00–19:00 饱和度骤升至 0.76～0.89，排队峰值达 129m，明显重于早高峰，是本次问题窗口",
+    "conclusion": "该路口呈早晚双峰潮汐，但早高峰仅为中度抬升；真正失稳发生在晚高峰窄窗口，应采用以晚高峰为主、早高峰轻量响应的分时策略，而非全天通用模板。"
+  }
+}

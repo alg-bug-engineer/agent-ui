@@ -1,0 +1,13 @@
+{
+  "totalCases": 1432,
+  "sceneFeatures": 9186,
+  "reasoningRules": 214,
+  "retrievalQuery": {
+    "problemType": "排队溢出 · 信号配时/协调不合理",
+    "period": "晚高峰",
+    "geometry": "十字路口 · 单点信控",
+    "keywords": ["北进口直行", "排队溢出", "晚高峰潮汐", "有效放行不足"]
+  },
+  "matchedCaseCount": 37,
+  "matchLatencySeconds": 1.8
+}

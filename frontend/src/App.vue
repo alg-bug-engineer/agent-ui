@@ -7,9 +7,22 @@ import { runtimeConfig } from './config/runtime'
 import { useNarrative } from './state/narrative'
 import type { ActId } from './types'
 
+const Act3Experience = defineAsyncComponent(() => import('../act3/Act3Experience.vue'))
+const Act4Experience = defineAsyncComponent(() => import('../act4/Act4Experience.vue'))
+const Act5Experience = defineAsyncComponent(() => import('../act5/Act5Experience.vue'))
 const Act6Report = defineAsyncComponent(() => import('../act6/Act6Report.vue'))
 
 const { state, actLabel, goToAct, setBeat } = useNarrative()
+
+const actNames: Record<ActId, string> = {
+  1: '全域感知',
+  2: '问题诊断',
+  3: '知识匹配',
+  4: '方案生成',
+  5: '效果验证',
+  6: '复盘进化',
+}
+
 const now = ref(new Date())
 type PresentationMode = 'map' | 'detail'
 const defaultPresentationMode = (act: ActId): PresentationMode => act === 2 ? 'map' : 'detail'
@@ -80,13 +93,13 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
 
       <nav class="act-navigation" aria-label="演示幕次">
         <button
-          v-for="act in ([1, 2, 6] as ActId[])"
+          v-for="act in ([1, 2, 3, 4, 5, 6] as ActId[])"
           :key="act"
           :class="{ active: state.activeAct === act }"
           @click="switchAct(act)"
         >
           <small>ACT 0{{ act }}</small>
-          <span>{{ act === 1 ? '全域感知' : act === 2 ? '问题诊断' : '复盘进化' }}</span>
+          <span>{{ actNames[act] }}</span>
         </button>
       </nav>
 
@@ -126,6 +139,24 @@ onBeforeUnmount(() => window.clearInterval(clockTimer))
         v-else-if="state.activeAct === 2"
         :key="`act2-${state.replayToken}`"
         :paused="state.paused"
+        @beat="setBeat"
+        @open-report="goToAct(3)"
+      />
+      <Act3Experience
+        v-else-if="state.activeAct === 3"
+        :key="`act3-${state.replayToken}`"
+        @beat="setBeat"
+        @open-plan="goToAct(4)"
+      />
+      <Act4Experience
+        v-else-if="state.activeAct === 4"
+        :key="`act4-${state.replayToken}`"
+        @beat="setBeat"
+        @open-effect="goToAct(5)"
+      />
+      <Act5Experience
+        v-else-if="state.activeAct === 5"
+        :key="`act5-${state.replayToken}`"
         @beat="setBeat"
         @open-report="goToAct(6)"
       />

@@ -1,0 +1,88 @@
+{
+  "generationSeconds": 12.4,
+  "manualBaselineMinutes": 20,
+  "current": {
+    "cycleSeconds": 148,
+    "phases": [
+      { "name": "南北直行", "currentGreen": 42, "proposedGreen": 46, "ratio": 0.31 },
+      { "name": "南北左转", "currentGreen": 18, "proposedGreen": 18, "ratio": 0.12 },
+      { "name": "东西直行", "currentGreen": 46, "proposedGreen": 42, "ratio": 0.28 },
+      { "name": "东西左转", "currentGreen": 20, "proposedGreen": 20, "ratio": 0.14 }
+    ]
+  },
+  "recommended": {
+    "cycleSeconds": 148,
+    "phaseDiffSeconds": 8,
+    "phases": [
+      { "name": "南北直行", "currentGreen": 42, "proposedGreen": 46, "ratio": 0.31 },
+      { "name": "南北左转", "currentGreen": 18, "proposedGreen": 18, "ratio": 0.12 },
+      { "name": "东西直行", "currentGreen": 46, "proposedGreen": 42, "ratio": 0.28 },
+      { "name": "东西左转", "currentGreen": 20, "proposedGreen": 20, "ratio": 0.14 }
+    ]
+  },
+  "options": [
+    {
+      "id": "green-only",
+      "name": "方案 A · 单点加绿",
+      "summary": "北进口直行 +8s，周期不变，东西向被动让渡 8s",
+      "cycleSeconds": 148,
+      "phaseDiffSeconds": 0,
+      "targetGreenDeltaSeconds": 8,
+      "upstreamMeteringPct": 0,
+      "recommended": false
+    },
+    {
+      "id": "meter-only",
+      "name": "方案 B · 上游截流",
+      "summary": "不动绿信比，仅对上游轻风路、工业南路来车削峰 12%",
+      "cycleSeconds": 148,
+      "phaseDiffSeconds": 0,
+      "targetGreenDeltaSeconds": 0,
+      "upstreamMeteringPct": 12,
+      "recommended": false
+    },
+    {
+      "id": "combined",
+      "name": "方案 C · 协同组合",
+      "summary": "北进口直行 +4s、上游削峰 12%、下游相位差协调 8s，周期保持 148s",
+      "cycleSeconds": 148,
+      "phaseDiffSeconds": 8,
+      "targetGreenDeltaSeconds": 4,
+      "upstreamMeteringPct": 12,
+      "recommended": true
+    }
+  ],
+  "impacts": [
+    {
+      "optionId": "green-only",
+      "target": { "label": "北进口排队", "before": "129m", "after": "88m", "tone": "normal" },
+      "conflict": { "label": "东西向排队", "before": "63m", "after": "101m", "tone": "critical" },
+      "upstream": { "label": "上游到达强度", "before": "100%", "after": "100%（未处理）", "tone": "warning" },
+      "downstream": { "label": "下游占有率", "before": "42%", "after": "61%", "tone": "warning" }
+    },
+    {
+      "optionId": "meter-only",
+      "target": { "label": "北进口排队", "before": "129m", "after": "106m", "tone": "warning" },
+      "conflict": { "label": "东西向排队", "before": "63m", "after": "64m", "tone": "normal" },
+      "upstream": { "label": "上游到达强度", "before": "100%", "after": "88%", "tone": "normal" },
+      "downstream": { "label": "下游占有率", "before": "42%", "after": "47%", "tone": "normal" }
+    },
+    {
+      "optionId": "combined",
+      "target": { "label": "北进口排队", "before": "129m", "after": "78m", "tone": "normal" },
+      "conflict": { "label": "东西向排队", "before": "63m", "after": "71m", "tone": "normal" },
+      "upstream": { "label": "上游到达强度", "before": "100%", "after": "88%", "tone": "normal" },
+      "downstream": { "label": "下游占有率", "before": "42%", "after": "55%", "tone": "normal" }
+    }
+  ],
+  "deployment": {
+    "status": "已下发至路口信号机，晚高峰窗口自动启用",
+    "controller": "解放东路×奥体西路 · 信号机 SC-011WWE28FMC00001",
+    "effectiveAt": "17:00 自动启用组合方案 · 19:10 自动回退标准配时",
+    "rollbackConditions": [
+      "东西向排队超过 92m，立即回退 2 秒",
+      "下游占有率超过 65%，停止北进口加放",
+      "上游排队超过 30m，降低截流比例"
+    ]
+  }
+}

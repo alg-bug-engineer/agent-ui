@@ -1,0 +1,32 @@
+{
+  "deployment": {
+    "planName": "方案 C · 协同组合（北进口 +4s / 上游削峰 12% / 下游相位差协调）",
+    "deployedAt": "17:00:00",
+    "effectiveCycles": 3
+  },
+  "metrics": [
+    { "id": "queue", "label": "北进口排队长度", "unit": "m", "before": 129, "after": 78, "improvementPct": 39.5, "direction": "down" },
+    { "id": "delay", "label": "平均延误", "unit": "s", "before": 86, "after": 52, "improvementPct": 39.5, "direction": "down" },
+    { "id": "efficiency", "label": "通行效率", "unit": "pcu/h", "before": 612, "after": 780, "improvementPct": 27.5, "direction": "up" },
+    { "id": "green-utilization", "label": "绿灯利用率", "unit": "%", "before": 54.2, "after": 76.8, "improvementPct": 41.7, "direction": "up" }
+  ],
+  "hourlyComparison": [
+    { "hour": "17:00", "before": 96,  "after": 71 },
+    { "hour": "17:20", "before": 108, "after": 68 },
+    { "hour": "17:40", "before": 118, "after": 74 },
+    { "hour": "18:00", "before": 129, "after": 78 },
+    { "hour": "18:20", "before": 121, "after": 70 },
+    { "hour": "18:40", "before": 104, "after": 63 },
+    { "hour": "19:00", "before": 84,  "after": 51 }
+  ],
+  "dailyTrend": [
+    { "day": "周一", "queueBeforeM": 132, "queueAfterM": 85 },
+    { "day": "周二", "queueBeforeM": 126, "queueAfterM": 80 },
+    { "day": "周三", "queueBeforeM": 129, "queueAfterM": 78 },
+    { "day": "周四", "queueBeforeM": 135, "queueAfterM": 76 },
+    { "day": "周五", "queueBeforeM": 141, "queueAfterM": 82 },
+    { "day": "周六", "queueBeforeM": 98,  "queueAfterM": 62 },
+    { "day": "周日", "queueBeforeM": 91,  "queueAfterM": 58 }
+  ],
+  "conclusion": "方案下发后连续 3 个信号周期内北进口排队长度由 129m 降至 78m，东西向与下游均保持在安全边界内；一周持续跟踪显示晚高峰排队长度稳定下降 35%–43%，未出现回弹，可转入常态化每日复盘。"
+}
