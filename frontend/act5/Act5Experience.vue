@@ -51,8 +51,14 @@ const overallProgress = computed(() => ((currentIndex.value + 1) / beats.length)
 function selectBeat(index: number) {
   currentIndex.value = index
   emit('beat', beats[index].id)
-  if (beats[index].id === 'peak-verification') nextTick(renderHourlyChart)
-  if (beats[index].id === 'closing') nextTick(renderDailyChart)
+  if (beats[index].id === 'peak-verification') nextTick(() => {
+    renderHourlyChart()
+    resizeCharts()
+  })
+  if (beats[index].id === 'closing') nextTick(() => {
+    renderDailyChart()
+    resizeCharts()
+  })
 }
 
 function goPrev() {
@@ -77,6 +83,7 @@ function darkAxis() {
 
 function renderHourlyChart() {
   if (!hourlyChart.value || !trend.value) return
+  hourlyChartInstance?.dispose()
   hourlyChartInstance = init(hourlyChart.value)
   hourlyChartInstance.setOption({
     grid: { left: 34, right: 12, top: 24, bottom: 24 },
@@ -122,6 +129,7 @@ function renderHourlyChart() {
 
 function renderDailyChart() {
   if (!dailyChart.value || !trend.value) return
+  dailyChartInstance?.dispose()
   dailyChartInstance = init(dailyChart.value)
   dailyChartInstance.setOption({
     grid: { left: 34, right: 12, top: 24, bottom: 24 },

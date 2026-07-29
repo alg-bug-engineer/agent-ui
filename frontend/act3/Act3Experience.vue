@@ -37,7 +37,7 @@ const beats = [
   },
   {
     id: 'strategy-brief',
-    title: '治理策略',
+    title: '治理方向',
     subtitle: '摒弃通用模板，定制现场策略',
   },
 ] as const
@@ -49,11 +49,13 @@ const tidalFlow = ref<TidalFlowScene | null>(null)
 const strategyBrief = ref<StrategyBrief | null>(null)
 const activeCaseId = ref('')
 const tidalChart = ref<HTMLDivElement | null>(null)
+const objectListReady = ref(false)
 let tidalChartInstance: EChartsType | null = null
+let objectListTimer = 0
 
 const current = computed(() => beats[currentIndex.value])
 const completed = computed(() => currentIndex.value === beats.length - 1)
-const overallProgress = computed(() => ((currentIndex.value + 1) / beats.length) * 100)
+const showStrategySlots = computed(() => current.value.id === 'strategy-brief')
 const activeCase = computed(() =>
   similarCases.value.find((item) => item.id === activeCaseId.value) ?? similarCases.value[0],
 )
@@ -61,7 +63,16 @@ const activeCase = computed(() =>
 function selectBeat(index: number) {
   currentIndex.value = index
   emit('beat', beats[index].id)
-  if (beats[index].id === 'tidal-pattern') nextTick(renderTidalChart)
+  if (beats[index].id === 'tidal-pattern') nextTick(() => {
+    renderTidalChart()
+    resizeChart()
+  })
+}
+
+function selectCase(id: string) {
+  activeCaseId.value = id
+  const index = beats.findIndex((item) => item.id === 'similar-cases')
+  if (index !== currentIndex.value) selectBeat(index)
 }
 
 function goPrev() {
@@ -97,15 +108,15 @@ function renderTidalChart() {
       type: 'category',
       boundaryGap: false,
       data: hours,
-      axisLine: { lineStyle: { color: 'rgba(220,240,255,.25)' } },
-      axisLabel: { color: 'rgba(220,240,255,.45)', fontSize: 8, interval: 2 },
+      axisLine: { lineStyle: { color: 'rgba(23,54,77,.16)' } },
+      axisLabel: { color: '#7c96a6', fontSize: 8, interval: 2 },
     },
     yAxis: {
       type: 'value',
       name: '排队长度(m)',
-      nameTextStyle: { color: 'rgba(220,240,255,.4)', fontSize: 8 },
-      splitLine: { lineStyle: { color: 'rgba(255,255,255,.06)' } },
-      axisLabel: { color: 'rgba(220,240,255,.45)', fontSize: 8 },
+      nameTextStyle: { color: '#93a3ad', fontSize: 8 },
+      splitLine: { lineStyle: { color: 'rgba(23,54,77,.07)' } },
+      axisLabel: { color: '#7c96a6', fontSize: 8 },
     },
     series: [
       {
@@ -113,21 +124,21 @@ function renderTidalChart() {
         smooth: true,
         symbol: 'none',
         data: tidalFlow.value.hourly.map((item) => item.queueM),
-        lineStyle: { width: 2.5, color: '#66e0ff' },
-        areaStyle: { color: 'rgba(102,224,255,.08)' },
+        lineStyle: { width: 2.5, color: '#179d8e' },
+        areaStyle: { color: 'rgba(23,157,142,.1)' },
         markArea: {
           silent: true,
           data: [
             ...(morning
               ? [[{
                   xAxis: morning[0],
-                  itemStyle: { color: 'rgba(245,166,35,.10)' },
+                  itemStyle: { color: 'rgba(216,149,42,.12)' },
                 }, { xAxis: morning[1] }]]
               : []),
             ...(evening
               ? [[{
                   xAxis: evening[0],
-                  itemStyle: { color: 'rgba(245,166,35,.22)' },
+                  itemStyle: { color: 'rgba(217,83,79,.14)' },
                 }, { xAxis: evening[1] }]]
               : []),
           ],
@@ -157,206 +168,257 @@ onMounted(async () => {
   await nextTick()
   renderTidalChart()
   window.addEventListener('resize', resizeChart)
+  objectListTimer = window.setTimeout(() => {
+    objectListReady.value = true
+  }, 1000)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', resizeChart)
+  window.clearTimeout(objectListTimer)
   tidalChartInstance?.dispose()
 })
 </script>
 
 <template>
-  <div class="act-experience act3-experience">
-    <aside class="glass-panel agent-dock reasoning-panel">
-      <div class="dock-cap">
-        <span class="dock-live"><i></i> KNOWLEDGE MATCHING</span>
-        <b>知识匹配链</b>
-        <small>{{ String(currentIndex + 1).padStart(2, '0') }} / {{ String(beats.length).padStart(2, '0') }}</small>
-      </div>
+  <div class="act-experience act3-experience act3-dashboard">
+    <div v-if="!objectListReady" class="act3-object-list act3-object-list-loading">
+      <span class="live-dot"></span>
+      正在检索交管知识库…
+    </div>
 
-      <div class="diagnosis-title">
-        <div class="agent-emblem"><span></span><span></span><span></span></div>
-        <div>
-          <h2>案例与策略匹配</h2>
-          <p>解放东路×奥体西路 · 晚高峰排队溢出</p>
+    <Transition name="act3-list-pop">
+      <aside v-if="objectListReady" class="act3-object-list">
+        <template v-if="showStrategySlots && strategyBrief">
+          <div class="act3-list-head">
+            <span class="live-dot"></span>
+            分时段治理方向
+          </div>
+
+          <div class="act3-slot-list act3-slot-list-side">
+            <article
+              v-for="item in strategyBrief.timeSlots"
+              :key="item.period"
+              :class="['act3-slot', item.tone]"
+            >
+              <span>{{ item.period }}</span>
+              <strong>{{ item.label }}</strong>
+              <p>{{ item.strategy }}</p>
+            </article>
+          </div>
+
+          <div class="act3-list-foot">
+            <span>本次重点</span>
+            晚高峰窗口启用专属组合策略
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="act3-list-head">
+            <span class="live-dot"></span>
+            案例库检索对象
+          </div>
+
+          <div v-if="knowledgeBase" class="act3-list-stats">
+            <div><strong>{{ knowledgeBase.totalCases }}</strong><span>实战案例</span></div>
+            <div><strong>{{ knowledgeBase.sceneFeatures }}</strong><span>场景语义</span></div>
+            <div><strong>{{ knowledgeBase.reasoningRules }}</strong><span>推理规则</span></div>
+          </div>
+
+          <div class="act3-list-items">
+            <button
+              v-for="item in similarCases"
+              :key="item.id"
+              class="act3-object-item"
+              :class="{ active: item.id === activeCaseId }"
+              @click="selectCase(item.id)"
+            >
+              <span class="act3-object-badge">{{ item.matchScore }}%</span>
+              <div>
+                <strong>{{ item.location }}</strong>
+                <small>{{ item.title }}</small>
+              </div>
+            </button>
+          </div>
+
+          <div class="act3-list-foot">
+            <span>数据口径</span>
+            交管知识库（knowledge_qa_tagged）
+          </div>
+        </template>
+      </aside>
+    </Transition>
+
+    <section class="act3-panel">
+      <header class="act3-panel-head">
+        <div class="act3-panel-heading">
+          <strong>解放东路 × 奥体西路</strong>
+          <em class="act3-tag critical">晚高峰 · 排队溢出</em>
         </div>
-      </div>
+        <small class="act3-panel-index">{{ String(currentIndex + 1).padStart(2, '0') }} / {{ String(beats.length).padStart(2, '0') }}</small>
+      </header>
 
-      <div class="reasoning-progress">
-        <span :style="{ width: `${overallProgress}%` }"></span>
-      </div>
-
-      <ol class="reasoning-steps">
-        <li
+      <nav class="act3-step-tabs">
+        <button
           v-for="(item, index) in beats"
           :key="item.id"
           :class="{ active: index === currentIndex, done: index < currentIndex }"
           @click="selectBeat(index)"
         >
-          <span class="step-index">{{ index < currentIndex ? '✓' : String(index + 1).padStart(2, '0') }}</span>
-          <div>
-            <strong>{{ item.title }}</strong>
-            <small>{{ item.subtitle }}</small>
-          </div>
-          <i v-if="index === currentIndex"></i>
-        </li>
-      </ol>
+          <em>{{ index < currentIndex ? '✓' : index + 1 }}</em>
+          <span>{{ item.title }}</span>
+        </button>
+      </nav>
 
-      <div class="step-check-bar">
-        <div class="step-check-status">
+      <div class="act3-panel-body">
+        <template v-if="current.id === 'knowledge-recall' && knowledgeBase">
+          <div class="act3-info-card">
+            <span>检索条件</span>
+            {{ knowledgeBase.retrievalQuery.problemType }} · {{ knowledgeBase.retrievalQuery.period }} · {{ knowledgeBase.retrievalQuery.geometry }}
+          </div>
+
+          <div class="act3-tag-row">
+            <b v-for="keyword in knowledgeBase.retrievalQuery.keywords" :key="keyword" class="act3-chip">{{ keyword }}</b>
+          </div>
+
+          <div class="act3-judgement success">
+            <span class="act3-judgement-badge">✓</span>
+            <div>
+              <strong>已命中 {{ knowledgeBase.matchedCaseCount }} 个高相似度案例</strong>
+              <p>检索耗时 {{ knowledgeBase.matchLatencySeconds }}s，均命中「晚高峰 + 排队溢出」标签体系</p>
+            </div>
+          </div>
+        </template>
+
+        <template v-else-if="current.id === 'similar-cases' && activeCase">
+          <p class="act3-panel-hint">从左侧列表切换其他案例进行比对</p>
+
+          <article class="act3-case-card">
+            <header>
+              <strong>{{ activeCase.title }}</strong>
+              <em class="act3-tag critical">匹配度 {{ activeCase.matchScore }}%</em>
+            </header>
+
+            <div class="act3-match-block">
+              <div class="act3-match-label">命中标签 <small>{{ activeCase.hitTags.length }} 项</small></div>
+              <div class="act3-tag-row">
+                <b
+                  v-for="tag in activeCase.hitTags"
+                  :key="`${tag.dimension}-${tag.value}`"
+                  class="act3-chip matched"
+                >
+                  <em>{{ tag.dimension }}</em>{{ tag.value }}
+                </b>
+              </div>
+            </div>
+
+            <div class="act3-match-block">
+              <div class="act3-match-label">命中高阶语义 <small>{{ activeCase.hitSemantics.length }} 项</small></div>
+              <div class="act3-tag-row">
+                <b
+                  v-for="item in activeCase.hitSemantics"
+                  :key="`${item.dimension}-${item.value}`"
+                  class="act3-chip semantic"
+                >
+                  <em>{{ item.dimension }}</em>{{ item.value }}
+                </b>
+              </div>
+            </div>
+
+            <div class="act3-case-body">
+              <p><span>场景</span>{{ activeCase.scenario }}</p>
+              <p><span>诊断</span>{{ activeCase.diagnosis }}</p>
+              <p><span>治理</span>{{ activeCase.treatment }}</p>
+            </div>
+
+            <div class="act3-case-effect"><span>效果</span>{{ activeCase.effect }}</div>
+            <footer>来源：{{ activeCase.source.title }}</footer>
+          </article>
+
+          <div class="act3-judgement info">
+            <span class="act3-judgement-badge">Σ</span>
+            <div>
+              <strong>比对结论</strong>
+              <p>3 个真实案例均命中「晚高峰 + 排队溢出 + 信号配时短板」标签，并共享「潮汐失稳 / 有效放行不足 / 排队回传」等高阶语义，支撑定向加放而非全天大幅加绿。</p>
+            </div>
+          </div>
+        </template>
+
+        <template v-else-if="current.id === 'tidal-pattern' && tidalFlow">
+          <div class="act3-chart-card">
+            <div ref="tidalChart" class="act3-chart"></div>
+            <div class="act3-chart-caption">早高峰有抬升 · 晚高峰 17:00–19:00 显著更重</div>
+          </div>
+
+          <div class="act3-stat-row">
+            <article class="act3-stat-card critical">
+              <div><span>晚高峰</span><strong>17:00–19:00</strong></div>
+              <b>饱和度 0.76～0.89</b>
+              <small>排队峰值 129m</small>
+              <p>{{ tidalFlow.insight.peakSummary }}</p>
+            </article>
+            <article class="act3-stat-card warning">
+              <div><span>早高峰</span><strong>07:00–09:00</strong></div>
+              <b>饱和度 0.58～0.71</b>
+              <small>排队峰值 74m</small>
+              <p>{{ tidalFlow.insight.morningSummary }}</p>
+            </article>
+            <article class="act3-stat-card normal">
+              <div><span>平峰</span><strong>其余时段</strong></div>
+              <b>饱和度 ≤ 0.50</b>
+              <small>排队 ≤ 32m</small>
+              <p>{{ tidalFlow.insight.offpeakSummary }}</p>
+            </article>
+          </div>
+
+          <div class="act3-judgement critical">
+            <span class="act3-judgement-badge">!</span>
+            <div><strong>潮汐结论</strong><p>{{ tidalFlow.insight.conclusion }}</p></div>
+          </div>
+        </template>
+
+        <template v-else-if="current.id === 'strategy-brief' && strategyBrief">
+          <div class="act3-principle-list">
+            <div class="act3-principle-head">治理原则</div>
+            <article v-for="(item, index) in strategyBrief.principles" :key="item" class="act3-principle-item">
+              <em>{{ index + 1 }}</em>
+              <p>{{ item }}</p>
+            </article>
+          </div>
+
+          <div class="act3-info-card">
+            <span>推荐方向</span>
+            {{ strategyBrief.recommendedDirection }}
+          </div>
+
+          <div class="act3-judgement success">
+            <span class="act3-judgement-badge">✓</span>
+            <div><strong>预期成效</strong><p>{{ strategyBrief.conclusion }}</p></div>
+          </div>
+
+          <button class="act3-cta" @click="emit('openPlan')">
+            <span>进入配时方案生成</span><b>→</b>
+          </button>
+
+          <div class="act3-source-note">
+            <span>数据口径</span>
+            真实案例摘自交管知识库（knowledge_qa_tagged）；潮汐曲线与策略结论为演示数据，用于呈现专家分析逻辑
+          </div>
+        </template>
+      </div>
+
+      <footer class="act3-step-check-bar">
+        <div class="act3-step-check-status">
           <span class="live-dot"></span>
-          {{ completed ? '策略匹配完成 · 已形成现场专属方向' : `待检查 · ${current.title}` }}
+          {{ completed ? '治理方向已确定 · 可进入配时方案生成' : `待检查 · ${current.title}` }}
         </div>
-        <div class="step-check-nav">
+        <div class="act3-step-check-nav">
           <button :disabled="currentIndex === 0" @click="goPrev">← 上一步</button>
           <button class="next-act" @click="goNext">
             {{ completed ? '进入方案生成 →' : '下一步 →' }}
           </button>
         </div>
-      </div>
-    </aside>
-
-    <aside class="glass-panel agent-dock evidence-panel">
-      <div class="dock-cap evidence-cap">
-        <span class="dock-live"><i></i> ANALYSIS WORKBENCH</span>
-        <b>{{ current.title }}</b>
-        <small>LIVE</small>
-      </div>
-
-      <template v-if="current.id === 'knowledge-recall' && knowledgeBase">
-        <div class="evidence-heading"><span>交管知识库检索</span><b>01</b></div>
-        <div class="knowledge-stats">
-          <div><strong>{{ knowledgeBase.totalCases.toLocaleString() }}</strong><span>一线实战处置案例</span></div>
-          <div><strong>{{ knowledgeBase.sceneFeatures.toLocaleString() }}</strong><span>场景语义</span></div>
-          <div><strong>{{ knowledgeBase.reasoningRules }}</strong><span>推理规则</span></div>
-        </div>
-        <div class="target-card">
-          <small>本次检索条件</small>
-          <h2>{{ knowledgeBase.retrievalQuery.problemType }}</h2>
-          <p>{{ knowledgeBase.retrievalQuery.period }} · {{ knowledgeBase.retrievalQuery.geometry }}</p>
-        </div>
-        <div class="keyword-tags">
-          <span v-for="keyword in knowledgeBase.retrievalQuery.keywords" :key="keyword">{{ keyword }}</span>
-        </div>
-        <div class="plain-conclusion">
-          <b>检索结论</b>
-          {{ knowledgeBase.matchLatencySeconds }}s 内从知识库命中 {{ knowledgeBase.matchedCaseCount }} 个高相似度案例，进入案例比对环节。
-        </div>
-      </template>
-
-      <template v-else-if="current.id === 'similar-cases'">
-        <div class="evidence-heading"><span>晚高峰排队溢出真实案例</span><b>02</b></div>
-        <div class="case-tab-row">
-          <button
-            v-for="item in similarCases"
-            :key="item.id"
-            :class="{ active: item.id === activeCaseId }"
-            @click="activeCaseId = item.id"
-          >
-            <small>匹配度 {{ item.matchScore }}%</small>
-            <strong>{{ item.location }}</strong>
-          </button>
-        </div>
-        <article v-if="activeCase" class="case-card">
-          <header>
-            <strong>{{ activeCase.title }}</strong>
-            <span>匹配度 {{ activeCase.matchScore }}%</span>
-          </header>
-          <div class="match-block">
-            <div class="match-label">命中标签 <small>{{ activeCase.hitTags.length }} 项</small></div>
-            <div class="hit-tag-row">
-              <b
-                v-for="tag in activeCase.hitTags"
-                :key="`${tag.dimension}-${tag.value}`"
-                class="hit-tag matched"
-              >
-                <em>{{ tag.dimension }}</em>{{ tag.value }}
-              </b>
-            </div>
-          </div>
-          <div class="match-block">
-            <div class="match-label">命中高阶语义 <small>{{ activeCase.hitSemantics.length }} 项</small></div>
-            <div class="hit-tag-row">
-              <b
-                v-for="item in activeCase.hitSemantics"
-                :key="`${item.dimension}-${item.value}`"
-                class="hit-tag matched"
-              >
-                <em>{{ item.dimension }}</em>{{ item.value }}
-              </b>
-            </div>
-          </div>
-          <p><span>场景</span>{{ activeCase.scenario }}</p>
-          <p><span>诊断</span>{{ activeCase.diagnosis }}</p>
-          <p><span>治理</span>{{ activeCase.treatment }}</p>
-          <div class="case-effect"><span>效果</span>{{ activeCase.effect }}</div>
-          <footer>来源：{{ activeCase.source.title }}</footer>
-        </article>
-        <div class="plain-conclusion">
-          <b>比对结论</b>
-          3 个真实案例均命中「晚高峰 + 排队溢出 + 信号配时短板」标签，并共享「潮汐失稳 / 有效放行不足 / 排队回传」等高阶语义，支撑定向加放而非全天大幅加绿。
-        </div>
-      </template>
-
-      <template v-else-if="current.id === 'tidal-pattern' && tidalFlow">
-        <div class="evidence-heading"><span>{{ tidalFlow.insight.title }}</span><b>03</b></div>
-        <div class="tidal-chart-panel">
-          <div ref="tidalChart" class="tidal-chart"></div>
-          <div class="tidal-chart-caption"><i></i>早高峰有抬升 · 晚高峰 17:00–19:00 显著更重</div>
-        </div>
-        <div class="direction-list tidal-summary tidal-summary-triple">
-          <article class="direction-card normal">
-            <div><span>平峰</span><strong>其余时段</strong></div>
-            <b>饱和度 ≤ 0.50</b>
-            <small>排队 ≤ 32m</small>
-            <p>{{ tidalFlow.insight.offpeakSummary }}</p>
-          </article>
-          <article class="direction-card warning">
-            <div><span>早高峰</span><strong>07:00–09:00</strong></div>
-            <b>饱和度 0.58～0.71</b>
-            <small>排队峰值 74m</small>
-            <p>{{ tidalFlow.insight.morningSummary }}</p>
-          </article>
-          <article class="direction-card critical">
-            <div><span>晚高峰</span><strong>17:00–19:00</strong></div>
-            <b>饱和度 0.76～0.89</b>
-            <small>排队峰值 129m</small>
-            <p>{{ tidalFlow.insight.peakSummary }}</p>
-          </article>
-        </div>
-        <div class="plain-conclusion critical">
-          <b>潮汐结论</b>
-          {{ tidalFlow.insight.conclusion }}
-        </div>
-      </template>
-
-      <template v-else-if="current.id === 'strategy-brief' && strategyBrief">
-        <div class="evidence-heading"><span>{{ strategyBrief.title }}</span><b>04</b></div>
-        <div class="principle-list">
-          <span v-for="item in strategyBrief.principles" :key="item">{{ item }}</span>
-        </div>
-        <div class="timeslot-list">
-          <article v-for="item in strategyBrief.timeSlots" :key="item.period" :class="item.tone">
-            <span>{{ item.period }}</span>
-            <strong>{{ item.label }}</strong>
-            <p>{{ item.strategy }}</p>
-          </article>
-        </div>
-        <div class="decision-rationale">
-          <span>推荐方向</span>
-          <p>{{ strategyBrief.recommendedDirection }}</p>
-        </div>
-        <div class="expected-outcome">{{ strategyBrief.conclusion }}</div>
-        <button class="primary-action report-entry" @click="emit('openPlan')">
-          <span>进入配时方案生成</span><b>→</b>
-        </button>
-      </template>
-
-      <div class="analysis-source">
-        <span>数据口径</span>
-        <b>真实案例摘自交管知识库（knowledge_qa_tagged）</b>
-        <small>潮汐曲线与策略结论为演示数据，用于呈现专家分析逻辑</small>
-      </div>
-    </aside>
+      </footer>
+    </section>
   </div>
 </template>

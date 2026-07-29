@@ -189,7 +189,7 @@ onMounted(async () => {
 
       <template v-else-if="current.id === 'impact-preview' && activeImpact">
         <div class="evidence-heading"><span>方案影响预估 · 四维同屏</span><b>03</b></div>
-        <div class="case-tab-row">
+        <div class="plan-tab-row">
           <button
             v-for="item in plan.options"
             :key="item.id"
