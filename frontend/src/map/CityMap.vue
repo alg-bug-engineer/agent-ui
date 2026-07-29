@@ -115,29 +115,6 @@ const narrativeProgress = computed(() => {
   return index < 0 ? 0 : Math.round(((index + 1) / order.length) * 100)
 })
 
-const nextNarrative = computed(() => {
-  const messages: Record<string, string> = {
-    cognition: '下一步：把排队长度与动态阈值放到道路上核验',
-    evidence: '下一步：镜头拉远，建立目标、冲突方向与上下游拓扑关系',
-    direction: '下一步：沿上游走廊追踪流量来源与贡献',
-    trace: '下一步：结合流量溯源结果逐项验证问题成因',
-    cause: '问题验证完成：进入知识匹配与策略生成',
-    'knowledge-recall': '下一步：对照命中的真实相似案例，提炼共性处置经验',
-    'similar-cases': '下一步：用潮汐曲线确认问题窗口是否集中在晚高峰',
-    'tidal-pattern': '下一步：形成分时段治理方向，准备进入配时方案生成',
-    'strategy-brief': '治理方向已确定：进入配时方案生成',
-    'plan-generation': '下一步：对比单点加绿、上游截流与协同组合三类方案',
-    'plan-options': '下一步：把推荐方案放到目标、冲突、上下游四维同屏预估',
-    'impact-preview': '下一步：下发信号机，并绑定自动回退护栏',
-    deployment: '方案已锁定：进入执行后效果闭环验证',
-    'deployment-confirm': '下一步：对比下发前后排队、延误、效率与绿灯利用率',
-    'before-after': '下一步：在晚高峰窗口逐周期确认改善是否持续',
-    'peak-verification': '下一步：用一周趋势确认无回弹，转入每日复盘',
-    closing: '效果验证完成：进入每日复盘与经验沉淀',
-  }
-  return messages[props.beat] ?? ''
-})
-
 const simulationNarratives: Record<typeof simulationScenario.value, MapNarrative> = {
   baseline: {
     chapter: '反事实推演',
@@ -1638,7 +1615,6 @@ onBeforeUnmount(() => {
         <div class="verdict-copy">
           <strong>{{ mapNarrative.headline }}</strong>
           <p>{{ mapNarrative.summary }}</p>
-          <small v-if="activeAct !== 2 && nextNarrative" class="verdict-next">{{ nextNarrative }}</small>
         </div>
         <div class="verdict-metrics">
           <div v-for="metric in mapNarrative.metrics" :key="metric.label" :class="metric.status">
