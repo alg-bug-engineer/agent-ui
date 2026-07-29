@@ -709,28 +709,6 @@
   margin: 10px 10px 9px;
 }
 
-.v2-completed-summary {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin: 0 10px;
-}
-
-.v2-completed-summary span {
-  padding: 9px;
-  color: rgba(191, 221, 232, .53);
-  text-align: center;
-  background: rgba(78, 224, 170, .035);
-  border: 1px solid rgba(78, 224, 170, .12);
-  font-size: 7px;
-}
-
-.v2-completed-summary strong {
-  margin-right: 4px;
-  color: var(--v2-green);
-  font: 800 14px "DIN Alternate", sans-serif;
-}
-
 .v2-task-board-foot {
   flex: 0 0 auto;
   display: flex;
@@ -1931,39 +1909,155 @@
 .v2-direction-facts {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 7px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .v2-direction-facts article {
-  padding: 9px;
-  background: rgba(255, 255, 255, .025);
-  border-left: 2px solid var(--v2-blue);
+  min-width: 0;
+  padding: 11px;
+  background: linear-gradient(140deg, rgba(26, 127, 255, .08), rgba(255, 255, 255, .025));
+  border: 1px solid rgba(87, 158, 191, .2);
+  border-left: 3px solid var(--v2-blue);
 }
 
 .v2-direction-facts article.critical {
+  background: linear-gradient(140deg, rgba(255, 119, 112, .12), rgba(255, 255, 255, .025));
   border-left-color: var(--v2-red);
 }
 
 .v2-direction-facts article.warning {
+  background: linear-gradient(140deg, rgba(255, 193, 92, .1), rgba(255, 255, 255, .025));
   border-left-color: var(--v2-amber);
 }
 
-.v2-direction-facts small {
+.v2-direction-facts header {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.v2-direction-facts header small {
   color: var(--v2-muted);
-  font-size: 7px;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.v2-direction-facts header b {
+  color: var(--v2-cyan);
+  font-size: 9px;
 }
 
 .v2-direction-facts strong {
   display: block;
-  margin-top: 3px;
-  font-size: 9px;
+  margin-top: 6px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.v2-direction-facts article > div {
+  margin-top: 7px;
+  color: var(--v2-cyan);
+  font-size: 15px;
+  font-weight: 850;
 }
 
 .v2-direction-facts p {
-  margin: 3px 0 0;
-  color: rgba(212, 234, 243, .48);
-  font-size: 7px;
+  margin: 5px 0 0;
+  color: rgba(222, 241, 248, .7);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.v2-direction-facts footer {
+  margin-top: 7px;
+  padding-top: 7px;
+  color: rgba(218, 238, 246, .56);
+  border-top: 1px solid rgba(112, 184, 212, .12);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.v2-direction-facts article.critical > div,
+.v2-direction-facts article.critical header b {
+  color: var(--v2-red);
+}
+
+.v2-direction-facts article.warning > div,
+.v2-direction-facts article.warning header b {
+  color: var(--v2-amber);
+}
+
+.v2-topology-title {
+  margin-top: 11px !important;
+}
+
+.v2-topology-path {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  padding: 10px;
+  background: rgba(3, 15, 26, .56);
+  border: 1px solid rgba(57, 220, 244, .18);
+}
+
+.v2-topology-path > span {
+  min-width: 0;
+  padding: 7px 4px;
+  text-align: center;
+  background: rgba(255, 193, 92, .06);
+  border: 1px solid rgba(255, 193, 92, .16);
+}
+
+.v2-topology-path > span.target {
+  background: rgba(255, 119, 112, .08);
+  border-color: rgba(255, 119, 112, .25);
+}
+
+.v2-topology-path span small,
+.v2-topology-path span strong {
+  display: block;
+}
+
+.v2-topology-path span small {
+  color: var(--v2-muted);
+  font-size: 9px;
+}
+
+.v2-topology-path span strong {
+  margin-top: 4px;
+  color: var(--v2-amber);
+  font-size: 15px;
+}
+
+.v2-topology-path span.target strong {
+  color: var(--v2-red);
+}
+
+.v2-topology-path > i {
+  color: var(--v2-cyan);
+  font-style: normal;
+}
+
+.v2-topology-path > b {
+  grid-column: 2 / 5;
+  margin-top: 2px;
+  padding: 6px;
+  color: #dff8fd;
+  text-align: center;
+  background: rgba(58, 140, 255, .08);
+  border-top: 1px solid rgba(58, 140, 255, .2);
+  font-size: 10px;
+}
+
+.v2-topology-path > b small {
+  margin-right: 7px;
+  color: var(--v2-blue);
+  font-size: 9px;
 }
 
 .v2-causal-chain {
@@ -4008,6 +4102,206 @@
 
 .v2-review-experience .report-card header h3 {
   font-size: 16px;
+}
+
+/* Act 2 topology hierarchy: dimensions stay readable, decision values dominate. */
+.v2-threshold-visual div span {
+  color: rgba(218, 239, 247, .8);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.v2-threshold-visual div b,
+.v2-threshold-visual div strong {
+  font-size: 28px;
+  font-weight: 850;
+  line-height: 1.05;
+}
+
+.v2-threshold-visual p {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.v2-direction-facts header small {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.v2-direction-facts header b {
+  font-size: 10px;
+}
+
+.v2-direction-facts strong {
+  font-size: 15px;
+}
+
+.v2-direction-facts article > div {
+  font-size: 17px;
+}
+
+.v2-direction-facts p {
+  font-size: 11px;
+}
+
+.v2-direction-facts footer {
+  font-size: 10px;
+}
+
+.v2-topology-title span {
+  color: var(--v2-cyan);
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.v2-topology-title b {
+  font-size: 11px;
+}
+
+.v2-topology-path span small {
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.v2-topology-path span strong {
+  font-size: 18px;
+}
+
+.v2-topology-path > b {
+  font-size: 12px;
+}
+
+.v2-analysis-chain strong {
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.v2-analysis-chain p {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.v2-analysis-chain li > b {
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* Match the decision hierarchy of main Act2: label → value → evidence. */
+.v2-cognition-grid span,
+.v2-metric-stack span,
+.v2-impact-list span,
+.v2-outcome-metrics > article > span,
+.v2-readiness-grid span,
+.v2-deployment-card div small,
+.v2-safe-results small {
+  color: #b8d9e7;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.v2-cognition-grid strong,
+.v2-metric-stack strong {
+  color: #fff;
+  font-size: 28px;
+  text-shadow: 0 0 14px rgba(102, 224, 255, .18);
+}
+
+.v2-cognition-grid p,
+.v2-metric-stack p,
+.v2-impact-list b,
+.v2-outcome-metrics b,
+.v2-readiness-grid small,
+.v2-deployment-card > p,
+.v2-safe-results b {
+  color: rgba(220, 240, 255, .72);
+  font-size: 11px;
+}
+
+.v2-source-list span {
+  color: rgba(224, 242, 249, .74);
+  font-size: 11px;
+}
+
+.v2-source-list span b {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.v2-causal-chain article span {
+  color: #b8d9e7;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.v2-causal-chain article strong {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.v2-exclusion > span {
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.v2-exclusion strong {
+  color: #fff;
+  font-size: 15px;
+}
+
+.v2-exclusion p {
+  font-size: 11px;
+}
+
+.v2-hypothesis-grid article > span {
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.v2-hypothesis-grid strong {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.v2-hypothesis-grid p {
+  font-size: 11px;
+}
+
+.v2-impact-list strong,
+.v2-outcome-metrics strong,
+.v2-readiness-grid strong,
+.v2-deployment-card div b,
+.v2-safe-results strong {
+  font-size: 20px;
+}
+
+.v2-plan-options header span,
+.v2-timing-parameters header strong,
+.v2-plan-impact-preview header strong,
+.v2-command-receipt > header span,
+.v2-peak-chart header strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.v2-parameter-head,
+.v2-parameter-row,
+.v2-plan-options p,
+.v2-plan-options footer span,
+.v2-plan-impact-preview small,
+.v2-command-receipt > div span,
+.v2-command-receipt > footer,
+.v2-peak-chart header span,
+.v2-verification-window small {
+  font-size: 11px;
+}
+
+.v2-plan-impact-preview > div strong,
+.v2-command-receipt > div b,
+.v2-verification-window b {
+  font-size: 18px;
 }
 
 @keyframes v2-spin {

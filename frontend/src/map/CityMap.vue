@@ -11,6 +11,7 @@ import type {
   ExpertDiagnosis,
   FlowTraceScene,
   MonitoredIntersection,
+  SimilarCase,
   TargetIntersection,
 } from '../types'
 
@@ -26,6 +27,7 @@ const channelization = ref<ChannelizationScene | null>(null)
 const topology = ref<any>(null)
 const flowTrace = ref<FlowTraceScene | null>(null)
 const diagnosis = ref<ExpertDiagnosis | null>(null)
+const similarCases = ref<SimilarCase[]>([])
 type SimulationScenarioId = 'baseline' | 'green-only' | 'combined'
 const simulationScenario = ref<SimulationScenarioId>('baseline')
 const showStaticAoiCards = false
@@ -264,10 +266,10 @@ const beatNarratives: Record<string, MapNarrative> = {
     ],
   },
   trace: {
-    chapter: '流量溯源',
-    eyebrow: '流量溯源 · 六跳追踪',
-    headline: '奥体西路北侧连续来车波是主要源头',
-    summary: '主走廊六跳累计解释 92.0% 到达流量，明确各上游节点的流量贡献。',
+    chapter: '拓扑研判',
+    eyebrow: '空间拓扑 × 六跳流量溯源',
+    headline: '目标、冲突、上游与下游形成完整因果关系',
+    summary: '路网角色与到达流量同屏分析，确认北侧连续来车波叠加目标方向有效放行不足。',
     tone: 'action',
     metrics: [
       { label: '累计解释', value: '92.0%' },
@@ -1358,6 +1360,93 @@ function renderFlowTrace() {
   }, 40))
 }
 
+function renderSimilarCasesMap() {
+  if (!target.value) return
+  const center = target.value.center
+  const placements: Array<[number, number]> = [
+    metersToGeo(center, -150, 118),
+    metersToGeo(center, 155, 72),
+    metersToGeo(center, -118, -126),
+  ]
+  const tones = ['success', 'action', 'warning'] as const
+
+  similarCases.value.slice(0, 3).forEach((item, index) => {
+    const position = placements[index]
+    addActionLink([position, center], index === 0 ? '#22c55e' : '#00d4f0', 3.5)
+    addNarrativeMarker(
+      position,
+      `${tones[index]} compact`,
+      `知识关联 · 案例 ${item.caseId}`,
+      `${item.matchScore}% 匹配`,
+      `${item.location} · ${item.title}`,
+      { offsetX: index === 1 ? 118 : -118, offsetY: -8, zIndex: 158 },
+    )
+  })
+
+  addTargetAnchor('案例检索目标')
+  addNarrativeMarker(
+    center,
+    'action',
+    '当前问题画像',
+    '到达波叠加放行不足',
+    '路口形态、时段、流量特征与治理边界联合匹配',
+    { offsetX: 142, offsetY: -34, zIndex: 162 },
+  )
+}
+
+function renderEffectMap() {
+  renderTopology()
+  const points = topologyPoints()
+  const upstream = points.get('upstream') ?? []
+  const targetPoint = points.get('target')?.[0]
+  const downstream = points.get('downstream')?.[0]
+  const branch = points.get('branch')?.[0]
+
+  if (upstream.length && targetPoint) {
+    const ordered = [...upstream].sort((a, b) => b[1] - a[1])
+    addActionLink([...ordered, targetPoint], '#22c55e', 6)
+    addNarrativeMarker(
+      ordered[0],
+      'success compact',
+      '到达强度',
+      '100% → 88%',
+      '削峰策略持续生效',
+      { offsetX: 126 },
+    )
+  }
+  if (targetPoint) {
+    addNarrativeMarker(
+      targetPoint,
+      'success',
+      '目标方向',
+      '129m → 78m',
+      '北进口排队下降 39.5%',
+      { offsetX: 136, offsetY: -22 },
+    )
+  }
+  if (branch) {
+    addNarrativeMarker(
+      branch,
+      'success compact',
+      '垂直方向',
+      '71m < 92m',
+      '未发生压力转移',
+      { offsetX: -132 },
+    )
+  }
+  if (targetPoint && downstream) {
+    addActionLink([targetPoint, downstream], '#22c55e', 6)
+    addNarrativeMarker(
+      downstream,
+      'success compact',
+      '下游承接',
+      '55% < 65%',
+      '保持安全余量',
+      { offsetX: 132 },
+    )
+  }
+}
+
 function applyCamera() {
   if (!map) return
   const targetCenter = runtimeConfig.map.target
@@ -1376,7 +1465,7 @@ function applyCamera() {
     decision: { zoom: 16.3, center: [117.1113, 36.6647] },
     trace: { zoom: 14.45, center: [117.1112, 36.6717] },
     'knowledge-recall': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
-    'similar-cases': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
+    'similar-cases': { zoom: 16.7, center: [targetCenter[0], targetCenter[1] + 0.00015] },
     'tidal-pattern': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
     'strategy-brief': { zoom: 18.2, center: [targetCenter[0], targetCenter[1] + 0.00015] },
     'plan-generation': { zoom: 16.5, center: targetCenter },
@@ -1455,20 +1544,24 @@ function renderScene() {
     renderTopology()
     renderTopologyStage()
   } else if (props.beat === 'trace') {
+    renderTopology()
     renderFlowTrace()
+    renderCauseMap()
   } else if (['plan-options', 'impact-preview', 'peak-verification'].includes(props.beat)) {
     renderTopology()
   } else if (props.beat === 'knowledge-recall') {
     addTargetAnchor('相似案例匹配')
   } else if (props.beat === 'similar-cases') {
-    addTargetAnchor('案例匹配完成')
+    renderSimilarCasesMap()
   } else if (props.beat === 'tidal-pattern') {
     addTargetAnchor('潮汐特征研判')
   } else if (props.beat === 'strategy-brief') {
     addTargetAnchor('治理方向已确定')
   } else if (['plan-generation', 'deployment'].includes(props.beat)) {
     addTargetAnchor('配时方案锁定路口')
-  } else if (['deployment-confirm', 'before-after', 'closing'].includes(props.beat)) {
+  } else if (props.beat === 'before-after') {
+    renderEffectMap()
+  } else if (['deployment-confirm', 'closing'].includes(props.beat)) {
     addTargetAnchor('执行效果追踪中')
   } else {
     addTargetAnchor('目标已锁定')
@@ -1520,6 +1613,7 @@ onMounted(async () => {
     topologyData,
     traceData,
     diagnosisData,
+    caseData,
   ] = await Promise.all([
     dataRepository.intersections(),
     dataRepository.devices(),
@@ -1528,6 +1622,7 @@ onMounted(async () => {
     dataRepository.topology(),
     dataRepository.flowTrace(),
     dataRepository.expertDiagnosis(),
+    dataRepository.similarCases(),
   ])
   intersections.value = intersectionData
   devices.value = deviceData
@@ -1536,6 +1631,7 @@ onMounted(async () => {
   topology.value = topologyData
   flowTrace.value = traceData
   diagnosis.value = diagnosisData
+  similarCases.value = caseData
   await nextTick()
   await loadMap()
 })

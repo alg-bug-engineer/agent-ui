@@ -575,10 +575,6 @@ onMounted(async () => {
             </div>
             <footer><span>已验证 3 个周期 · 未触发回退</span><b>查看处置详情 →</b></footer>
           </button>
-          <div class="v2-completed-summary">
-            <span><strong>180</strong>今日已闭环</span>
-            <span><strong>14</strong>新增有效经验</span>
-          </div>
         </template>
       </div>
 
@@ -762,22 +758,35 @@ onMounted(async () => {
             </span>
           </div>
         </div>
-        <ol class="v2-analysis-chain">
-          <li>
-            <span>01</span><div><strong>拓扑关系</strong><p>目标、冲突、上游与下游同屏分析</p></div><b>完成</b>
-          </li>
-          <li>
-            <span>02</span><div><strong>流量溯源</strong><p>六跳主走廊累计解释 {{ trace?.summary.coveredSharePct.toFixed(1) ?? '92.0' }}%</p></div><b>完成</b>
-          </li>
-          <li>
-            <span>03</span><div><strong>问题验证</strong><p>逐项核验放行不足、到达波与下游承接</p></div><b>完成</b>
-          </li>
-        </ol>
+        <div class="v2-section-title v2-topology-title"><span>专家空间拓扑</span><b>四类角色同屏研判</b></div>
         <div class="v2-direction-facts">
           <article v-for="item in diagnosis?.directions" :key="item.id" :class="item.tone">
-            <small>{{ item.role }}</small><strong>{{ item.primaryMetric }}</strong><p>{{ item.label }}</p>
+            <header><small>{{ item.role }}</small><b>{{ item.tone === 'critical' ? '重点' : item.tone === 'warning' ? '关注' : '正常' }}</b></header>
+            <strong>{{ item.label }}</strong>
+            <div>{{ item.primaryMetric }}</div>
+            <p>{{ item.secondaryMetric }}</p>
+            <footer>{{ item.assessment }}</footer>
           </article>
         </div>
+        <div class="v2-topology-path">
+          <span><small>上游来源</small><strong>57.9%</strong></span>
+          <i>→</i>
+          <span class="target"><small>目标路口</small><strong>129m</strong></span>
+          <i>→</i>
+          <span><small>下游承接</small><strong>42%</strong></span>
+          <b><small>垂直冲突</small>63m / 警戒 92m</b>
+        </div>
+        <ol class="v2-analysis-chain">
+          <li>
+            <span>01</span><div><strong>拓扑关系</strong><p>目标、冲突、上游与下游建立空间关联</p></div><b>已建立</b>
+          </li>
+          <li>
+            <span>02</span><div><strong>流量溯源</strong><p>六跳主走廊累计解释 {{ trace?.summary.coveredSharePct.toFixed(1) ?? '92.0' }}%</p></div><b>已完成</b>
+          </li>
+          <li>
+            <span>03</span><div><strong>问题验证</strong><p>逐项核验放行不足、到达波与下游承接</p></div><b>已确认</b>
+          </li>
+        </ol>
       </template>
 
       <template v-else-if="activeStage === 3">
