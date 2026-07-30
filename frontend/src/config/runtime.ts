@@ -10,7 +10,7 @@ function envNumber(value: string | undefined, fallback: number): number {
 
 export const runtimeConfig = Object.freeze({
   app: {
-    title: envText(import.meta.env.VITE_APP_TITLE, '济南城市信控智能体'),
+    title: envText(import.meta.env.VITE_APP_TITLE, '济南交管支队信控智能体'),
     city: envText(import.meta.env.VITE_APP_CITY, '济南市'),
     dataMode: envText(import.meta.env.VITE_DATA_MODE, 'demo'),
   },

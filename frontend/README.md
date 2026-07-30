@@ -34,7 +34,7 @@ cp .env.example .env.local
 填写：
 
 ```dotenv
-VITE_APP_TITLE=济南城市信控智能体
+VITE_APP_TITLE=济南交管支队信控智能体
 VITE_DATA_BASE_URL=/data
 VITE_AMAP_KEY=
 VITE_AMAP_SECURITY_CODE=
